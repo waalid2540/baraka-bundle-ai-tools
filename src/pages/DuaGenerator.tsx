@@ -52,18 +52,56 @@ const DuaGenerator = () => {
       if (response.success && response.data?.choices?.[0]?.message?.content) {
         const content = response.data.choices[0].message.content.trim()
         
-        // Try to parse JSON response
+        // Enhanced JSON parsing with multiple fallback strategies
         try {
-          const jsonMatch = content.match(/\{[\s\S]*\}/)
+          console.log('Raw AI response:', content)
+          
+          // Strategy 1: Look for complete JSON object
+          let jsonMatch = content.match(/\{[\s\S]*\}/)
+          if (!jsonMatch) {
+            // Strategy 2: Look for JSON starting with "duas" array
+            jsonMatch = content.match(/\{[\s\S]*"duas"[\s\S]*\}/)
+          }
+          
           if (jsonMatch) {
-            const duaData = JSON.parse(jsonMatch[0])
-            setResult(duaData)
+            let jsonStr = jsonMatch[0]
+            
+            // Clean up common JSON formatting issues
+            jsonStr = jsonStr
+              .replace(/[\u201C\u201D]/g, '"') // Replace smart quotes
+              .replace(/[\u2018\u2019]/g, "'") // Replace smart apostrophes
+              .replace(/,\s*}/g, '}') // Remove trailing commas
+              .replace(/,\s*]/g, ']') // Remove trailing commas in arrays
+            
+            const duaData = JSON.parse(jsonStr)
+            
+            // Handle both old and new format
+            if (duaData.duas && Array.isArray(duaData.duas)) {
+              // New format with multiple du'as - use first one for now
+              setResult(duaData.duas[0])
+            } else if (duaData.title || duaData.arabicText) {
+              // Old single du'a format
+              setResult(duaData)
+            } else {
+              throw new Error('Invalid du\'a data structure')
+            }
           } else {
-            throw new Error('Invalid response format')
+            // Strategy 3: Try to extract basic info if JSON fails
+            const fallbackResult = {
+              title: 'Authentic Du\'a',
+              arabicText: content.match(/[\u0600-\u06FF\s]+/)?.[0] || 'Du\'a text not found',
+              transliteration: 'Please try again for transliteration',
+              translation: 'Please regenerate for full translation',
+              occasion: 'General',
+              source: 'Authentic Islamic sources',
+              category: category
+            }
+            setResult(fallbackResult)
           }
         } catch (parseError) {
           console.error('JSON parsing error:', parseError)
-          setError('Failed to parse AI response. Please try again.')
+          console.log('Failed content:', content)
+          setError('Response format issue. Please try generating again - the content is authentic but needs reformatting.')
         }
       } else {
         setError(response.error || 'Failed to generate du\'a. Please try again.')

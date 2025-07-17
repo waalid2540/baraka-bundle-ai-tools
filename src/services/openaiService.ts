@@ -51,25 +51,18 @@ class OpenAIService {
     const prompt = `Find multiple authentic du'a options for the category "${category}" in ${language}.
     ${situation ? `Specific situation: ${situation}` : ''}
     
-    Return ONLY valid JSON in this format:
+    Return ONLY valid JSON in this EXACT format (no extra text before or after):
     {
-      "duas": [
-        {
-          "title": "Du'a title in ${language}",
-          "arabicText": "Exact Arabic text from Qur'an or authentic Hadith",
-          "transliteration": "Accurate phonetic transliteration",
-          "translation": "Complete translation in ${language}",
-          "occasion": "When this du'a is recited",
-          "source": "Exact source: Surah/Ayah or Hadith collection with number",
-          "category": "${category}",
-          "benefits": "Spiritual benefits mentioned in sources",
-          "times": "Recommended times to recite",
-          "isAuthentic": true
-        }
-      ],
-      "alternativeOptions": [
-        "Alternative authentic du'a for same category"
-      ]
+      "title": "Du'a title in ${language}",
+      "arabicText": "Exact Arabic text from Qur'an or authentic Hadith",
+      "transliteration": "Accurate phonetic transliteration",
+      "translation": "Complete translation in ${language}",
+      "occasion": "When this du'a is recited",
+      "source": "Exact source: Surah/Ayah or Hadith collection with number",
+      "category": "${category}",
+      "benefits": "Spiritual benefits mentioned in sources",
+      "times": "Recommended times to recite",
+      "isAuthentic": true
     }
     
     EXPANDED REQUIREMENTS:
@@ -128,18 +121,25 @@ NEVER repeat the same du'a. Always provide fresh, authentic alternatives.`
 - For guidance: 1:6, various Prophetic guidance du'as
 - For forgiveness: 39:53, istighfar variations, tawbah du'as
 
-🎲 ENSURE UNIQUENESS: Each response must contain different authentic du'ā!`
+🎲 ENSURE UNIQUENESS: Each response must contain different authentic du'ā!
+
+⚠️ CRITICAL JSON FORMATTING:
+- Return ONLY valid JSON with no extra text
+- Use double quotes for all strings
+- No trailing commas
+- Escape any quotes inside strings
+- Test JSON validity before returning`
         },
         {
           role: 'user',
           content: enhancedPrompt
         }
       ],
-      temperature: 0.8,
-      max_tokens: 3000,
-      presence_penalty: 0.8,
-      frequency_penalty: 0.9,
-      top_p: 0.95
+      temperature: 0.6,
+      max_tokens: 2000,
+      presence_penalty: 0.7,
+      frequency_penalty: 0.8,
+      top_p: 0.9
     }
 
     return this.makeRequest('/chat/completions', payload)
