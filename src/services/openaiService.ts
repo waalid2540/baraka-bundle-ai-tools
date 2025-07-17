@@ -46,123 +46,106 @@ class OpenAIService {
     }
   }
 
-  // 🧠 1. AI Du'ā Generator
+  // 🧠 1. AI Du'ā Generator - AUTHENTIC System
   async generateDua(category: string, language: string = 'english', situation?: string): Promise<OpenAIResponse> {
-    const prompt = `Generate an authentic Islamic du'a for the category "${category}" in ${language}.
+    const prompt = `Find an authentic du'a for the category "${category}" in ${language}.
     ${situation ? `Specific situation: ${situation}` : ''}
     
     Return ONLY valid JSON in this format:
     {
       "title": "Du'a title in ${language}",
-      "arabicText": "Complete Arabic text of the du'a",
+      "arabicText": "Exact Arabic text from Qur'an or authentic Hadith",
       "transliteration": "Accurate phonetic transliteration",
       "translation": "Complete translation in ${language}",
       "occasion": "When this du'a is recited",
-      "benefits": ["List of spiritual benefits"],
-      "source": "Qur'anic or Hadith reference",
-      "category": "${category}"
+      "source": "Exact source: Surah/Ayah or Hadith book and number",
+      "category": "${category}",
+      "isAuthentic": true
     }
     
-    Requirements:
-    - Only authentic du'as from Qur'an or Sahih Hadith
-    - Accurate Arabic text and transliteration
-    - Proper source citation
-    - Appropriate for the category and situation`
+    CRITICAL REQUIREMENTS:
+    - ONLY quote word-for-word du'as from Qur'an or authentic Hadith
+    - Do NOT create, paraphrase, or invent any du'a
+    - Must include exact source reference
+    - If no authentic du'a exists for this request, respond with: "No authentic du'a found"`
 
     const payload = {
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are an Islamic scholar expert in authentic du\'as from Qur\'an and Sahih Hadith. Only provide du\'as that are authentically sourced and properly referenced. Return only valid JSON.'
+          content: `You are an Islamic assistant who only generates du'ā that is directly taken from the Qur'an or authentic Hadith (Sahih Bukhari, Sahih Muslim, or other verified sources). 
+
+STRICT RULES:
+- Do NOT create or paraphrase du'ā
+- Do NOT invent anything
+- ONLY quote word-for-word du'ā from the Prophet ﷺ or the Qur'an
+- Include: Arabic text, English translation, Authentic source reference
+- No explanations unless requested
+
+If a request has no exact du'ā from authentic sources, respond: "There is no known authentic du'ā for this exact situation. However, here is a general du'ā you can make."
+
+Return only valid JSON format.`
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.2,
+      temperature: 0.1,
       max_tokens: 1500
     }
 
     return this.makeRequest('/chat/completions', payload)
   }
 
-  // 📖 2. Islamic Kids Story Generator
+  // 📖 2. Islamic Kids Story Generator - AUTHENTIC System
   async generateKidsStory(age: string, name: string, theme: string, language: string = 'english'): Promise<OpenAIResponse> {
-    const prompt = `Create a beautiful Islamic story for children aged ${age} with the theme "${theme}".
-    Main character name: ${name}
+    const prompt = `Tell an authentic Islamic story for children aged ${age} related to "${theme}".
+    Use character name: ${name} where appropriate
     Language: ${language}
     
     Return ONLY valid JSON in this format:
     {
       "title": "Story title in ${language}",
-      "story": "Complete story (200-300 words) appropriate for age ${age}",
-      "moralLesson": "Clear moral lesson from the story",
-      "quranReference": "Related Qur'anic verse with reference",
-      "arabicVerse": "Arabic text of the verse",
-      "verseTranslation": "Translation of the verse",
-      "parentNotes": "Tips for parents discussing this story",
+      "story": "Authentic story from Qur'an or Hadith (200-300 words) for age ${age}",
+      "moralLesson": "Moral lesson from the authentic source",
+      "quranReference": "Exact Qur'anic reference or Hadith source",
+      "arabicVerse": "Arabic text if from Qur'an",
+      "verseTranslation": "Translation of the verse/hadith",
+      "parentNotes": "Discussion tips for parents",
       "ageGroup": "${age}",
-      "theme": "${theme}"
+      "theme": "${theme}",
+      "isAuthentic": true
     }
     
-    Requirements:
-    - Age-appropriate for ${age} year olds
-    - Authentic Islamic values and teachings
-    - Engaging story with clear moral lesson
-    - Include relevant Qur'anic guidance
-    - Educational and entertaining`
+    CRITICAL REQUIREMENTS:
+    - ONLY tell stories from Qur'an or authentic Hadith
+    - Do NOT invent fictional stories or characters
+    - Use actual events involving Prophets or verified Sahabah stories
+    - Never add dialogue or details not in the source
+    - Always include source references`
 
     const payload = {
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are an Islamic education specialist creating engaging stories for Muslim children. Focus on authentic Islamic teachings, age-appropriate content, and clear moral lessons. Return only valid JSON.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    }
+          content: `You are a children's Islamic storyteller who only tells stories from the Qur'an or authentic Hadith. 
 
-    return this.makeRequest('/chat/completions', payload)
-  }
+STRICT RULES:
+- Do NOT invent fictional stories or characters
+- ONLY share actual events involving the Prophets (as mentioned in the Qur'an) or stories from the Sahabah that are verified and well-known
+- Always include references (Surah name and ayah numbers, or Hadith source)
+- Never add dialogue or fictional details not found in the source
 
-  // 📚 3. Tafsir Generator (Authentic)
-  async generateTafsir(input: string, language: string = 'english'): Promise<OpenAIResponse> {
-    const prompt = `Provide authentic Tafsir for: "${input}" in ${language}.
-    
-    Return ONLY valid JSON in this format:
-    {
-      "input": "${input}",
-      "verseReference": "Qur'anic reference if applicable",
-      "arabicText": "Original Arabic text",
-      "translation": "Clear translation in ${language}",
-      "tafsirSummary": "Concise explanation based on classical sources",
-      "keyLessons": ["Main lessons from this verse/topic"],
-      "historicalContext": "Historical background and circumstances of revelation",
-      "practicalApplication": "How to apply this guidance in daily life",
-      "sources": ["Ibn Kathir", "As-Sa'di", "Tabari", "etc."],
-      "relatedVerses": ["Other relevant Qur'anic verses"]
-    }
-    
-    Requirements:
-    - Based on authentic classical Tafsir sources
-    - Clear and accessible explanation
-    - Practical application for modern Muslims
-    - Proper source attribution`
+Format clearly:
+- Title
+- Short authentic story in simple, age-appropriate language
+- Qur'anic or Hadith source
+- Moral or reflection (only if authentic)
 
-    const payload = {
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an Islamic scholar specializing in Qur\'anic Tafsir. Provide authentic explanations based on classical Islamic scholarship (Ibn Kathir, As-Sa\'di, Tabari, etc.). Return only valid JSON.'
+Return only valid JSON format.`
         },
         {
           role: 'user',
@@ -170,6 +153,62 @@ class OpenAIService {
         }
       ],
       temperature: 0.3,
+      max_tokens: 2000
+    }
+
+    return this.makeRequest('/chat/completions', payload)
+  }
+
+  // 📚 3. Tafsir Generator - AUTHENTIC System
+  async generateTafsir(input: string, language: string = 'english'): Promise<OpenAIResponse> {
+    const prompt = `Provide authentic Tafsir explanation for: "${input}" in ${language}.
+    
+    Return ONLY valid JSON in this format:
+    {
+      "input": "${input}",
+      "verseReference": "Exact Qur'anic reference if applicable",
+      "arabicText": "Original Arabic ayah",
+      "translation": "Clear translation in ${language}",
+      "tafsirSummary": "Summary from authentic tafsir books only",
+      "keyLessons": ["Lessons from classical scholars"],
+      "historicalContext": "Background from authentic sources",
+      "practicalApplication": "Application as explained by scholars",
+      "sources": ["Specific tafsir source used"],
+      "relatedVerses": ["Related verses"],
+      "isAuthentic": true
+    }
+    
+    CRITICAL REQUIREMENTS:
+    - ONLY summarize from Tafsir Ibn Kathir, As-Sa'di, Al-Tabari
+    - No personal interpretation or opinions
+    - Use wording that reflects original tafsir books
+    - Never speak beyond what classical scholars explained
+    - Always mention specific tafsir source used`
+
+    const payload = {
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a tafsir explainer that only summarizes from authentic tafsir books: Tafsir Ibn Kathir, Tafsir As-Sa'di, Tafsir Al-Tabari. 
+
+STRICT RULES:
+- When a user provides a verse (Surah and ayah), explain the meaning using ONLY these tafasir
+- NO personal interpretation, NO opinions
+- Use the wording and summaries that reflect the original tafsir books
+- Always include: Arabic ayah, English translation, Summary from scholars, Tafsir source
+- Never speak beyond what the classical scholars explained
+
+Always mention the tafsir source used (e.g., Tafsir Ibn Kathir).
+
+Return only valid JSON format.`
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
       max_tokens: 2500
     }
 
@@ -208,7 +247,23 @@ class OpenAIService {
       messages: [
         {
           role: 'system',
-          content: 'You are an Islamic scholar and expert in Arabic names and their meanings. Provide authentic Islamic names with proper Arabic script and historical significance. Return only valid JSON.'
+          content: `You are a name generator that provides only names with known, authentic Arabic or Islamic meanings. 
+
+STRICT RULES:
+- Do NOT generate invented or modern names without clear Islamic/Arabic roots
+- ONLY provide names that have verified meanings and authentic origins
+- Do not include names with negative or doubtful origins
+- Always include proper Arabic script
+- Include authentic Islamic historical connections when available
+- If the name has no clear authentic root, do not show it
+
+Format requirements:
+- Accurate Arabic script
+- Verified meanings only
+- Historical significance when applicable
+- Proper pronunciation guidance
+
+Return only valid JSON format.`
         },
         {
           role: 'user',
