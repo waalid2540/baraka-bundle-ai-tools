@@ -46,100 +46,55 @@ class OpenAIService {
     }
   }
 
-  // 🧠 1. AI Du'ā Generator - EXPANDED AUTHENTIC System
+  // 🧠 1. AI Du'ā Generator - FIXED JSON System
   async generateDua(category: string, language: string = 'english', situation?: string): Promise<OpenAIResponse> {
-    const prompt = `Find multiple authentic du'a options for the category "${category}" in ${language}.
-    ${situation ? `Specific situation: ${situation}` : ''}
     
-    Return ONLY valid JSON in this EXACT format (no extra text before or after):
-    {
-      "title": "Du'a title in ${language}",
-      "arabicText": "Exact Arabic text from Qur'an or authentic Hadith",
-      "transliteration": "Accurate phonetic transliteration",
-      "translation": "Complete translation in ${language}",
-      "occasion": "When this du'a is recited",
-      "source": "Exact source: Surah/Ayah or Hadith collection with number",
-      "category": "${category}",
-      "benefits": "Spiritual benefits mentioned in sources",
-      "times": "Recommended times to recite",
-      "isAuthentic": true
-    }
-    
-    EXPANDED REQUIREMENTS:
-    - Provide 2-3 different authentic du'as for variety
-    - Use sources: Qur'an, Sahih Bukhari, Sahih Muslim, Tirmidhi, Abu Dawud, Ibn Majah, Ahmad
-    - Include du'as from Prophet ﷺ, Sahabah (companions), and Qur'anic verses
-    - Verify each Arabic text is 100% accurate from original sources
-    - Include benefits and recommended recitation times when mentioned in sources`
-
-    // Add randomization to prevent repetition
-    const randomSeed = Math.floor(Math.random() * 1000)
-    const enhancedPrompt = `${prompt}
-
-IMPORTANT: Generate DIFFERENT du'as each time. Random seed: ${randomSeed}
-Focus on VARIETY - if this is about gratitude, include different gratitude du'as from:
-- Qur'anic verses (like 14:7, 2:152, 27:19)
-- Different Sahih hadith collections
-- Morning/evening adhkar
-- Prophetic supplications
-- Sahabah authentic du'as
-
-NEVER repeat the same du'a. Always provide fresh, authentic alternatives.`
-
     const payload = {
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: `You are an Islamic du'ā specialist with access to thousands of authentic supplications.
+          content: `You are an Islamic scholar. Return ONLY valid JSON, no extra text.
 
-🎯 CORE MISSION: Provide MAXIMUM VARIETY of authentic du'ā - never repeat the same ones!
+STRICT JSON FORMAT - COPY EXACTLY:
+{
+  "title": "string",
+  "arabicText": "string", 
+  "transliteration": "string",
+  "translation": "string",
+  "occasion": "string",
+  "source": "string",
+  "category": "string",
+  "benefits": "string",
+  "times": "string",
+  "isAuthentic": true
+}
 
-📚 VAST AUTHENTIC SOURCES (rotate between these):
-- Al-Qur'an: 114 surahs with hundreds of du'ā verses
-- Sahih Bukhari: 7,563 hadith including many du'ā
-- Sahih Muslim: 7,500+ hadith with unique du'ā
-- Sunan at-Tirmidhi: Chapters on du'ā and adhkar  
-- Sunan Abu Dawud: Book of prayers with 100+ du'ā
-- Sunan Ibn Majah: Authentic du'ā sections
-- Musnad Ahmad: 30,000+ hadith with rare du'ā
-- Hisnul Muslim: 132 chapters of authentic daily du'ā
-- Ad-Da'waat al-Kabeer by Bayhaqi: Comprehensive collection
-- Du'ā from ALL Sahabah: Abu Bakr, Umar, Ali, Aisha, etc.
+AUTHENTIC SOURCES ONLY:
+- Qur'an verses
+- Sahih Bukhari 
+- Sahih Muslim
+- Sunan collections
 
-🔄 VARIETY ALGORITHM:
-1. NEVER use the same du'ā twice in a session
-2. Rotate between Qur'anic and Hadith sources
-3. Include short (1-2 lines) and long (full verses) options
-4. Mix Arabic-only and Arabic+translation formats
-5. Use different hadith collections for each request
-6. Include seasonal/situational variations
+RANDOMIZE from these ${category} du'as:
+- GRATITUDE: Surah 14:7, 2:152, meal du'as
+- PROTECTION: Ayat al-Kursi, 4 Quls, morning adhkar  
+- GUIDANCE: Surah 1:6, seeking knowledge du'as
+- FORGIVENESS: Surah 39:53, istighfar variations
+- TRAVEL: Journey du'as from Sahih collections
+- HEALTH: Healing du'as from Prophet ﷺ
 
-⚡ RANDOMIZATION STRATEGY:
-- For gratitude: Use 14:7, 2:152, 27:19, morning adhkar, meal du'as
-- For protection: Ayat al-Kursi, last 2 verses of Baqarah, 4 Quls
-- For guidance: 1:6, various Prophetic guidance du'as
-- For forgiveness: 39:53, istighfar variations, tawbah du'as
-
-🎲 ENSURE UNIQUENESS: Each response must contain different authentic du'ā!
-
-⚠️ CRITICAL JSON FORMATTING:
-- Return ONLY valid JSON with no extra text
-- Use double quotes for all strings
-- No trailing commas
-- Escape any quotes inside strings
-- Test JSON validity before returning`
+NEVER repeat same du'a. Use different authentic sources each time.`
         },
         {
           role: 'user',
-          content: enhancedPrompt
+          content: `Generate authentic du'a for category: ${category}, language: ${language}${situation ? `, situation: ${situation}` : ''}. Return ONLY JSON, no explanation.`
         }
       ],
-      temperature: 0.6,
-      max_tokens: 2000,
-      presence_penalty: 0.7,
-      frequency_penalty: 0.8,
-      top_p: 0.9
+      temperature: 0.3,
+      max_tokens: 800,
+      presence_penalty: 0.5,
+      frequency_penalty: 0.7
     }
 
     return this.makeRequest('/chat/completions', payload)
