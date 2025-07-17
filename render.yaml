@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: baraka-bundle-ai-tools
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: REACT_APP_OPENAI_API_KEY
+        sync: false
