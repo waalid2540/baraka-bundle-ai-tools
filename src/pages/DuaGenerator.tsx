@@ -8,9 +8,11 @@ interface DuaResult {
   transliteration: string
   translation: string
   occasion: string
-  benefits: string[]
+  benefits: string | string[]
   source: string
   category: string
+  times?: string
+  isAuthentic?: boolean
 }
 
 const DuaGenerator = () => {
@@ -47,7 +49,9 @@ const DuaGenerator = () => {
     setResult(null)
 
     try {
+      console.log('Starting du\'a generation...', { category, language, situation })
       const response = await openaiService.generateDua(category, language, situation || undefined)
+      console.log('OpenAI response received:', response)
       
       if (response.success && response.data?.choices?.[0]?.message?.content) {
         const content = response.data.choices[0].message.content.trim()
@@ -92,6 +96,7 @@ const DuaGenerator = () => {
           
         } catch (parseError) {
           console.error('JSON parsing failed:', parseError)
+          console.error('Original content that failed:', content)
           
           // Last resort: Create minimal working result
           const basicResult = {
@@ -106,6 +111,7 @@ const DuaGenerator = () => {
             times: 'Any time',
             isAuthentic: true
           }
+          console.log('Using fallback result:', basicResult)
           setResult(basicResult)
         }
       } else {
@@ -113,7 +119,22 @@ const DuaGenerator = () => {
       }
     } catch (error) {
       console.error('Du\'a generation error:', error)
-      setError('An error occurred while generating du\'a. Please try again.')
+      
+      // Provide fallback even on complete failure
+      const emergencyResult = {
+        title: 'Emergency Du\'a',
+        arabicText: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+        transliteration: 'Bismillah ir-Rahman ir-Raheem',
+        translation: 'In the name of Allah, the Most Gracious, the Most Merciful',
+        occasion: 'Beginning of all good deeds',
+        source: 'Quran 1:1',
+        category: category,
+        benefits: 'Starting with Allah\'s name brings blessings',
+        times: 'Before any action',
+        isAuthentic: true
+      }
+      setResult(emergencyResult)
+      setError('Using backup du\'a - please check your internet connection.')
     } finally {
       setIsLoading(false)
     }
@@ -270,17 +291,29 @@ const DuaGenerator = () => {
                 </div>
 
                 {/* Benefits */}
-                {result.benefits && result.benefits.length > 0 && (
-                  <div>
+                {result.benefits && (
+                  <div className="bg-purple-50 rounded-lg p-4">
                     <p className="text-sm font-medium text-gray-700 mb-2">Benefits:</p>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      {result.benefits.map((benefit, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="text-islamic-green-600 mr-2">•</span>
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
+                    {Array.isArray(result.benefits) ? (
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        {result.benefits.map((benefit, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-islamic-green-600 mr-2">•</span>
+                            {benefit}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-600">{result.benefits}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Times */}
+                {result.times && (
+                  <div className="bg-amber-50 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Recommended Times:</p>
+                    <p className="text-sm text-gray-600">{result.times}</p>
                   </div>
                 )}
 
