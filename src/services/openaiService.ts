@@ -46,58 +46,82 @@ class OpenAIService {
     }
   }
 
-  // 🧠 1. AI Du'ā Generator - FIXED JSON System
+  // 🧠 1. Du'ā Generator - AUTHENTIC DATABASE ONLY
   async generateDua(category: string, language: string = 'english', situation?: string): Promise<OpenAIResponse> {
     
-    const payload = {
-      model: 'gpt-4o-mini',
-      messages: [
+    // FIXED: Use hardcoded authentic du'as - NO AI GENERATION
+    const authenticDuas = {
+      gratitude: [
         {
-          role: 'system',
-          content: `You are an Islamic scholar. Return ONLY valid JSON, no extra text.
-
-STRICT JSON FORMAT - COPY EXACTLY:
-{
-  "title": "string",
-  "arabicText": "string", 
-  "transliteration": "string",
-  "translation": "string",
-  "occasion": "string",
-  "source": "string",
-  "category": "string",
-  "benefits": "string",
-  "times": "string",
-  "isAuthentic": true
-}
-
-AUTHENTIC SOURCES ONLY:
-- Qur'an verses
-- Sahih Bukhari 
-- Sahih Muslim
-- Sunan collections
-
-RANDOMIZE from these ${category} du'as:
-- GRATITUDE: Surah 14:7, 2:152, meal du'as
-- PROTECTION: Ayat al-Kursi, 4 Quls, morning adhkar  
-- GUIDANCE: Surah 1:6, seeking knowledge du'as
-- FORGIVENESS: Surah 39:53, istighfar variations
-- TRAVEL: Journey du'as from Sahih collections
-- HEALTH: Healing du'as from Prophet ﷺ
-
-NEVER repeat same du'a. Use different authentic sources each time.`
+          title: "Gratitude to Allah",
+          arabicText: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+          transliteration: "Alhamdulillahi rabbil alameen",
+          translation: "All praise is due to Allah, Lord of the worlds",
+          occasion: "Expressing gratitude to Allah",
+          source: "Quran 1:2",
+          category: "gratitude",
+          benefits: "Acknowledging Allah as the source of all blessings",
+          times: "Any time",
+          isAuthentic: true
         },
         {
-          role: 'user',
-          content: `Generate authentic du'a for category: ${category}, language: ${language}${situation ? `, situation: ${situation}` : ''}. Return ONLY JSON, no explanation.`
+          title: "Thanks After Eating",
+          arabicText: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
+          transliteration: "Alhamdulillahi alladhi at'amani hadha wa razaqaneehi min ghayri hawlin minni wa la quwwah",
+          translation: "All praise is due to Allah who fed me this and provided it for me without any might or power from me",
+          occasion: "After finishing a meal",
+          source: "Sunan Abu Dawud 4023",
+          category: "gratitude",
+          benefits: "Recognizing Allah's provision and sustenance",
+          times: "After eating",
+          isAuthentic: true
         }
       ],
-      temperature: 0.3,
-      max_tokens: 800,
-      presence_penalty: 0.5,
-      frequency_penalty: 0.7
+      protection: [
+        {
+          title: "Seeking Allah's Protection",
+          arabicText: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+          transliteration: "A'udhu bi kalimatillahit-tammati min sharri ma khalaq",
+          translation: "I seek refuge in the perfect words of Allah from the evil of what He created",
+          occasion: "Seeking protection from harm",
+          source: "Sahih Muslim 2708",
+          category: "protection",
+          benefits: "Comprehensive protection from all evils",
+          times: "Morning, evening, or when feeling afraid",
+          isAuthentic: true
+        }
+      ],
+      general: [
+        {
+          title: "General Supplication",
+          arabicText: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+          transliteration: "Rabbana atina fi'd-dunya hasanatan wa fi'l-akhirati hasanatan wa qina 'adhab an-nar",
+          translation: "Our Lord, give us good in this world and good in the hereafter, and save us from the punishment of the Fire",
+          occasion: "General supplication for both worlds",
+          source: "Quran 2:201",
+          category: "general",
+          benefits: "Asking for good in this life and the next",
+          times: "Any time",
+          isAuthentic: true
+        }
+      ]
     }
 
-    return this.makeRequest('/chat/completions', payload)
+    // Get authentic du'a from database
+    const categoryDuas = authenticDuas[category as keyof typeof authenticDuas] || authenticDuas.general
+    const randomIndex = Math.floor(Math.random() * categoryDuas.length)
+    const selectedDua = categoryDuas[randomIndex]
+
+    return {
+      success: true,
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(selectedDua)
+          }
+        }]
+      }
+    }
   }
 
   // 📖 2. Islamic Kids Story Generator - EXPANDED AUTHENTIC System
