@@ -49,11 +49,11 @@ class OpenAIService {
   // 🧠 1. Du'ā Generator - AUTHENTIC DATABASE ONLY
   async generateDua(category: string, language: string = 'english', situation?: string): Promise<OpenAIResponse> {
     
-    // FIXED: Use hardcoded authentic du'as - NO AI GENERATION
+    // EXPANDED: Many more authentic du'as - NO AI GENERATION
     const authenticDuas = {
       gratitude: [
         {
-          title: "Gratitude to Allah",
+          title: "Praise to Allah",
           arabicText: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
           transliteration: "Alhamdulillahi rabbil alameen",
           translation: "All praise is due to Allah, Lord of the worlds",
@@ -75,6 +75,30 @@ class OpenAIService {
           benefits: "Recognizing Allah's provision and sustenance",
           times: "After eating",
           isAuthentic: true
+        },
+        {
+          title: "Gratitude for Blessings",
+          arabicText: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
+          transliteration: "Alhamdulillahi alladhi bi ni'matihi tatimmu as-salihat",
+          translation: "All praise is due to Allah by whose grace good deeds are completed",
+          occasion: "When something good happens",
+          source: "Ibn Majah 3803",
+          category: "gratitude",
+          benefits: "Acknowledging Allah's role in all good outcomes",
+          times: "After achieving something good",
+          isAuthentic: true
+        },
+        {
+          title: "Morning Gratitude",
+          arabicText: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ",
+          transliteration: "Asbahna wa asbahal-mulku lillahi walhamdu lillah",
+          translation: "We have reached the morning and the dominion belongs to Allah, and all praise is due to Allah",
+          occasion: "Upon waking up in the morning",
+          source: "Sahih Muslim 2723",
+          category: "gratitude",
+          benefits: "Starting the day with acknowledgment of Allah's sovereignty",
+          times: "Morning",
+          isAuthentic: true
         }
       ],
       protection: [
@@ -89,11 +113,129 @@ class OpenAIService {
           benefits: "Comprehensive protection from all evils",
           times: "Morning, evening, or when feeling afraid",
           isAuthentic: true
+        },
+        {
+          title: "Evening Protection",
+          arabicText: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ",
+          transliteration: "Amsayna wa amsal-mulku lillahi walhamdu lillah",
+          translation: "We have reached the evening and the dominion belongs to Allah, and all praise is due to Allah",
+          occasion: "Evening protection and acknowledgment",
+          source: "Sahih Muslim 2723",
+          category: "protection",
+          benefits: "Evening protection and recognition of Allah's dominion",
+          times: "Evening",
+          isAuthentic: true
+        },
+        {
+          title: "Protection from Evil Eye",
+          arabicText: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ وَمِنْ كُلِّ عَيْنٍ لَامَّةٍ",
+          transliteration: "A'udhu bi kalimatillahit-tammati min kulli shaytanin wa hammatin wa min kulli 'aynin lammah",
+          translation: "I seek refuge in the perfect words of Allah from every devil and poisonous creature, and from every evil eye",
+          occasion: "Protection from evil eye and harmful creatures",
+          source: "Sahih Bukhari 3371",
+          category: "protection",
+          benefits: "Protection from supernatural and natural harms",
+          times: "When feeling vulnerable or afraid",
+          isAuthentic: true
+        }
+      ],
+      forgiveness: [
+        {
+          title: "Seeking Forgiveness",
+          arabicText: "رَبِّ اغْفِرْ لِي ذَنْبِي وَخَطَئِي وَجَهْلِي",
+          transliteration: "Rabbi ghfir li dhanbi wa khata'i wa jahli",
+          translation: "My Lord, forgive my sins, my mistakes, and my ignorance",
+          occasion: "Seeking Allah's forgiveness",
+          source: "Sahih Bukhari 6398",
+          category: "forgiveness",
+          benefits: "Comprehensive forgiveness for all types of sins",
+          times: "Any time, especially after prayer",
+          isAuthentic: true
+        },
+        {
+          title: "Master of Seeking Forgiveness",
+          arabicText: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ",
+          transliteration: "Allahumma anta rabbi la ilaha illa anta khalaqtani wa ana 'abduka",
+          translation: "O Allah, You are my Lord, there is no god but You. You created me and I am Your servant",
+          occasion: "The master supplication for seeking forgiveness",
+          source: "Sahih Bukhari 6306",
+          category: "forgiveness",
+          benefits: "The most comprehensive du'a for forgiveness",
+          times: "Morning, or anytime seeking forgiveness",
+          isAuthentic: true
+        }
+      ],
+      guidance: [
+        {
+          title: "Seeking Guidance",
+          arabicText: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+          transliteration: "Ihdinas-siratal-mustaqeem",
+          translation: "Guide us to the straight path",
+          occasion: "Seeking Allah's guidance",
+          source: "Quran 1:6",
+          category: "guidance",
+          benefits: "Asking for divine guidance in all matters",
+          times: "In every prayer and when making decisions",
+          isAuthentic: true
+        },
+        {
+          title: "Guidance and Knowledge",
+          arabicText: "رَبِّ زِدْنِي عِلْمًا",
+          transliteration: "Rabbi zidni 'ilma",
+          translation: "My Lord, increase me in knowledge",
+          occasion: "Seeking increase in beneficial knowledge",
+          source: "Quran 20:114",
+          category: "guidance",
+          benefits: "Asking for beneficial knowledge and wisdom",
+          times: "Before studying or learning",
+          isAuthentic: true
+        }
+      ],
+      health: [
+        {
+          title: "Healing Du'a",
+          arabicText: "اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ الْبَاسَ وَاشْفِ أَنْتَ الشَّافِي",
+          transliteration: "Allahumma rabban-nasi adhhibil-ba'sa washfi anta ash-shafi",
+          translation: "O Allah, Lord of the people, remove the hardship and heal, You are the Healer",
+          occasion: "When seeking healing from illness",
+          source: "Sahih Bukhari 5743",
+          category: "health",
+          benefits: "Seeking Allah's healing for any illness",
+          times: "When sick or visiting the sick",
+          isAuthentic: true
+        }
+      ],
+      travel: [
+        {
+          title: "Travel Du'a",
+          arabicText: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ",
+          transliteration: "Subhanal-ladhi sakhkhara lana hadha wa ma kunna lahu muqrineen",
+          translation: "Glory to Him who has subjected this to us, and we could never have accomplished this by ourselves",
+          occasion: "When beginning a journey",
+          source: "Sunan Abu Dawud 2602",
+          category: "travel",
+          benefits: "Acknowledging Allah's blessing in travel",
+          times: "When starting any journey",
+          isAuthentic: true
+        }
+      ],
+      success: [
+        {
+          title: "Success and Achievement",
+          arabicText: "رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ",
+          transliteration: "Rabbana wa la tuhammilna ma la taqata lana bih",
+          translation: "Our Lord, do not burden us with what we cannot bear",
+          occasion: "When facing challenges or seeking success",
+          source: "Quran 2:286",
+          category: "success",
+          benefits: "Asking Allah not to burden us beyond our capacity",
+          times: "When facing difficulties or challenges",
+          isAuthentic: true
         }
       ],
       general: [
         {
-          title: "General Supplication",
+          title: "Comprehensive Du'a",
           arabicText: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
           transliteration: "Rabbana atina fi'd-dunya hasanatan wa fi'l-akhirati hasanatan wa qina 'adhab an-nar",
           translation: "Our Lord, give us good in this world and good in the hereafter, and save us from the punishment of the Fire",
@@ -102,6 +244,18 @@ class OpenAIService {
           category: "general",
           benefits: "Asking for good in this life and the next",
           times: "Any time",
+          isAuthentic: true
+        },
+        {
+          title: "Peace and Blessings",
+          arabicText: "بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+          transliteration: "Bismillahi tawakkaltu 'alallahi wa la hawla wa la quwwata illa billah",
+          translation: "In the name of Allah, I trust in Allah, and there is no might nor power except with Allah",
+          occasion: "When leaving the house or starting any task",
+          source: "Sunan Abu Dawud 5095",
+          category: "general",
+          benefits: "Placing trust in Allah and seeking His help",
+          times: "Before starting any important task",
           isAuthentic: true
         }
       ]
@@ -205,8 +359,17 @@ Return engaging but completely authentic Islamic stories.`
     return this.makeRequest('/chat/completions', payload)
   }
 
-  // 📚 3. Tafsir Generator - EXPANDED AUTHENTIC System
+  // 📚 3. Tafsir Generator - REMOVED (AI errors unacceptable for religious content)
   async generateTafsir(input: string, language: string = 'english'): Promise<OpenAIResponse> {
+    return {
+      success: false,
+      error: 'Tafsir feature has been removed due to AI accuracy concerns. Please consult authentic Islamic scholars or verified tafsir books for Quranic explanations.'
+    }
+  }
+
+  // OLD TAFSIR CODE REMOVED FOR SAFETY
+  /*
+  async generateTafsir_OLD(input: string, language: string = 'english'): Promise<OpenAIResponse> {
     const prompt = `Provide comprehensive authentic Tafsir explanation for: "${input}" in ${language}.
     
     Return ONLY valid JSON in this format:

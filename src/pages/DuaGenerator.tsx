@@ -27,15 +27,13 @@ const DuaGenerator = () => {
 
   const categories = [
     { value: 'general', label: 'General Du\'a' },
-    { value: 'sadness', label: 'Sadness & Grief' },
-    { value: 'success', label: 'Success & Achievement' },
-    { value: 'parenting', label: 'Parenting & Children' },
-    { value: 'travel', label: 'Travel & Journey' },
-    { value: 'health', label: 'Health & Healing' },
+    { value: 'gratitude', label: 'Gratitude & Thanks' },
+    { value: 'protection', label: 'Protection & Safety' },
     { value: 'forgiveness', label: 'Forgiveness & Repentance' },
     { value: 'guidance', label: 'Guidance & Wisdom' },
-    { value: 'gratitude', label: 'Gratitude & Thanks' },
-    { value: 'protection', label: 'Protection & Safety' }
+    { value: 'health', label: 'Health & Healing' },
+    { value: 'travel', label: 'Travel & Journey' },
+    { value: 'success', label: 'Success & Achievement' }
   ]
 
   const languages = [

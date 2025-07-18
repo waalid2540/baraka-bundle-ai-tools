@@ -91,14 +91,14 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold text-white mb-4">
-                4 Powerful AI Tools
+                3 Authentic AI Tools
               </h3>
               <p className="text-xl text-white/80 max-w-2xl mx-auto">
-                Professional Islamic AI tools trusted by families, educators, and Islamic organizations worldwide
+                Authentic Islamic AI tools with verified content from Quran and Hadith sources
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Du'a Generator */}
               <Link to="/dua-generator" className="group relative">
                 <div className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 backdrop-blur-md border border-emerald-500/20 rounded-2xl p-8 hover:border-emerald-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 transform hover:-translate-y-2">
@@ -201,56 +201,6 @@ const HomePage = () => {
                 </div>
               </Link>
 
-              {/* Tafsir Generator */}
-              <Link to="/tafsir-generator" className="group relative">
-                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur-md border border-blue-500/20 rounded-2xl p-8 hover:border-blue-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 transform hover:-translate-y-2">
-                  <div className="absolute top-4 right-4">
-                    <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-medium">
-                      Scholar's Choice
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl shadow-lg">
-                      📚
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-bold text-white mb-1">Tafsir Generator</h4>
-                      <p className="text-blue-400 text-sm">Authentic Classical Sources</p>
-                    </div>
-                  </div>
-                  
-                  <p className="text-white/80 mb-6 leading-relaxed">
-                    Understand the Qur'an deeply using authentic tafsir from Ibn Kathir, As-Sa'di, 
-                    and Tabari. Perfect for da'wah and education.
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                      <span className="text-white/70">Classical Sources</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                      <span className="text-white/70">Verse Search</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                      <span className="text-white/70">Historical Context</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                      <span className="text-white/70">Practical Application</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <span className="text-blue-400 font-semibold group-hover:text-blue-300 transition-colors">
-                      Explore Tafsir →
-                    </span>
-                  </div>
-                </div>
-              </Link>
 
               {/* Name Generator */}
               <Link to="/name-generator" className="group relative">
@@ -426,7 +376,6 @@ const HomePage = () => {
                 <ul className="space-y-2 text-sm text-gray-400">
                   <li><Link to="/dua-generator" className="hover:text-white transition-colors">Du'a Generator</Link></li>
                   <li><Link to="/kids-story-generator" className="hover:text-white transition-colors">Kids Stories</Link></li>
-                  <li><Link to="/tafsir-generator" className="hover:text-white transition-colors">Tafsir Generator</Link></li>
                   <li><Link to="/name-generator" className="hover:text-white transition-colors">Name Generator</Link></li>
                 </ul>
               </div>
