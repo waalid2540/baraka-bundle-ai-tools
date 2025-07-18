@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
+import { authenticIslamicService } from '../services/authenticIslamicService'
 
 interface DuaResult {
   title: string
@@ -22,6 +23,7 @@ const DuaGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<DuaResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [useAuthenticOnly, setUseAuthenticOnly] = useState(true)
 
   const categories = [
     { value: 'general', label: 'General Du\'a' },
@@ -49,7 +51,16 @@ const DuaGenerator = () => {
     setResult(null)
 
     try {
-      console.log('Starting du\'a generation...', { category, language, situation })
+      if (useAuthenticOnly) {
+        // Use pre-verified authentic du'as
+        console.log('Using authentic database for du\'a generation...')
+        const authenticResult = authenticIslamicService.getAuthenticDua(category, language)
+        setResult(authenticResult)
+        setIsLoading(false)
+        return
+      }
+
+      console.log('Starting AI du\'a generation...', { category, language, situation })
       const response = await openaiService.generateDua(category, language, situation || undefined)
       console.log('OpenAI response received:', response)
       
@@ -221,6 +232,31 @@ const DuaGenerator = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
                   rows={3}
                 />
+              </div>
+
+              {/* Authentic Mode Toggle */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-green-800">🔒 Authentic Mode</h4>
+                    <p className="text-sm text-green-600">Use pre-verified Islamic sources only</p>
+                  </div>
+                  <button
+                    onClick={() => setUseAuthenticOnly(!useAuthenticOnly)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      useAuthenticOnly ? 'bg-green-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        useAuthenticOnly ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-green-700 mt-2">
+                  {useAuthenticOnly ? '✅ Using verified Quran & Hadith database' : '⚠️ Using AI generation (may have errors)'}
+                </p>
               </div>
 
               {/* Generate Button */}
