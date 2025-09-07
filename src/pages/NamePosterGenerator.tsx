@@ -115,22 +115,22 @@ const NamePosterGenerator = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-xl border-b border-gold-500/20">
+      <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/')}
-                className="text-gold-400 hover:text-gold-300 transition-colors"
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
               >
                 ← Back
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gold-400">Name Poster Generator</h1>
-                <p className="text-gold-300/60 text-sm">Beautiful Islamic name posters</p>
+                <h1 className="text-2xl font-bold text-yellow-400">Name Poster Generator</h1>
+                <p className="text-yellow-300/60 text-sm">Beautiful Islamic name posters</p>
               </div>
             </div>
-            <div className="text-3xl font-bold text-gold-400">$3.99</div>
+            <div className="text-3xl font-bold text-yellow-400">$3.99</div>
           </div>
         </div>
       </header>
@@ -155,27 +155,27 @@ const NamePosterGenerator = () => {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-gold-400 font-semibold mb-2">
+                  <label className="block text-yellow-400 font-semibold mb-2">
                     Name to Generate Poster For
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-gold-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
                     placeholder="Enter name (e.g., Fatima, Muhammad, Aisha)"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gold-400 font-semibold mb-2">
+                  <label className="block text-yellow-400 font-semibold mb-2">
                     Language for Explanations
                   </label>
                   <select
                     value={formData.language}
                     onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-gold-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
                   >
                     {languages.map(lang => (
                       <option key={lang} value={lang}>{lang}</option>
@@ -190,34 +190,34 @@ const NamePosterGenerator = () => {
                 )}
 
                 <div className="bg-slate-800/50 rounded-xl p-6 space-y-3">
-                  <h3 className="text-gold-400 font-semibold mb-3">What You'll Get:</h3>
+                  <h3 className="text-yellow-400 font-semibold mb-3">What You'll Get:</h3>
                   <div className="space-y-2 text-gray-300">
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Beautiful Arabic calligraphy of the name</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Detailed meaning and etymology</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Islamic significance and history</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Quranic and Hadith references</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Famous Islamic personalities with this name</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Personalized dua for the name bearer</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <span className="text-gold-400">✓</span>
+                      <span className="text-yellow-400">✓</span>
                       <span>Premium PDF with Islamic border designs</span>
                     </div>
                   </div>
@@ -255,8 +255,8 @@ const NamePosterGenerator = () => {
                 </div>
                 <div className="border-t border-slate-700 pt-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gold-400 font-semibold">Total:</span>
-                    <span className="text-3xl font-bold text-gold-400">$3.99</span>
+                    <span className="text-yellow-400 font-semibold">Total:</span>
+                    <span className="text-3xl font-bold text-yellow-400">$3.99</span>
                   </div>
                 </div>
               </div>
