@@ -1,0 +1,453 @@
+// BarakahTool Premium PDF Generation Service
+// Beautiful Islamic PDF Documents with Arabic Support
+
+import jsPDF from 'jspdf'
+
+// PDF Configuration
+const PDF_CONFIG = {
+  orientation: 'portrait' as const,
+  unit: 'mm' as const,
+  format: 'a4' as const,
+  putOnlyUsedFonts: true,
+  compress: true
+}
+
+// Premium Color Scheme
+const COLORS = {
+  gold: '#D4AF37',
+  darkGold: '#B8941F',
+  emerald: '#10B981',
+  slate: '#1E293B',
+  white: '#FFFFFF',
+  lightGray: '#F1F5F9'
+}
+
+class PDFService {
+  private doc: jsPDF | null = null
+
+  // Initialize new PDF document
+  private initDocument(): jsPDF {
+    this.doc = new jsPDF(PDF_CONFIG)
+    return this.doc
+  }
+
+  // Add Islamic border design
+  private addIslamicBorder(doc: jsPDF): void {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // Outer border
+    doc.setDrawColor(COLORS.gold)
+    doc.setLineWidth(2)
+    doc.rect(10, 10, pageWidth - 20, pageHeight - 20)
+    
+    // Inner decorative border
+    doc.setLineWidth(0.5)
+    doc.rect(15, 15, pageWidth - 30, pageHeight - 30)
+    
+    // Corner ornaments (simplified geometric patterns)
+    const corners = [
+      { x: 10, y: 10 },
+      { x: pageWidth - 10, y: 10 },
+      { x: 10, y: pageHeight - 10 },
+      { x: pageWidth - 10, y: pageHeight - 10 }
+    ]
+    
+    corners.forEach(corner => {
+      doc.setFillColor(COLORS.gold)
+      doc.circle(corner.x, corner.y, 3, 'F')
+    })
+  }
+
+  // Add header with title
+  private addHeader(doc: jsPDF, title: string, subtitle?: string): void {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    
+    // Title
+    doc.setFontSize(24)
+    doc.setTextColor(COLORS.slate)
+    doc.text(title, pageWidth / 2, 35, { align: 'center' })
+    
+    // Subtitle
+    if (subtitle) {
+      doc.setFontSize(12)
+      doc.setTextColor(COLORS.darkGold)
+      doc.text(subtitle, pageWidth / 2, 45, { align: 'center' })
+    }
+    
+    // Decorative line
+    doc.setDrawColor(COLORS.gold)
+    doc.setLineWidth(0.5)
+    doc.line(30, 50, pageWidth - 30, 50)
+  }
+
+  // Add Arabic text with proper RTL support
+  private addArabicText(doc: jsPDF, text: string, x: number, y: number, options?: any): void {
+    // Note: For production, you'd need to add Arabic font support
+    // This is a placeholder that shows the structure
+    doc.setFontSize(options?.fontSize || 16)
+    doc.text(text, x, y, { ...options, align: options?.align || 'right' })
+  }
+
+  // Generate Dua PDF
+  async generateDuaPDF(duaData: {
+    name: string
+    situation: string
+    arabicText: string
+    transliteration: string
+    translation: string
+    references: string
+    benefits: string
+    bestTimes: string
+    language: string
+  }): Promise<Blob> {
+    const doc = this.initDocument()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    
+    // Add border and header
+    this.addIslamicBorder(doc)
+    this.addHeader(doc, 'Personalized Dua', `For ${duaData.name}`)
+    
+    let yPosition = 65
+    
+    // Situation
+    doc.setFontSize(12)
+    doc.setTextColor(COLORS.slate)
+    doc.setFont('helvetica', 'bold')
+    doc.text('SITUATION:', 25, yPosition)
+    doc.setFont('helvetica', 'normal')
+    doc.text(duaData.situation, 25, yPosition + 7, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Arabic Dua
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('ARABIC DUA:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(18)
+    doc.setTextColor(COLORS.slate)
+    this.addArabicText(doc, duaData.arabicText, pageWidth - 25, yPosition, { 
+      align: 'right',
+      maxWidth: pageWidth - 50 
+    })
+    yPosition += 25
+    
+    // Transliteration
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('TRANSLITERATION:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(COLORS.slate)
+    doc.text(duaData.transliteration, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Translation
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text(`${duaData.language.toUpperCase()} TRANSLATION:`, 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(duaData.translation, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 25
+    
+    // Islamic References
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('ISLAMIC REFERENCES:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(duaData.references, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Benefits
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('SPIRITUAL BENEFITS:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(duaData.benefits, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Best Times
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('BEST TIMES TO RECITE:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(duaData.bestTimes, 25, yPosition, { maxWidth: pageWidth - 50 })
+    
+    // Footer
+    doc.setFontSize(8)
+    doc.setTextColor(COLORS.darkGold)
+    doc.text('Generated by BarakahTool - Premium Islamic Digital Platform', pageWidth / 2, pageHeight - 15, { align: 'center' })
+    
+    return doc.output('blob')
+  }
+
+  // Generate Kids Story PDF
+  async generateStoryPDF(storyData: {
+    title: string
+    story: string
+    moralLessons: string[]
+    islamicReferences: string
+    reflectionQuestions: string[]
+    ageGroup: string
+    theme: string
+    language: string
+  }): Promise<Blob> {
+    const doc = this.initDocument()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // Add border and header
+    this.addIslamicBorder(doc)
+    this.addHeader(doc, storyData.title, `Age: ${storyData.ageGroup} | Theme: ${storyData.theme}`)
+    
+    let yPosition = 60
+    
+    // Story text
+    doc.setFontSize(11)
+    doc.setTextColor(COLORS.slate)
+    doc.setFont('helvetica', 'normal')
+    const lines = doc.splitTextToSize(storyData.story, pageWidth - 50)
+    
+    lines.forEach((line: string) => {
+      if (yPosition > pageHeight - 40) {
+        doc.addPage()
+        this.addIslamicBorder(doc)
+        yPosition = 30
+      }
+      doc.text(line, 25, yPosition)
+      yPosition += 6
+    })
+    
+    // Moral Lessons
+    yPosition += 10
+    if (yPosition > pageHeight - 60) {
+      doc.addPage()
+      this.addIslamicBorder(doc)
+      yPosition = 30
+    }
+    
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('MORAL LESSONS:', 25, yPosition)
+    yPosition += 10
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    storyData.moralLessons.forEach((lesson, index) => {
+      doc.text(`${index + 1}. ${lesson}`, 30, yPosition)
+      yPosition += 7
+    })
+    
+    // Islamic References
+    yPosition += 5
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('ISLAMIC REFERENCES:', 25, yPosition)
+    yPosition += 10
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(storyData.islamicReferences, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 15
+    
+    // Reflection Questions
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('REFLECTION QUESTIONS:', 25, yPosition)
+    yPosition += 10
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    storyData.reflectionQuestions.forEach((question, index) => {
+      if (yPosition > pageHeight - 20) {
+        doc.addPage()
+        this.addIslamicBorder(doc)
+        yPosition = 30
+      }
+      doc.text(`${index + 1}. ${question}`, 30, yPosition, { maxWidth: pageWidth - 60 })
+      yPosition += 10
+    })
+    
+    // Footer
+    doc.setFontSize(8)
+    doc.setTextColor(COLORS.darkGold)
+    doc.text('Generated by BarakahTool - Premium Islamic Digital Platform', pageWidth / 2, pageHeight - 15, { align: 'center' })
+    
+    return doc.output('blob')
+  }
+
+  // Generate Name Poster PDF
+  async generateNamePosterPDF(nameData: {
+    name: string
+    arabicName: string
+    meaning: string
+    etymology: string
+    islamicSignificance: string
+    quranicReferences: string
+    famousBearers: string[]
+    characterTraits: string[]
+    personalizedDua: string
+    language: string
+  }): Promise<Blob> {
+    const doc = this.initDocument()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // Premium border design
+    this.addIslamicBorder(doc)
+    
+    // Large Arabic Name (centered)
+    doc.setFontSize(48)
+    doc.setTextColor(COLORS.gold)
+    this.addArabicText(doc, nameData.arabicName, pageWidth / 2, 50, { align: 'center' })
+    
+    // Latin Name
+    doc.setFontSize(24)
+    doc.setTextColor(COLORS.slate)
+    doc.text(nameData.name, pageWidth / 2, 70, { align: 'center' })
+    
+    // Decorative separator
+    doc.setDrawColor(COLORS.gold)
+    doc.setLineWidth(0.5)
+    doc.line(40, 80, pageWidth - 40, 80)
+    
+    let yPosition = 95
+    
+    // Meaning
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('MEANING:', 25, yPosition)
+    yPosition += 8
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(nameData.meaning, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Etymology
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('ETYMOLOGY & ROOTS:', 25, yPosition)
+    yPosition += 8
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(nameData.etymology, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 20
+    
+    // Islamic Significance
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('ISLAMIC SIGNIFICANCE:', 25, yPosition)
+    yPosition += 8
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    doc.text(nameData.islamicSignificance, 25, yPosition, { maxWidth: pageWidth - 50 })
+    yPosition += 25
+    
+    // Character Traits
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('CHARACTER TRAITS:', 25, yPosition)
+    yPosition += 8
+    
+    // Create two columns for traits
+    const traitsPerColumn = Math.ceil(nameData.characterTraits.length / 2)
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    
+    nameData.characterTraits.slice(0, traitsPerColumn).forEach((trait, index) => {
+      doc.text(`• ${trait}`, 30, yPosition + (index * 6))
+    })
+    
+    nameData.characterTraits.slice(traitsPerColumn).forEach((trait, index) => {
+      doc.text(`• ${trait}`, pageWidth / 2 + 10, yPosition + (index * 6))
+    })
+    
+    yPosition += traitsPerColumn * 6 + 10
+    
+    // Famous Bearers
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('FAMOUS BEARERS:', 25, yPosition)
+    yPosition += 8
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(COLORS.slate)
+    nameData.famousBearers.forEach((bearer, index) => {
+      if (yPosition > pageHeight - 40) {
+        doc.addPage()
+        this.addIslamicBorder(doc)
+        yPosition = 30
+      }
+      doc.text(`• ${bearer}`, 30, yPosition)
+      yPosition += 6
+    })
+    
+    // Personalized Dua
+    yPosition += 5
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(COLORS.emerald)
+    doc.text('PERSONALIZED DUA:', 25, yPosition)
+    yPosition += 8
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(COLORS.slate)
+    doc.text(nameData.personalizedDua, 25, yPosition, { maxWidth: pageWidth - 50 })
+    
+    // Footer with premium branding
+    doc.setFontSize(8)
+    doc.setTextColor(COLORS.darkGold)
+    doc.text('BarakahTool - Premium Islamic Name Poster', pageWidth / 2, pageHeight - 15, { align: 'center' })
+    doc.text('© 2024 BarakahTool. All rights reserved.', pageWidth / 2, pageHeight - 10, { align: 'center' })
+    
+    return doc.output('blob')
+  }
+
+  // Download PDF
+  downloadPDF(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${filename}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+}
+
+export const pdfService = new PDFService()
+export default pdfService

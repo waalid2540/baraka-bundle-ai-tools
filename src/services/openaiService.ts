@@ -1,10 +1,8 @@
-// OpenAI Service for Baraka Bundle AI Tools
-// Professional Islamic AI content generation
+// BarakahTool Premium OpenAI Service - GPT-5 Ready
+// High-Class Islamic AI Content Generation Platform
 
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || ''
 const OPENAI_BASE_URL = 'https://api.openai.com/v1'
-
-console.log('OpenAI API Key loaded:', OPENAI_API_KEY ? 'YES' : 'NO')
 
 interface OpenAIResponse {
   success: boolean
@@ -13,12 +11,19 @@ interface OpenAIResponse {
 }
 
 class OpenAIService {
+  private apiKey: string
+  private model: string = 'gpt-4-turbo-preview' // Will upgrade to gpt-5 when available
+
+  constructor() {
+    this.apiKey = OPENAI_API_KEY
+  }
+
   private async makeRequest(endpoint: string, payload: any): Promise<OpenAIResponse> {
     try {
-      if (!OPENAI_API_KEY) {
+      if (!this.apiKey) {
         return { 
           success: false, 
-          error: 'OpenAI API key not configured. Please add REACT_APP_OPENAI_API_KEY to your environment variables.' 
+          error: 'OpenAI API key not configured. Please add REACT_APP_OPENAI_API_KEY to your environment.' 
         }
       }
 
@@ -26,7 +31,7 @@ class OpenAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
+          'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify(payload)
       })
@@ -46,412 +51,210 @@ class OpenAIService {
     }
   }
 
-  // 🧠 1. Du'ā Generator - AUTHENTIC DATABASE ONLY
-  async generateDua(category: string, language: string = 'english', situation?: string): Promise<OpenAIResponse> {
-    
-    // EXPANDED: Many more authentic du'as - NO AI GENERATION
-    const authenticDuas = {
-      gratitude: [
-        {
-          title: "Praise to Allah",
-          arabicText: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-          transliteration: "Alhamdulillahi rabbil alameen",
-          translation: "All praise is due to Allah, Lord of the worlds",
-          occasion: "Expressing gratitude to Allah",
-          source: "Quran 1:2",
-          category: "gratitude",
-          benefits: "Acknowledging Allah as the source of all blessings",
-          times: "Any time",
-          isAuthentic: true
-        },
-        {
-          title: "Thanks After Eating",
-          arabicText: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
-          transliteration: "Alhamdulillahi alladhi at'amani hadha wa razaqaneehi min ghayri hawlin minni wa la quwwah",
-          translation: "All praise is due to Allah who fed me this and provided it for me without any might or power from me",
-          occasion: "After finishing a meal",
-          source: "Sunan Abu Dawud 4023",
-          category: "gratitude",
-          benefits: "Recognizing Allah's provision and sustenance",
-          times: "After eating",
-          isAuthentic: true
-        },
-        {
-          title: "Gratitude for Blessings",
-          arabicText: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
-          transliteration: "Alhamdulillahi alladhi bi ni'matihi tatimmu as-salihat",
-          translation: "All praise is due to Allah by whose grace good deeds are completed",
-          occasion: "When something good happens",
-          source: "Ibn Majah 3803",
-          category: "gratitude",
-          benefits: "Acknowledging Allah's role in all good outcomes",
-          times: "After achieving something good",
-          isAuthentic: true
-        },
-        {
-          title: "Morning Gratitude",
-          arabicText: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ",
-          transliteration: "Asbahna wa asbahal-mulku lillahi walhamdu lillah",
-          translation: "We have reached the morning and the dominion belongs to Allah, and all praise is due to Allah",
-          occasion: "Upon waking up in the morning",
-          source: "Sahih Muslim 2723",
-          category: "gratitude",
-          benefits: "Starting the day with acknowledgment of Allah's sovereignty",
-          times: "Morning",
-          isAuthentic: true
-        }
-      ],
-      protection: [
-        {
-          title: "Seeking Allah's Protection",
-          arabicText: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
-          transliteration: "A'udhu bi kalimatillahit-tammati min sharri ma khalaq",
-          translation: "I seek refuge in the perfect words of Allah from the evil of what He created",
-          occasion: "Seeking protection from harm",
-          source: "Sahih Muslim 2708",
-          category: "protection",
-          benefits: "Comprehensive protection from all evils",
-          times: "Morning, evening, or when feeling afraid",
-          isAuthentic: true
-        },
-        {
-          title: "Evening Protection",
-          arabicText: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ",
-          transliteration: "Amsayna wa amsal-mulku lillahi walhamdu lillah",
-          translation: "We have reached the evening and the dominion belongs to Allah, and all praise is due to Allah",
-          occasion: "Evening protection and acknowledgment",
-          source: "Sahih Muslim 2723",
-          category: "protection",
-          benefits: "Evening protection and recognition of Allah's dominion",
-          times: "Evening",
-          isAuthentic: true
-        },
-        {
-          title: "Protection from Evil Eye",
-          arabicText: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ وَمِنْ كُلِّ عَيْنٍ لَامَّةٍ",
-          transliteration: "A'udhu bi kalimatillahit-tammati min kulli shaytanin wa hammatin wa min kulli 'aynin lammah",
-          translation: "I seek refuge in the perfect words of Allah from every devil and poisonous creature, and from every evil eye",
-          occasion: "Protection from evil eye and harmful creatures",
-          source: "Sahih Bukhari 3371",
-          category: "protection",
-          benefits: "Protection from supernatural and natural harms",
-          times: "When feeling vulnerable or afraid",
-          isAuthentic: true
-        }
-      ],
-      forgiveness: [
-        {
-          title: "Seeking Forgiveness",
-          arabicText: "رَبِّ اغْفِرْ لِي ذَنْبِي وَخَطَئِي وَجَهْلِي",
-          transliteration: "Rabbi ghfir li dhanbi wa khata'i wa jahli",
-          translation: "My Lord, forgive my sins, my mistakes, and my ignorance",
-          occasion: "Seeking Allah's forgiveness",
-          source: "Sahih Bukhari 6398",
-          category: "forgiveness",
-          benefits: "Comprehensive forgiveness for all types of sins",
-          times: "Any time, especially after prayer",
-          isAuthentic: true
-        },
-        {
-          title: "Master of Seeking Forgiveness",
-          arabicText: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ",
-          transliteration: "Allahumma anta rabbi la ilaha illa anta khalaqtani wa ana 'abduka",
-          translation: "O Allah, You are my Lord, there is no god but You. You created me and I am Your servant",
-          occasion: "The master supplication for seeking forgiveness",
-          source: "Sahih Bukhari 6306",
-          category: "forgiveness",
-          benefits: "The most comprehensive du'a for forgiveness",
-          times: "Morning, or anytime seeking forgiveness",
-          isAuthentic: true
-        }
-      ],
-      guidance: [
-        {
-          title: "Seeking Guidance",
-          arabicText: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-          transliteration: "Ihdinas-siratal-mustaqeem",
-          translation: "Guide us to the straight path",
-          occasion: "Seeking Allah's guidance",
-          source: "Quran 1:6",
-          category: "guidance",
-          benefits: "Asking for divine guidance in all matters",
-          times: "In every prayer and when making decisions",
-          isAuthentic: true
-        },
-        {
-          title: "Guidance and Knowledge",
-          arabicText: "رَبِّ زِدْنِي عِلْمًا",
-          transliteration: "Rabbi zidni 'ilma",
-          translation: "My Lord, increase me in knowledge",
-          occasion: "Seeking increase in beneficial knowledge",
-          source: "Quran 20:114",
-          category: "guidance",
-          benefits: "Asking for beneficial knowledge and wisdom",
-          times: "Before studying or learning",
-          isAuthentic: true
-        }
-      ],
-      health: [
-        {
-          title: "Healing Du'a",
-          arabicText: "اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ الْبَاسَ وَاشْفِ أَنْتَ الشَّافِي",
-          transliteration: "Allahumma rabban-nasi adhhibil-ba'sa washfi anta ash-shafi",
-          translation: "O Allah, Lord of the people, remove the hardship and heal, You are the Healer",
-          occasion: "When seeking healing from illness",
-          source: "Sahih Bukhari 5743",
-          category: "health",
-          benefits: "Seeking Allah's healing for any illness",
-          times: "When sick or visiting the sick",
-          isAuthentic: true
-        }
-      ],
-      travel: [
-        {
-          title: "Travel Du'a",
-          arabicText: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ",
-          transliteration: "Subhanal-ladhi sakhkhara lana hadha wa ma kunna lahu muqrineen",
-          translation: "Glory to Him who has subjected this to us, and we could never have accomplished this by ourselves",
-          occasion: "When beginning a journey",
-          source: "Sunan Abu Dawud 2602",
-          category: "travel",
-          benefits: "Acknowledging Allah's blessing in travel",
-          times: "When starting any journey",
-          isAuthentic: true
-        }
-      ],
-      success: [
-        {
-          title: "Success and Achievement",
-          arabicText: "رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ",
-          transliteration: "Rabbana wa la tuhammilna ma la taqata lana bih",
-          translation: "Our Lord, do not burden us with what we cannot bear",
-          occasion: "When facing challenges or seeking success",
-          source: "Quran 2:286",
-          category: "success",
-          benefits: "Asking Allah not to burden us beyond our capacity",
-          times: "When facing difficulties or challenges",
-          isAuthentic: true
-        }
-      ],
-      general: [
-        {
-          title: "Comprehensive Du'a",
-          arabicText: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
-          transliteration: "Rabbana atina fi'd-dunya hasanatan wa fi'l-akhirati hasanatan wa qina 'adhab an-nar",
-          translation: "Our Lord, give us good in this world and good in the hereafter, and save us from the punishment of the Fire",
-          occasion: "General supplication for both worlds",
-          source: "Quran 2:201",
-          category: "general",
-          benefits: "Asking for good in this life and the next",
-          times: "Any time",
-          isAuthentic: true
-        },
-        {
-          title: "Peace and Blessings",
-          arabicText: "بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
-          transliteration: "Bismillahi tawakkaltu 'alallahi wa la hawla wa la quwwata illa billah",
-          translation: "In the name of Allah, I trust in Allah, and there is no might nor power except with Allah",
-          occasion: "When leaving the house or starting any task",
-          source: "Sunan Abu Dawud 5095",
-          category: "general",
-          benefits: "Placing trust in Allah and seeking His help",
-          times: "Before starting any important task",
-          isAuthentic: true
-        }
-      ]
-    }
+  // 🤲 1. PREMIUM Dua Generator - UNLIMITED AUTHENTIC System
+  async generateDua(name: string, situation: string, language: string = 'English'): Promise<OpenAIResponse> {
+    const prompt = `Create a powerful and authentic Islamic dua for ${name} regarding: ${situation}.
 
-    // Get authentic du'a from database
-    const categoryDuas = authenticDuas[category as keyof typeof authenticDuas] || authenticDuas.general
-    const randomIndex = Math.floor(Math.random() * categoryDuas.length)
-    const selectedDua = categoryDuas[randomIndex]
-
-    return {
-      success: true,
-      data: {
-        choices: [{
-          message: {
-            content: JSON.stringify(selectedDua)
-          }
-        }]
-      }
-    }
-  }
-
-  // 📖 2. Islamic Kids Story Generator - EXPANDED AUTHENTIC System
-  async generateKidsStory(age: string, name: string, theme: string, language: string = 'english'): Promise<OpenAIResponse> {
-    const prompt = `Create an authentic Islamic story for children aged ${age} related to "${theme}".
-    Use character name: ${name} where appropriate
-    Language: ${language}
+    PREMIUM REQUIREMENTS:
+    1. Write the dua first in beautiful Arabic with full diacritical marks (tashkeel)
+    2. Provide clear word-by-word transliteration for proper pronunciation
+    3. Translate into ${language} with deep spiritual meaning and context
+    4. Include relevant Quranic verses or authentic hadith references
+    5. Add spiritual benefits and best times to recite
+    6. Explain the theological significance
     
-    Return ONLY valid JSON in this format:
-    {
-      "title": "Story title in ${language}",
-      "story": "Authentic story from Qur'an or Hadith (300-500 words) for age ${age}",
-      "characters": ["List of authentic historical figures mentioned"],
-      "moralLessons": ["Multiple lessons from the authentic source"],
-      "quranReference": "Exact Qur'anic reference or Hadith source with book and number",
-      "arabicVerse": "Arabic text if from Qur'an",
-      "verseTranslation": "Translation of the verse/hadith",
-      "parentNotes": "Discussion tips and additional context for parents",
-      "reflectionQuestions": ["Age-appropriate questions for children"],
-      "relatedStories": ["Similar authentic stories children might enjoy"],
-      "ageGroup": "${age}",
-      "theme": "${theme}",
-      "difficulty": "Reading level appropriate for age",
-      "isAuthentic": true
-    }
+    PREMIUM FORMAT:
+    📿 ARABIC DUA:
+    [Beautiful Arabic text with complete tashkeel/harakat]
     
-    EXPANDED STORY SOURCES:
-    - All Prophets' stories from Qur'an (Adam to Muhammad ﷺ)
-    - Sahabah stories with authentic chains
-    - Stories of righteous women (Maryam, Asiya, Khadijah, Aisha)
-    - Lessons from Seerah (Prophet's biography)
-    - Historical events from early Islam
-    - Stories from Sahih Bukhari and Muslim collections`
+    🔤 TRANSLITERATION:
+    [Clear pronunciation guide with emphasis marks]
+    
+    🌍 ${language.toUpperCase()} TRANSLATION:
+    [Deep meaningful translation with spiritual context]
+    
+    📖 ISLAMIC REFERENCES:
+    [Specific Quran verses with surah:ayah or Hadith with book and number]
+    
+    ✨ SPIRITUAL BENEFITS:
+    [Detailed benefits and rewards from Islamic sources]
+    
+    ⏰ BEST TIMES:
+    [Recommended times for maximum acceptance]
+    
+    💎 THEOLOGICAL INSIGHT:
+    [Deep spiritual wisdom and connection to Islamic principles]`
 
     const payload = {
-      model: 'gpt-4o-mini',
+      model: this.model,
       messages: [
         {
           role: 'system',
-          content: `You are an Islamic educator specializing in authentic children's stories from Qur'an and Hadith.
-
-COMPREHENSIVE STORY SOURCES:
-- All 25 Prophets mentioned in Qur'an with their complete narratives
-- Sahabah stories: Abu Bakr, Umar, Uthman, Ali, and other companions
-- Righteous women: Maryam, Asiya, Khadijah, Aisha, Fatimah
-- Seerah events: Prophet's childhood, prophethood, Hijra, battles
-- Early Islamic history: Conquest of Makkah, spreading of Islam
-- Moral tales from Sahih collections with verified chains
-
-STORYTELLING AUTHENTICITY:
-1. Use ONLY events documented in Qur'an or authentic Hadith
-2. Never add fictional dialogue or invented details
-3. Include exact references to verses or hadith numbers
-4. Adapt language complexity to specified age group
-5. Extract genuine moral lessons from original sources
-6. Provide variety - rotate between different prophets and companions
-
-AGE-APPROPRIATE ADAPTATION:
-- Ages 3-5: Simple language, basic morals, short stories
-- Ages 6-8: More details, character development, clear lessons
-- Ages 9-12: Complex narratives, historical context, deeper reflection
-- Ages 13+: Full stories with scholarly insights and applications
-
-VARIETY REQUIREMENTS:
-- Rotate between prophets: Ibrahim, Musa, Isa, Yusuf, etc.
-- Include female role models from Islamic history
-- Mix Qur'anic stories with authentic Seerah events
-- Vary themes: patience, courage, honesty, kindness, wisdom
-
-Return engaging but completely authentic Islamic stories.`
+          content: `You are a premium Islamic scholar with deep mastery of Quran, Hadith, and Islamic spirituality. 
+          Generate powerful, authentic duas with perfect Arabic, deep spiritual insight, and comprehensive Islamic knowledge.
+          Your responses should reflect the highest scholarship standards while remaining accessible.`
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.3,
-      max_tokens: 2000
+      temperature: 0.8,
+      max_tokens: 2500
     }
 
-    return this.makeRequest('/chat/completions', payload)
-  }
-
-  // 📚 3. Tafsir Generator - REMOVED (AI errors unacceptable for religious content)
-  async generateTafsir(input: string, language: string = 'english'): Promise<OpenAIResponse> {
-    return {
-      success: false,
-      error: 'Tafsir feature has been removed due to AI accuracy concerns. Please consult authentic Islamic scholars or verified tafsir books for Quranic explanations.'
-    }
-  }
-
-  // OLD TAFSIR CODE REMOVED FOR SAFETY - COMMENTED OUT DUE TO AI ACCURACY ISSUES
-
-  // 🧾 4. Islamic Name Generator - COMPREHENSIVE AUTHENTIC System
-  async generateNames(gender: 'male' | 'female', language: string, theme: string, count: number = 5): Promise<OpenAIResponse> {
-    const prompt = `Generate ${count} diverse authentic Islamic names for ${gender} in ${language} with the theme "${theme}".
+    const response = await this.makeRequest('/chat/completions', payload)
     
-    Return ONLY valid JSON in this format:
-    {
-      "names": [
-        {
-          "name": "Name in Latin script",
-          "arabicScript": "النص العربي مع التشكيل",
-          "meaning": "Detailed meaning in ${language}",
-          "rootMeaning": "Arabic linguistic root and derivation",
-          "origin": "Historical and cultural origin",
-          "islamicHistory": "Connection to Islamic history (prophets, sahaba, scholars, etc.)",
-          "pronunciation": "Detailed phonetic pronunciation guide",
-          "variations": ["Alternative spellings and forms"],
-          "famousPersons": ["Historical Islamic figures with this name"],
-          "popularity": "Usage across Islamic cultures and regions",
-          "nicknames": ["Common diminutives and pet names"],
-          "modernUsage": "Contemporary usage in Muslim communities",
-          "gender": "${gender}",
-          "theme": "${theme}",
-          "verified": true
+    if (response.success && response.data?.choices?.[0]?.message?.content) {
+      return {
+        success: true,
+        data: {
+          content: response.data.choices[0].message.content,
+          type: 'dua',
+          language: language,
+          premium: true
         }
-      ],
-      "alternativeThemes": ["Similar themes with different name options"],
-      "totalDatabase": "Size of authentic name database consulted"
+      }
     }
     
-    COMPREHENSIVE NAME SOURCES:
-    - Prophets and Messengers (25 names from Qur'an)
-    - Sahaba (Companions) - male and female
-    - Islamic scholars and saints throughout history
-    - Arabic linguistic roots with positive meanings
-    - Names from Islamic golden age figures
-    - Regional Islamic names (Arabic, Persian, Turkish, Urdu, etc.)
-    - Classical Arabic poetry and literature figures`
+    return response
+  }
+
+  // 📚 2. PREMIUM Kids Story Generator - UNLIMITED AUTHENTIC Stories
+  async generateKidsStory(age: string, theme: string, language: string = 'English'): Promise<OpenAIResponse> {
+    const prompt = `Create a premium engaging Islamic story for a ${age}-year-old child about "${theme}".
+
+    PREMIUM STORY REQUIREMENTS:
+    1. 400-500 words in ${language}
+    2. Age-appropriate vocabulary with educational value
+    3. Include authentic Islamic morals from Quran/Hadith
+    4. Feature relatable characters (Prophets, Sahabah, or modern Muslim children)
+    5. Clear moral lesson with Islamic teaching
+    6. Engaging plot with vivid descriptions
+    7. Cultural diversity reflecting global Muslim community
+    
+    PREMIUM STORY STRUCTURE:
+    🌟 TITLE: 
+    [Captivating Islamic title]
+    
+    📖 STORY:
+    [Full engaging story with rich details and Islamic values]
+    
+    💡 MORAL LESSONS:
+    [Multiple clear Islamic teachings from the story]
+    
+    📿 ISLAMIC REFERENCES:
+    [Specific Quranic verses or Hadith that support the story's message]
+    
+    🎨 SCENE DESCRIPTIONS:
+    [Vivid descriptions for potential illustrations]
+    
+    🤔 REFLECTION QUESTIONS:
+    [5 thoughtful age-appropriate questions]
+    
+    👨‍👩‍👧 PARENT GUIDE:
+    [Discussion tips and additional Islamic context for parents]
+    
+    📚 FURTHER READING:
+    [Related authentic Islamic stories and resources]`
 
     const payload = {
-      model: 'gpt-4o-mini',
+      model: this.model,
       messages: [
         {
           role: 'system',
-          content: `You are an Islamic name specialist with access to comprehensive authentic Arabic and Islamic name databases.
+          content: `You are a master Islamic storyteller specializing in premium children's content. 
+          Create captivating, age-appropriate stories that teach authentic Islamic values through engaging narratives. 
+          Use vivid descriptions, relatable characters, and ensure every story has deep educational and spiritual value.
+          Draw from the rich tradition of Islamic history, prophetic stories, and contemporary Muslim life.`
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.9,
+      max_tokens: 3000
+    }
 
-COMPREHENSIVE AUTHENTIC SOURCES:
-1. QURANIC NAMES: All 25 prophets + righteous figures mentioned in Qur'an
-2. SAHABA NAMES: Complete database of male/female companions with verified meanings  
-3. CLASSICAL SCHOLARS: Ibn Sina, Al-Ghazali, Ibn Taymiyyah, Al-Tabari, etc.
-4. ARABIC LINGUISTICS: Names derived from verified Arabic roots with positive meanings
-5. REGIONAL ISLAMIC: Persian (Rumi, Hafez), Turkish (Ottoman era), Urdu/Indian
-6. HISTORICAL FIGURES: Caliphs, scholars, poets, scientists from Islamic civilization
+    const response = await this.makeRequest('/chat/completions', payload)
+    
+    if (response.success && response.data?.choices?.[0]?.message?.content) {
+      return {
+        success: true,
+        data: {
+          content: response.data.choices[0].message.content,
+          type: 'story',
+          ageGroup: age,
+          theme: theme,
+          language: language,
+          premium: true
+        }
+      }
+    }
+    
+    return response
+  }
 
-AUTHENTICITY VERIFICATION:
-- Every name must have documented historical usage in Islamic contexts
-- Arabic script must include proper diacritics (tashkeel)
-- Meanings verified from classical Arabic dictionaries
-- Historical connections must be factually accurate
-- Pronunciation guides based on classical Arabic phonetics
-- Regional variations documented from authentic sources
+  // 🎨 3. PREMIUM Name Poster Generator - UNLIMITED AUTHENTIC Names  
+  async generateNamePoster(name: string, language: string = 'English'): Promise<OpenAIResponse> {
+    const prompt = `Create premium comprehensive content for an Islamic name poster for "${name}".
 
-DIVERSITY REQUIREMENTS:
-- Rotate between different historical periods
-- Include names from various Islamic cultures (Arab, Persian, Turkish, etc.)
-- Mix prophetic names with scholarly and companion names
-- Provide both common and unique authentic options
-- Include linguistic analysis and root derivations
+    PREMIUM POSTER CONTENT:
+    1. Arabic calligraphy representation with full vocalization
+    2. Detailed etymology and linguistic roots
+    3. Deep Islamic significance and spiritual meaning
+    4. Quranic references (if the name or its root appears)
+    5. Hadith references and stories of bearers
+    6. Character traits in Islamic tradition
+    7. Famous Islamic personalities throughout history
+    8. Special dua incorporating the name's meaning
+    9. Numerological significance in Islamic tradition
+    10. Cultural variations across Muslim world
+    
+    PREMIUM FORMAT IN ${language}:
+    ✨ NAME IN ARABIC CALLIGRAPHY:
+    [Beautiful Arabic with full tashkeel and artistic styling notes]
+    
+    📜 ETYMOLOGY & LINGUISTIC ROOTS:
+    [Detailed Arabic root analysis and morphological breakdown]
+    
+    🕌 ISLAMIC SIGNIFICANCE:
+    [Deep religious, spiritual, and cultural importance]
+    
+    📖 QURANIC CONNECTIONS:
+    [Direct verses or thematic connections with references]
+    
+    🌟 HADITH & PROPHETIC TRADITIONS:
+    [Authentic narrations and stories]
+    
+    💎 CHARACTER TRAITS & VIRTUES:
+    [Islamic virtues and qualities associated with the name]
+    
+    👑 FAMOUS BEARERS IN ISLAMIC HISTORY:
+    [Detailed list from classical to contemporary]
+    
+    🤲 PERSONALIZED DUA:
+    [Special prayer incorporating the name's meaning and aspirations]
+    
+    🔢 ISLAMIC NUMEROLOGY:
+    [Abjad value and spiritual significance]
+    
+    🌍 GLOBAL VARIATIONS:
+    [How the name is used across different Muslim cultures]
+    
+    ✍️ CALLIGRAPHY STYLE SUGGESTIONS:
+    [Recommendations for artistic presentation]`
 
-COMPREHENSIVE OUTPUT:
-- Detailed meanings beyond basic translation
-- Historical context and famous bearers
-- Pronunciation with emphasis on correct Arabic sounds
-- Cultural usage across different Muslim regions
-- Variations and diminutives used historically
-
-QUALITY CONTROL:
-- Never include names with uncertain or negative meanings
-- Verify all Arabic script accuracy
-- Cross-reference historical authenticity
-- Ensure cultural sensitivity across Islamic traditions
-- Provide educational value beyond just name selection
-
-Return rich, educational, and completely authentic Islamic name information.`
+    const payload = {
+      model: this.model,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a premium expert in Islamic onomastics, Arabic linguistics, calligraphy, and Islamic history. 
+          Provide deep, scholarly insights about Islamic names with perfect Arabic representation, rich historical context, 
+          and comprehensive cultural understanding. Your analysis should be both academically rigorous and spiritually meaningful.
+          Include rare and valuable insights that showcase premium knowledge.`
         },
         {
           role: 'user',
@@ -459,10 +262,57 @@ Return rich, educational, and completely authentic Islamic name information.`
         }
       ],
       temperature: 0.7,
-      max_tokens: 2000
+      max_tokens: 3000
     }
 
-    return this.makeRequest('/chat/completions', payload)
+    const response = await this.makeRequest('/chat/completions', payload)
+    
+    if (response.success && response.data?.choices?.[0]?.message?.content) {
+      return {
+        success: true,
+        data: {
+          content: response.data.choices[0].message.content,
+          type: 'namePoster',
+          name: name,
+          language: language,
+          premium: true
+        }
+      }
+    }
+    
+    return response
+  }
+
+  // 🌍 Get Supported Languages
+  getSupportedLanguages(): string[] {
+    return [
+      'Arabic',
+      'English', 
+      'Somali',
+      'Urdu',
+      'Turkish',
+      'Indonesian',
+      'French',
+      'Spanish',
+      'Malay',
+      'Bengali',
+      'Swahili',
+      'German',
+      'Russian',
+      'Persian',
+      'Chinese',
+      'Japanese'
+    ]
+  }
+
+  // 🚀 Set Model (for future GPT-5 upgrade)
+  setModel(model: string): void {
+    this.model = model
+  }
+
+  // 📊 Get Current Model
+  getCurrentModel(): string {
+    return this.model
   }
 }
 

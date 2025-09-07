@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import DuaGenerator from './pages/DuaGenerator'
 import KidsStoryGenerator from './pages/KidsStoryGenerator'
-import TafsirGenerator from './pages/TafsirGenerator'
-import NameGenerator from './pages/NameGenerator'
+import NamePosterGenerator from './pages/NamePosterGenerator'
 
 function App() {
   return (
@@ -12,9 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/dua-generator" element={<DuaGenerator />} />
-        <Route path="/kids-story-generator" element={<KidsStoryGenerator />} />
-        <Route path="/tafsir-generator" element={<TafsirGenerator />} />
-        <Route path="/name-generator" element={<NameGenerator />} />
+        <Route path="/kids-stories" element={<KidsStoryGenerator />} />
+        <Route path="/name-poster" element={<NamePosterGenerator />} />
         
         {/* 404 */}
         <Route path="*" element={
@@ -22,7 +20,7 @@ function App() {
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">404 - Page Not Found</h1>
               <a href="/" className="text-islamic-green-600 hover:underline">
-                Return to Baraka Bundle
+                Return to BarakahTool
               </a>
             </div>
           </div>
