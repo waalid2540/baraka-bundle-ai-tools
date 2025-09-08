@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import pdfService from '../services/pdfService'
+import islamicPdfGenerator from '../services/islamicPdfGenerator'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -77,11 +77,18 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
         
-        // Generate PDF
-        const pdfBlob = await pdfService.generateDuaPDF(duaData)
+        // Generate PDF using Islamic PDF Generator with HTML/Canvas approach
+        const pdfBlob = await islamicPdfGenerator.generatePdfFromHtml(duaData)
         
         // Download the PDF
-        pdfService.downloadPDF(pdfBlob, `Dua_for_${formData.name.replace(/\s+/g, '_')}`)
+        const url = URL.createObjectURL(pdfBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `Islamic_Dua_for_${formData.name.replace(/\s+/g, '_')}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
       } else {
         setError(response.error || 'Failed to generate dua')
       }
