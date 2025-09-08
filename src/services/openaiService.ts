@@ -84,6 +84,9 @@ Format output as:
 **Arabic:**
 [Duʿā in Arabic script WITH COMPLETE TASHKEEL]
 
+**Transliteration:**
+[Clear pronunciation guide in Latin letters]
+
 **Translation in {language}:**
 [Duʿā meaning in chosen language]
 

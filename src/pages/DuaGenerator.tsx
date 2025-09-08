@@ -59,13 +59,15 @@ const DuaGenerator = () => {
       )
 
       if (response.success && response.data) {
-        // Parse the response to extract Arabic and translation
+        // Parse the response to extract Arabic, transliteration, and translation
         const content = response.data.content
-        const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\*\*Translation|$)/i)
+        const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\*\*Transliteration|\*\*Translation|$)/i)
+        const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\*\*Translation|$)/i)
         const translationMatch = content.match(/\*\*Translation.*?:\*\*\s*([\s\S]*?)$/i)
         
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : '',
+          transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
           translation: translationMatch ? translationMatch[1].trim() : '',
           name: formData.name,
           situation: formData.situation,
