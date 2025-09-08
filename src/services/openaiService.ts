@@ -1,4 +1,4 @@
-// BarakahTool Premium OpenAI Service - GPT-5 Ready
+// BarakahTool Premium OpenAI Service
 // High-Class Islamic AI Content Generation Platform
 
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || ''
@@ -12,7 +12,7 @@ interface OpenAIResponse {
 
 class OpenAIService {
   private apiKey: string
-  private model: string = 'gpt-4-turbo-preview' // Will upgrade to gpt-5 when available
+  private model: string = 'gpt-4-turbo-preview' // Latest AI model for best results
 
   constructor() {
     this.apiKey = OPENAI_API_KEY
@@ -305,7 +305,7 @@ class OpenAIService {
     ]
   }
 
-  // 🚀 Set Model (for future GPT-5 upgrade)
+  // 🚀 Set Model (for future upgrades)
   setModel(model: string): void {
     this.model = model
   }

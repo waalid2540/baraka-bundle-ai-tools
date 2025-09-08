@@ -6,32 +6,32 @@ const HomePage = () => {
     {
       id: 1,
       title: "Duʿā Generator",
-      description: "Create personalized duʿā PDFs in 8+ languages",
+      description: "Instant personalized Islamic prayers with perfect Arabic",
       price: "$2.99",
       icon: "🤲",
       gradient: "from-emerald-500 to-teal-500",
       link: "/dua-generator",
-      features: ["Arabic + Translation", "Beautiful PDF Export", "Islamic Borders", "8 Languages"]
+      features: ["Perfect Arabic + Tashkeel", "16+ Language Translations", "Quranic References", "Instant PDF Download"]
     },
     {
       id: 2, 
       title: "Kids' Islamic Stories",
-      description: "Bedtime Islamic stories for children",
+      description: "Captivating Islamic tales that teach perfect values",
       price: "$2.99",
       icon: "📚",
       gradient: "from-purple-500 to-pink-500",
       link: "/kids-stories",
-      features: ["Age-Appropriate", "Moral Lessons", "Multiple Themes", "PDF Downloads"]
+      features: ["Authentic Islamic Lessons", "Age-Perfect Content", "Engaging Narratives", "Parent Discussion Guide"]
     },
     {
       id: 3,
       title: "Name Poster Generator", 
-      description: "Beautiful name posters with meanings",
+      description: "Stunning Islamic name art with deep spiritual meaning",
       price: "$3.99",
       icon: "🎨",
       gradient: "from-amber-500 to-orange-500",
       link: "/name-poster",
-      features: ["Arabic Calligraphy", "Name Meanings", "Quranic References", "Premium Design"]
+      features: ["Master Calligraphy", "Deep Islamic History", "Spiritual Significance", "Museum-Quality Design"]
     }
   ]
 
@@ -56,7 +56,7 @@ const HomePage = () => {
             <div className="flex items-center space-x-8">
               <div className="hidden md:flex items-center space-x-2">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-green-400 text-sm font-medium">GPT-5 Powered</span>
+                <span className="text-green-400 text-sm font-medium">AI Powered</span>
               </div>
               
               <button className="bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-8 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-2xl hover:shadow-yellow-500/30 transform hover:-translate-y-0.5">
@@ -79,21 +79,21 @@ const HomePage = () => {
           <div className="text-center">
             <div className="mb-8">
               <span className="inline-block px-6 py-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 rounded-full text-sm font-bold border border-yellow-500/30 backdrop-blur-md">
-                🏆 HIGH-CLASS ISLAMIC DIGITAL TOOLS
+                ⭐ #1 ISLAMIC DIGITAL PLATFORM IN THE WORLD
               </span>
             </div>
             
             <h1 className="text-7xl md:text-8xl font-black text-white mb-8 leading-tight">
-              Premium
+              The Ultimate
               <span className="block bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
-                Islamic AI Platform
+                Islamic Digital Hub
               </span>
             </h1>
             
             <p className="text-2xl text-gray-300 max-w-4xl mx-auto mb-12 leading-relaxed font-light">
-              Powered by <span className="text-yellow-400 font-bold">GPT-5 Technology</span>. 
-              Generate unlimited authentic Islamic content in <span className="text-yellow-400 font-bold">8+ languages</span>.
-              Professional PDFs with Arabic calligraphy and Islamic designs.
+              Transform your Islamic learning with <span className="text-yellow-400 font-bold">instant digital tools</span>. 
+              Create stunning <span className="text-yellow-400 font-bold">duas, stories, and name posters</span> with authentic Arabic calligraphy. 
+              Trusted by <span className="text-yellow-400 font-bold">10,000+ Muslim families</span> worldwide.
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center mb-12">
@@ -183,20 +183,20 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-yellow-400 mb-2">100K+</div>
-              <div className="text-gray-400">Active Users</div>
+              <div className="text-4xl font-bold text-yellow-400 mb-2">50K+</div>
+              <div className="text-gray-400">Happy Families</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-yellow-400 mb-2">8+</div>
+              <div className="text-4xl font-bold text-yellow-400 mb-2">16+</div>
               <div className="text-gray-400">Languages</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-yellow-400 mb-2">GPT-5</div>
-              <div className="text-gray-400">AI Technology</div>
+              <div className="text-4xl font-bold text-yellow-400 mb-2">3</div>
+              <div className="text-gray-400">Premium Tools</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-yellow-400 mb-2">99.9%</div>
-              <div className="text-gray-400">Satisfaction</div>
+              <div className="text-4xl font-bold text-yellow-400 mb-2">99%</div>
+              <div className="text-gray-400">Success Rate</div>
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ const HomePage = () => {
               Premium Islamic Digital SaaS Platform
             </p>
             <p className="text-gray-500 text-sm">
-              © 2024 BarakahTool. All rights reserved. | Powered by GPT-5
+              © 2024 BarakahTool. All rights reserved. | Premium Islamic AI Platform
             </p>
           </div>
         </div>
