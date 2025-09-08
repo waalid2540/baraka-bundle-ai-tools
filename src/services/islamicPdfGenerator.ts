@@ -344,7 +344,7 @@ class IslamicPdfGenerator {
         <div class="header">
           <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
           <h1>Sacred Islamic Du'ā</h1>
-          <div class="subtitle">A blessed supplication for ${duaData.name}</div>
+          <div class="subtitle">A blessed Islamic supplication</div>
         </div>
         
         <div class="section">
@@ -363,14 +363,12 @@ class IslamicPdfGenerator {
           </div>
         </div>
         
-        ${duaData.transliteration ? `
         <div class="section">
           <div class="section-title">Pronunciation Guide</div>
           <div class="transliteration">
-            ${duaData.transliteration}
+            ${duaData.transliteration || 'Pronunciation guide will be provided based on the Arabic text above'}
           </div>
         </div>
-        ` : ''}
         
         <div class="section">
           <div class="section-title">${duaData.language} Translation</div>
@@ -401,6 +399,8 @@ class IslamicPdfGenerator {
   
   // Generate PDF from HTML
   async generatePdfFromHtml(duaData: any): Promise<Blob> {
+    // Debug: Log what data we're receiving
+    console.log('PDF Generator received data:', duaData)
     // Create a temporary container
     const container = document.createElement('div')
     container.style.position = 'absolute'

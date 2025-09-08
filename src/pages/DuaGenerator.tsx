@@ -8,7 +8,6 @@ import { getThemeNames, getTheme } from '../services/pdfTemplates'
 const DuaGenerator = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    name: '',
     situation: '',
     language: 'English',
     theme: 'royalGold'
@@ -24,8 +23,8 @@ const DuaGenerator = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name.trim() || !formData.situation.trim()) {
-      setError('Please fill in all fields')
+    if (!formData.situation.trim()) {
+      setError('Please describe your situation')
       return
     }
 
@@ -53,7 +52,7 @@ const DuaGenerator = () => {
 
       // Generate dua using OpenAI
       const response = await openaiService.generateDua(
-        formData.name,
+        'User',
         formData.situation,
         formData.language
       )
@@ -69,7 +68,7 @@ const DuaGenerator = () => {
           arabicText: arabicMatch ? arabicMatch[1].trim() : '',
           transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
           translation: translationMatch ? translationMatch[1].trim() : '',
-          name: formData.name,
+          name: 'User',
           situation: formData.situation,
           language: formData.language,
           theme: formData.theme
@@ -88,7 +87,7 @@ const DuaGenerator = () => {
         const url = URL.createObjectURL(pdfBlob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `Islamic_Dua_for_${formData.name.replace(/\s+/g, '_')}.pdf`
+        link.download = `Islamic_Dua_${Date.now()}.pdf`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -144,20 +143,6 @@ const DuaGenerator = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                    placeholder="Enter your name"
-                    required
-                  />
-                </div>
-
                 <div>
                   <label className="block text-yellow-400 font-semibold mb-2">
                     What do you need duʿā for?
