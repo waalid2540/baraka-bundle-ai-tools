@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
 import pdfService from '../services/pdfService'
+import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
     situation: '',
-    language: 'English'
+    language: 'English',
+    theme: 'royalGold'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -17,6 +19,7 @@ const DuaGenerator = () => {
   const [showPayment, setShowPayment] = useState(false)
 
   const languages = openaiService.getSupportedLanguages()
+  const themeNames = getThemeNames()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,7 +69,8 @@ const DuaGenerator = () => {
           translation: translationMatch ? translationMatch[1].trim() : '',
           name: formData.name,
           situation: formData.situation,
-          language: formData.language
+          language: formData.language,
+          theme: formData.theme
         }
 
         setGeneratedDua(duaData)
@@ -154,19 +158,41 @@ const DuaGenerator = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Translation Language
-                  </label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                  >
-                    {languages.map(lang => (
-                      <option key={lang} value={lang}>{lang}</option>
-                    ))}
-                  </select>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-yellow-400 font-semibold mb-2">
+                      Translation Language
+                    </label>
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
+                    >
+                      {languages.map(lang => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-yellow-400 font-semibold mb-2">
+                      PDF Color Theme
+                    </label>
+                    <select
+                      value={formData.theme}
+                      onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
+                    >
+                      {themeNames.map(themeKey => {
+                        const theme = getTheme(themeKey)
+                        return (
+                          <option key={themeKey} value={themeKey}>
+                            {theme.name}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
                 </div>
 
                 {error && (
@@ -238,6 +264,10 @@ const DuaGenerator = () => {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Language:</span>
                   <span className="text-white">{formData.language}</span>
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-gray-400">PDF Theme:</span>
+                  <span className="text-white">{getTheme(formData.theme).name}</span>
                 </div>
                 <div className="border-t border-slate-700 pt-4">
                   <div className="flex justify-between items-center">

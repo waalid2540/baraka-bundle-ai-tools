@@ -1,7 +1,8 @@
 // BarakahTool Premium PDF Generation Service
-// Beautiful Islamic PDF Documents with Arabic Support
+// Beautiful Islamic PDF Documents with Multiple Themes & Tashkeel
 
 import jsPDF from 'jspdf'
+import { PDFTheme, getTheme, formatArabicWithTashkeel, getTemplateDecorations } from './pdfTemplates'
 
 // PDF Configuration
 const PDF_CONFIG = {
@@ -10,16 +11,6 @@ const PDF_CONFIG = {
   format: 'a4' as const,
   putOnlyUsedFonts: true,
   compress: true
-}
-
-// Premium Color Scheme
-const COLORS = {
-  gold: '#D4AF37',
-  darkGold: '#B8941F',
-  emerald: '#10B981',
-  slate: '#1E293B',
-  white: '#FFFFFF',
-  lightGray: '#F1F5F9'
 }
 
 class PDFService {
@@ -31,402 +22,306 @@ class PDFService {
     return this.doc
   }
 
-  // Add Premium Islamic border design
-  private addIslamicBorder(doc: jsPDF): void {
+  // Add Powerful Themed Islamic Border
+  private addThemedBorder(doc: jsPDF, theme: PDFTheme): void {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     
-    // Gradient-like outer border with multiple lines
-    doc.setDrawColor(COLORS.gold)
-    doc.setLineWidth(3)
-    doc.rect(8, 8, pageWidth - 16, pageHeight - 16)
+    // Convert hex colors to RGB
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 }
+    }
+    
+    const primaryColor = hexToRgb(theme.primary)
+    const secondaryColor = hexToRgb(theme.secondary)
+    const accentColor = hexToRgb(theme.accent)
+    
+    // Outer powerful border
+    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.setLineWidth(4)
+    doc.rect(6, 6, pageWidth - 12, pageHeight - 12)
     
     // Middle decorative border
+    doc.setDrawColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+    doc.setLineWidth(2)
+    doc.rect(10, 10, pageWidth - 20, pageHeight - 20)
+    
+    // Inner accent border
+    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
     doc.setLineWidth(1)
-    doc.setDrawColor(COLORS.darkGold)
-    doc.rect(12, 12, pageWidth - 24, pageHeight - 24)
+    doc.rect(14, 14, pageWidth - 28, pageHeight - 28)
     
-    // Inner decorative border
-    doc.setLineWidth(0.5)
-    doc.setDrawColor(COLORS.gold)
-    doc.rect(15, 15, pageWidth - 30, pageHeight - 30)
+    // Theme-specific corner decorations
+    this.addCornerDecorations(doc, theme, pageWidth, pageHeight)
     
-    // Corner ornaments with star pattern
-    const corners = [
-      { x: 10, y: 10 },
-      { x: pageWidth - 10, y: 10 },
-      { x: 10, y: pageHeight - 10 },
-      { x: pageWidth - 10, y: pageHeight - 10 }
-    ]
-    
-    corners.forEach(corner => {
-      // Outer circle
-      doc.setFillColor(COLORS.gold)
-      doc.circle(corner.x, corner.y, 5, 'F')
-      // Inner circle
-      doc.setFillColor(COLORS.white)
-      doc.circle(corner.x, corner.y, 3, 'F')
-      // Center dot
-      doc.setFillColor(COLORS.gold)
-      doc.circle(corner.x, corner.y, 1, 'F')
-    })
-    
-    // Top center ornament
-    doc.setFillColor(COLORS.gold)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(20)
-    doc.text('✦', pageWidth / 2, 20, { align: 'center' })
+    // Top center Islamic symbol
+    doc.setFontSize(18)
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    const symbol = this.getThemeSymbol(theme.name)
+    doc.text(symbol, pageWidth / 2, 18, { align: 'center' })
   }
 
-  // Add fancy header with title
-  private addHeader(doc: jsPDF, title: string, subtitle?: string): void {
+  // Get theme-specific symbol
+  private getThemeSymbol(themeName: string): string {
+    const symbols: { [key: string]: string } = {
+      'Night Prayer': '🌙',
+      'Fajr Dawn': '🌅', 
+      'Masjid Green': '🕌',
+      'Royal Gold': '👑',
+      'Rose Garden': '🌹',
+      'Ocean Depth': '🌊',
+      'Sunset Orange': '🔥',
+      'Midnight Black': '⭐'
+    }
+    return symbols[themeName] || '✨'
+  }
+
+  // Add corner decorations based on theme
+  private addCornerDecorations(doc: jsPDF, theme: PDFTheme, pageWidth: number, pageHeight: number): void {
+    const corners = [
+      { x: 8, y: 8 },
+      { x: pageWidth - 8, y: 8 },
+      { x: 8, y: pageHeight - 8 },
+      { x: pageWidth - 8, y: pageHeight - 8 }
+    ]
+    
+    const primaryColor = this.hexToRgb(theme.primary)
+    const accentColor = this.hexToRgb(theme.accent)
+    
+    corners.forEach(corner => {
+      if (theme.borderStyle === 'ornate') {
+        // Ornate style - multiple circles
+        doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+        doc.circle(corner.x, corner.y, 6, 'F')
+        doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+        doc.circle(corner.x, corner.y, 4, 'F')
+        doc.setFillColor(255, 255, 255)
+        doc.circle(corner.x, corner.y, 2, 'F')
+      } else if (theme.borderStyle === 'modern') {
+        // Modern style - geometric squares
+        doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+        doc.rect(corner.x - 3, corner.y - 3, 6, 6, 'F')
+        doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+        doc.circle(corner.x, corner.y, 2, 'F')
+      } else {
+        // Classic style - simple circles
+        doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+        doc.circle(corner.x, corner.y, 4, 'F')
+      }
+    })
+  }
+
+  // Convert hex to RGB
+  private hexToRgb(hex: string) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 0, g: 0, b: 0 }
+  }
+
+  // Add themed header
+  private addThemedHeader(doc: jsPDF, theme: PDFTheme, title: string, subtitle?: string): void {
     const pageWidth = doc.internal.pageSize.getWidth()
+    const primaryColor = this.hexToRgb(theme.primary)
+    const accentColor = this.hexToRgb(theme.accent)
     
     // Decorative element above title
-    doc.setFontSize(16)
-    doc.setTextColor(COLORS.gold)
-    doc.text('۝', pageWidth / 2, 30, { align: 'center' })
+    doc.setFontSize(20)
+    doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.text('۞', pageWidth / 2, 32, { align: 'center' })
     
-    // Title with shadow effect (by drawing twice)
-    doc.setFontSize(28)
-    doc.setTextColor(COLORS.darkGold)
-    doc.text(title, pageWidth / 2 + 0.5, 40.5, { align: 'center' })
-    doc.setTextColor(COLORS.slate)
-    doc.text(title, pageWidth / 2, 40, { align: 'center' })
+    // Title with shadow effect
+    doc.setFontSize(26)
+    doc.setTextColor(primaryColor.r - 20, primaryColor.g - 20, primaryColor.b - 20)
+    doc.text(title, pageWidth / 2 + 0.5, 43.5, { align: 'center' })
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.text(title, pageWidth / 2, 43, { align: 'center' })
     
     // Subtitle
     if (subtitle) {
-      doc.setFontSize(14)
-      doc.setTextColor(COLORS.gold)
-      doc.text(subtitle, pageWidth / 2, 50, { align: 'center' })
+      doc.setFontSize(12)
+      doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+      doc.text(subtitle, pageWidth / 2, 52, { align: 'center' })
     }
     
-    // Fancy decorative line with dots
-    const lineY = 56
-    doc.setDrawColor(COLORS.gold)
-    doc.setLineWidth(0.5)
+    // Decorative line
+    const lineY = 58
+    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.setLineWidth(0.8)
     doc.line(50, lineY, pageWidth - 50, lineY)
     
-    // Add decorative dots
-    doc.setFillColor(COLORS.gold)
-    doc.circle(45, lineY, 1, 'F')
-    doc.circle(pageWidth - 45, lineY, 1, 'F')
-    doc.circle(pageWidth / 2, lineY, 1.5, 'F')
+    // Decorative dots
+    doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.circle(45, lineY, 1.5, 'F')
+    doc.circle(pageWidth - 45, lineY, 1.5, 'F')
+    doc.circle(pageWidth / 2, lineY, 2, 'F')
   }
 
-  // Add Arabic text with proper RTL support
+  // Add Arabic text with proper tashkeel
   private addArabicText(doc: jsPDF, text: string, x: number, y: number, options?: any): void {
-    // Note: For production, you'd need to add Arabic font support
-    // This is a placeholder that shows the structure
-    doc.setFontSize(options?.fontSize || 16)
-    doc.text(text, x, y, { ...options, align: options?.align || 'right' })
+    // Format Arabic with proper tashkeel
+    const formattedText = formatArabicWithTashkeel(text)
+    doc.setFontSize(options?.fontSize || 20)
+    doc.text(formattedText, x, y, { 
+      ...options, 
+      align: options?.align || 'right',
+      direction: 'rtl'
+    })
   }
 
-  // Generate Dua PDF
+  // Generate Powerful Themed Dua PDF
   async generateDuaPDF(duaData: {
     name: string
     situation: string
     arabicText: string
     translation: string
     language: string
-  }): Promise<Blob> {
-    const doc = this.initDocument()
-    const pageWidth = doc.internal.pageSize.getWidth()
-    
-    // Add fancy border and header
-    this.addIslamicBorder(doc)
-    this.addHeader(doc, 'Blessed Islamic Dua', `Specially crafted for ${duaData.name}`)
-    
-    let yPosition = 70
-    
-    // Situation
-    doc.setFontSize(12)
-    doc.setTextColor(COLORS.slate)
-    doc.setFont('helvetica', 'bold')
-    doc.text('SITUATION:', 25, yPosition)
-    doc.setFont('helvetica', 'normal')
-    doc.text(duaData.situation, 25, yPosition + 7, { maxWidth: pageWidth - 50 })
-    yPosition += 20
-    
-    // Arabic Dua
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('ARABIC DUA:', 25, yPosition)
-    yPosition += 12
-    doc.setFontSize(20)
-    doc.setTextColor(COLORS.slate)
-    this.addArabicText(doc, duaData.arabicText, pageWidth - 25, yPosition, { 
-      align: 'right',
-      maxWidth: pageWidth - 50 
-    })
-    yPosition += 35
-    
-    // Translation
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text(`TRANSLATION (${duaData.language.toUpperCase()}):`, 25, yPosition)
-    yPosition += 12
-    doc.setFontSize(13)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(duaData.translation, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 30
-    
-    // Spiritual Note
-    doc.setDrawColor(COLORS.gold)
-    doc.setLineWidth(0.5)
-    doc.line(30, yPosition, pageWidth - 30, yPosition)
-    yPosition += 15
-    
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'italic')
-    doc.setTextColor(COLORS.darkGold)
-    doc.text('This dua has been generated from authentic Islamic sources.', pageWidth / 2, yPosition, { align: 'center' })
-    yPosition += 8
-    doc.text('Recite with sincerity and trust in Allah\'s mercy.', pageWidth / 2, yPosition, { align: 'center' })
-    
-    // Footer
-    doc.setFontSize(8)
-    doc.setTextColor(COLORS.darkGold)
-    doc.text('Generated by BarakahTool - Premium Islamic Digital Platform', pageWidth / 2, pageHeight - 15, { align: 'center' })
-    
-    return doc.output('blob')
-  }
-
-  // Generate Kids Story PDF
-  async generateStoryPDF(storyData: {
-    title: string
-    story: string
-    moralLessons: string[]
-    islamicReferences: string
-    reflectionQuestions: string[]
-    ageGroup: string
-    theme: string
-    language: string
+    theme?: string
   }): Promise<Blob> {
     const doc = this.initDocument()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     
-    // Add border and header
-    this.addIslamicBorder(doc)
-    this.addHeader(doc, storyData.title, `Age: ${storyData.ageGroup} | Theme: ${storyData.theme}`)
+    // Get selected theme
+    const theme = getTheme(duaData.theme || 'royalGold')
+    const decorations = getTemplateDecorations(theme)
     
-    let yPosition = 60
+    // Apply theme colors
+    const primaryColor = this.hexToRgb(theme.primary)
+    const secondaryColor = this.hexToRgb(theme.secondary)
+    const accentColor = this.hexToRgb(theme.accent)
+    const textColor = this.hexToRgb(theme.text)
+    const bgColor = this.hexToRgb(theme.background)
     
-    // Story text
+    // Add themed border and header
+    this.addThemedBorder(doc, theme)
+    this.addThemedHeader(doc, theme, '✨ Sacred Islamic Duʿā ✨', `Blessed supplication for ${duaData.name}`)
+    
+    let yPosition = 75
+    
+    // Situation section with themed box
+    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.setFillColor(bgColor.r, bgColor.g, bgColor.b)
+    doc.roundedRect(18, yPosition - 5, pageWidth - 36, 28, 4, 4, 'FD')
     doc.setFontSize(11)
-    doc.setTextColor(COLORS.slate)
+    doc.setTextColor(textColor.r, textColor.g, textColor.b)
+    doc.setFont('helvetica', 'bold')
+    doc.text('YOUR SACRED REQUEST:', 22, yPosition + 3)
     doc.setFont('helvetica', 'normal')
-    const lines = doc.splitTextToSize(storyData.story, pageWidth - 50)
+    doc.setFontSize(10)
+    doc.text(duaData.situation, 22, yPosition + 12, { maxWidth: pageWidth - 44 })
+    yPosition += 38
+
+    // Arabic section with powerful styling
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    const arabicHeader = theme.name === 'Masjid Green' 
+      ? '۞ بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ۞' 
+      : '۞ ۞ ۞  BLESSED ARABIC SUPPLICATION  ۞ ۞ ۞'
+    doc.text(arabicHeader, pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 12
     
-    lines.forEach((line: string) => {
-      if (yPosition > pageHeight - 40) {
-        doc.addPage()
-        this.addIslamicBorder(doc)
-        yPosition = 30
-      }
-      doc.text(line, 25, yPosition)
-      yPosition += 6
-    })
+    // Arabic text container with theme styling
+    const arabicHeight = 55
+    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.setFillColor(bgColor.r, bgColor.g, bgColor.b)
+    doc.setLineWidth(2)
     
-    // Moral Lessons
-    yPosition += 10
-    if (yPosition > pageHeight - 60) {
-      doc.addPage()
-      this.addIslamicBorder(doc)
-      yPosition = 30
+    // Theme-specific border style
+    if (theme.borderStyle === 'ornate') {
+      doc.setLineDashPattern([6, 4], 0)
+    } else if (theme.borderStyle === 'modern') {
+      doc.setLineDashPattern([10, 5], 0)
     }
     
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('MORAL LESSONS:', 25, yPosition)
-    yPosition += 10
+    doc.roundedRect(16, yPosition, pageWidth - 32, arabicHeight, 8, 8, 'FD')
+    doc.setLineDashPattern([], 0)
     
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    storyData.moralLessons.forEach((lesson, index) => {
-      doc.text(`${index + 1}. ${lesson}`, 30, yPosition)
-      yPosition += 7
+    // Arabic text with tashkeel
+    doc.setFontSize(26)
+    doc.setTextColor(textColor.r, textColor.g, textColor.b)
+    this.addArabicText(doc, duaData.arabicText, pageWidth - 25, yPosition + 28, {
+      fontSize: 26,
+      maxWidth: pageWidth - 50,
+      align: 'right'
     })
-    
-    // Islamic References
-    yPosition += 5
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('ISLAMIC REFERENCES:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(storyData.islamicReferences, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 15
-    
-    // Reflection Questions
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('REFLECTION QUESTIONS:', 25, yPosition)
-    yPosition += 10
-    
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    storyData.reflectionQuestions.forEach((question, index) => {
-      if (yPosition > pageHeight - 20) {
-        doc.addPage()
-        this.addIslamicBorder(doc)
-        yPosition = 30
-      }
-      doc.text(`${index + 1}. ${question}`, 30, yPosition, { maxWidth: pageWidth - 60 })
-      yPosition += 10
-    })
-    
-    // Footer
-    doc.setFontSize(8)
-    doc.setTextColor(COLORS.darkGold)
-    doc.text('Generated by BarakahTool - Premium Islamic Digital Platform', pageWidth / 2, pageHeight - 15, { align: 'center' })
-    
-    return doc.output('blob')
-  }
+    yPosition += arabicHeight + 20
 
-  // Generate Name Poster PDF
-  async generateNamePosterPDF(nameData: {
-    name: string
-    arabicName: string
-    meaning: string
-    etymology: string
-    islamicSignificance: string
-    quranicReferences: string
-    famousBearers: string[]
-    characterTraits: string[]
-    personalizedDua: string
-    language: string
-  }): Promise<Blob> {
-    const doc = this.initDocument()
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    
-    // Premium border design
-    this.addIslamicBorder(doc)
-    
-    // Large Arabic Name (centered)
-    doc.setFontSize(48)
-    doc.setTextColor(COLORS.gold)
-    this.addArabicText(doc, nameData.arabicName, pageWidth / 2, 50, { align: 'center' })
-    
-    // Latin Name
-    doc.setFontSize(24)
-    doc.setTextColor(COLORS.slate)
-    doc.text(nameData.name, pageWidth / 2, 70, { align: 'center' })
-    
-    // Decorative separator
-    doc.setDrawColor(COLORS.gold)
-    doc.setLineWidth(0.5)
-    doc.line(40, 80, pageWidth - 40, 80)
-    
-    let yPosition = 95
-    
-    // Meaning
-    doc.setFontSize(14)
+    // Translation section
+    doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('MEANING:', 25, yPosition)
-    yPosition += 8
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(nameData.meaning, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 20
+    doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+    doc.text(`۞ ۞ ۞  ${duaData.language.toUpperCase()} TRANSLATION  ۞ ۞ ۞`, pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 12
     
-    // Etymology
+    // Translation text
     doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('ETYMOLOGY & ROOTS:', 25, yPosition)
-    yPosition += 8
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(nameData.etymology, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 20
-    
-    // Islamic Significance
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('ISLAMIC SIGNIFICANCE:', 25, yPosition)
-    yPosition += 8
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(nameData.islamicSignificance, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 25
-    
-    // Character Traits
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('CHARACTER TRAITS:', 25, yPosition)
-    yPosition += 8
-    
-    // Create two columns for traits
-    const traitsPerColumn = Math.ceil(nameData.characterTraits.length / 2)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    
-    nameData.characterTraits.slice(0, traitsPerColumn).forEach((trait, index) => {
-      doc.text(`• ${trait}`, 30, yPosition + (index * 6))
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(textColor.r, textColor.g, textColor.b)
+    const translationText = `"${duaData.translation}"`
+    const translationLines = doc.splitTextToSize(translationText, pageWidth - 50)
+    translationLines.forEach((line: string) => {
+      doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 8
     })
+    yPosition += 15
+
+    // Spiritual guidance section
+    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.setLineWidth(1)
+    doc.line(35, yPosition, pageWidth - 35, yPosition)
+    yPosition += 10
     
-    nameData.characterTraits.slice(traitsPerColumn).forEach((trait, index) => {
-      doc.text(`• ${trait}`, pageWidth / 2 + 10, yPosition + (index * 6))
-    })
-    
-    yPosition += traitsPerColumn * 6 + 10
-    
-    // Famous Bearers
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('FAMOUS BEARERS:', 25, yPosition)
-    yPosition += 8
-    doc.setFontSize(10)
+    doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.text('★ SPIRITUAL GUIDANCE ★', pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 10
+    
+    const guidance = [
+      '• Crafted from authentic Qur\'anic and Prophetic traditions',
+      '• Recite with complete sincerity and unwavering faith',
+      '• Best times: Before Fajr, between Maghrib-Isha, while fasting',
+      '• Repeat 3, 7, or 33 times for increased divine blessing'
+    ]
+    
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    nameData.famousBearers.forEach((bearer, index) => {
-      if (yPosition > pageHeight - 40) {
-        doc.addPage()
-        this.addIslamicBorder(doc)
-        yPosition = 30
-      }
-      doc.text(`• ${bearer}`, 30, yPosition)
+    doc.setTextColor(textColor.r, textColor.g, textColor.b)
+    guidance.forEach(line => {
+      doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
       yPosition += 6
     })
     
-    // Personalized Dua
-    yPosition += 5
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('PERSONALIZED DUA:', 25, yPosition)
+    // Decorative separator
     yPosition += 8
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'italic')
-    doc.setTextColor(COLORS.slate)
-    doc.text(nameData.personalizedDua, 25, yPosition, { maxWidth: pageWidth - 50 })
+    doc.setFontSize(18)
+    doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.text('◆ ◆ ◆', pageWidth / 2, yPosition, { align: 'center' })
+
+    // Premium footer
+    const footerY = pageHeight - 25
+    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.setLineWidth(1)
+    doc.line(25, footerY, pageWidth - 25, footerY)
     
-    // Footer with premium branding
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.text(`${this.getThemeSymbol(theme.name)} BarakahTool ${this.getThemeSymbol(theme.name)}`, pageWidth / 2, footerY + 8, { align: 'center' })
+    
     doc.setFontSize(8)
-    doc.setTextColor(COLORS.darkGold)
-    doc.text('BarakahTool - Premium Islamic Name Poster', pageWidth / 2, pageHeight - 15, { align: 'center' })
-    doc.text('© 2024 BarakahTool. All rights reserved.', pageWidth / 2, pageHeight - 10, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(textColor.r, textColor.g, textColor.b)
+    doc.text(`Premium Islamic Digital Platform | Theme: ${theme.name}`, pageWidth / 2, footerY + 15, { align: 'center' })
     
     return doc.output('blob')
   }
