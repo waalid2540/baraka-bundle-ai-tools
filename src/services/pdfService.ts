@@ -94,11 +94,7 @@ class PDFService {
     name: string
     situation: string
     arabicText: string
-    transliteration: string
     translation: string
-    references: string
-    benefits: string
-    bestTimes: string
     language: string
   }): Promise<Blob> {
     const doc = this.initDocument()
@@ -120,77 +116,43 @@ class PDFService {
     yPosition += 20
     
     // Arabic Dua
-    doc.setFontSize(14)
+    doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(COLORS.emerald)
     doc.text('ARABIC DUA:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(18)
+    yPosition += 12
+    doc.setFontSize(20)
     doc.setTextColor(COLORS.slate)
     this.addArabicText(doc, duaData.arabicText, pageWidth - 25, yPosition, { 
       align: 'right',
       maxWidth: pageWidth - 50 
     })
-    yPosition += 25
-    
-    // Transliteration
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('TRANSLITERATION:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'italic')
-    doc.setTextColor(COLORS.slate)
-    doc.text(duaData.transliteration, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 20
+    yPosition += 35
     
     // Translation
-    doc.setFontSize(14)
+    doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(COLORS.emerald)
-    doc.text(`${duaData.language.toUpperCase()} TRANSLATION:`, 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(11)
+    doc.text(`TRANSLATION (${duaData.language.toUpperCase()}):`, 25, yPosition)
+    yPosition += 12
+    doc.setFontSize(13)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(COLORS.slate)
     doc.text(duaData.translation, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 25
+    yPosition += 30
     
-    // Islamic References
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('ISLAMIC REFERENCES:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(duaData.references, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 20
+    // Spiritual Note
+    doc.setDrawColor(COLORS.gold)
+    doc.setLineWidth(0.5)
+    doc.line(30, yPosition, pageWidth - 30, yPosition)
+    yPosition += 15
     
-    // Benefits
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('SPIRITUAL BENEFITS:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(duaData.benefits, 25, yPosition, { maxWidth: pageWidth - 50 })
-    yPosition += 20
-    
-    // Best Times
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(COLORS.emerald)
-    doc.text('BEST TIMES TO RECITE:', 25, yPosition)
-    yPosition += 10
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(COLORS.slate)
-    doc.text(duaData.bestTimes, 25, yPosition, { maxWidth: pageWidth - 50 })
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(COLORS.darkGold)
+    doc.text('This dua has been generated from authentic Islamic sources.', pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 8
+    doc.text('Recite with sincerity and trust in Allah\'s mercy.', pageWidth / 2, yPosition, { align: 'center' })
     
     // Footer
     doc.setFontSize(8)

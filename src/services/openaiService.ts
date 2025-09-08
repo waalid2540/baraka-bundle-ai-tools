@@ -53,54 +53,45 @@ class OpenAIService {
 
   // 🤲 1. PREMIUM Dua Generator - UNLIMITED AUTHENTIC System
   async generateDua(name: string, situation: string, language: string = 'English'): Promise<OpenAIResponse> {
-    const prompt = `Create a powerful and authentic Islamic dua for ${name} regarding: ${situation}.
+    const prompt = `Generate a powerful Islamic duʿā for ${name} regarding: ${situation}.
+Language for translation: ${language}
 
-    PREMIUM REQUIREMENTS:
-    1. Write the dua first in beautiful Arabic with full diacritical marks (tashkeel)
-    2. Provide clear word-by-word transliteration for proper pronunciation
-    3. Translate into ${language} with deep spiritual meaning and context
-    4. Include relevant Quranic verses or authentic hadith references
-    5. Add spiritual benefits and best times to recite
-    6. Explain the theological significance
-    
-    PREMIUM FORMAT:
-    📿 ARABIC DUA:
-    [Beautiful Arabic text with complete tashkeel/harakat]
-    
-    🔤 TRANSLITERATION:
-    [Clear pronunciation guide with emphasis marks]
-    
-    🌍 ${language.toUpperCase()} TRANSLATION:
-    [Deep meaningful translation with spiritual context]
-    
-    📖 ISLAMIC REFERENCES:
-    [Specific Quran verses with surah:ayah or Hadith with book and number]
-    
-    ✨ SPIRITUAL BENEFITS:
-    [Detailed benefits and rewards from Islamic sources]
-    
-    ⏰ BEST TIMES:
-    [Recommended times for maximum acceptance]
-    
-    💎 THEOLOGICAL INSIGHT:
-    [Deep spiritual wisdom and connection to Islamic principles]`
+Follow the exact format provided in your instructions.`
 
     const payload = {
       model: this.model,
       messages: [
         {
           role: 'system',
-          content: `You are a premium Islamic scholar with deep mastery of Quran, Hadith, and Islamic spirituality. 
-          Generate powerful, authentic duas with perfect Arabic, deep spiritual insight, and comprehensive Islamic knowledge.
-          Your responses should reflect the highest scholarship standards while remaining accessible.`
+          content: `You are an Islamic duʿā generator designed to produce authentic, powerful, and respectful supplications inspired by the Qur'an and authentic Sunnah.
+
+Your responsibilities:
+- Always write the duʿā first in Arabic (beautiful, classical style).
+- Provide a clear, natural translation in the user's chosen language (English, Somali, Urdu, Turkish, Indonesian, French, Spanish, etc.).
+- Keep duʿā short (2–5 lines), but meaningful and emotionally strong.
+- Use respectful invocations such as: "اللهم" (O Allah), "يا رحمن" (O Most Merciful), "يا رب" (O Lord).
+- Avoid fabricated narrations or weak content. Do not invent hadith.
+- If relevant, you may echo Qur'anic phrases (e.g., "ربنا آتنا في الدنيا حسنة") or authentic prophetic duʿās.
+- The translation must feel natural and heartfelt, not robotic.
+
+Format output as:
+
+**Arabic:**
+[Duʿā in Arabic script]
+
+**Translation in {language}:**
+[Duʿā meaning in chosen language]
+
+Tone: Uplifting, sincere, spiritually moving.
+Never include commentary or long tafsīr — only the duʿā and its translation.`
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.8,
-      max_tokens: 2500
+      temperature: 0.7,
+      max_tokens: 800
     }
 
     const response = await this.makeRequest('/chat/completions', payload)
@@ -111,6 +102,8 @@ class OpenAIService {
         data: {
           content: response.data.choices[0].message.content,
           type: 'dua',
+          name: name,
+          situation: situation,
           language: language,
           premium: true
         }
