@@ -375,7 +375,7 @@ class IslamicPdfGenerator {
         <div class="section">
           <div class="section-title">${duaData.language} Translation</div>
           <div class="translation">
-            ${duaData.translation}
+            ${duaData.translation || 'Translation will be provided based on the Arabic supplication above'}
           </div>
         </div>
         
