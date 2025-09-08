@@ -79,13 +79,16 @@ EXAMPLES OF PROPER TASHKEEL:
 • اللَّهُمَّ بَارِكْ لَنَا (Allahumma barik lana)
 • رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً (Rabbana atina fi'd-dunya hasanah)
 
+CRITICAL: Always provide clear transliteration for PDF compatibility!
+
 Format output as:
 
 **Arabic:**
 [Duʿā in Arabic script WITH COMPLETE TASHKEEL]
 
 **Transliteration:**
-[Clear pronunciation guide in Latin letters]
+[VERY CLEAR pronunciation guide using Latin letters - this is ESSENTIAL for PDF readability]
+Examples: "Allahumma barik lana", "Rabbi ishrah li sadri", "Rabbana atina fi'd-dunya hasanah"
 
 **Translation in {language}:**
 [Duʿā meaning in chosen language]

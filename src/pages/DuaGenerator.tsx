@@ -337,6 +337,20 @@ const DuaGenerator = () => {
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Pronunciation Section */}
+                  {generatedDua.transliteration && (
+                    <div className="text-center mb-8">
+                      <div className="inline-block px-4 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full mb-4">
+                        <span className="text-emerald-400 text-sm font-semibold">✦ PRONUNCIATION GUIDE ✦</span>
+                      </div>
+                      <div className="bg-black/30 rounded-xl p-6 border border-emerald-500/10">
+                        <p className="text-xl md:text-2xl text-emerald-200 leading-relaxed font-light italic text-center">
+                          {generatedDua.transliteration}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Decorative Divider */}
                   <div className="flex items-center justify-center my-8">
@@ -364,7 +378,7 @@ const DuaGenerator = () => {
                     <button
                       onClick={async () => {
                         const pdfBlob = await pdfService.generateDuaPDF(generatedDua)
-                        pdfService.downloadPDF(pdfBlob, `Dua_${generatedDua.name}_Premium`)
+                        pdfService.downloadPDF(pdfBlob, `Dua_for_${generatedDua.name.replace(/\s+/g, '_')}_Clear`)
                       }}
                       className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
                     >

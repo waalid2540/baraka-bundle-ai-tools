@@ -108,73 +108,7 @@ class PDFService {
     doc.circle(pageWidth / 2, lineY, 2.5, 'F')
   }
 
-  // Add Arabic text with proper handling
-  private addArabicText(doc: jsPDF, text: string, x: number, y: number, options?: any): void {
-    doc.setFontSize(options?.fontSize || 18)
-    
-    // Check if text contains Arabic characters
-    const hasArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text)
-    
-    if (hasArabic && text.trim()) {
-      try {
-        // Try to render Arabic text
-        // Split into multiple lines if needed
-        const maxWidth = options?.maxWidth || 120
-        const lines = this.splitArabicText(text, maxWidth)
-        
-        lines.forEach((line, index) => {
-          const lineY = y + (index * 8)
-          doc.text(line, x, lineY, { 
-            ...options, 
-            align: options?.align || 'right',
-            maxWidth: undefined // Remove maxWidth for individual lines
-          })
-        })
-      } catch (error) {
-        // Fallback with transliteration note
-        doc.text('[Arabic Du\'a - Original Arabic preserved in authentic sources]', x, y, { 
-          ...options, 
-          align: 'center',
-          maxWidth: options?.maxWidth || 120
-        })
-      }
-    } else {
-      // No Arabic detected, use placeholder
-      doc.text('[Arabic Du\'a Text - Authentic Islamic supplication]', x, y, { 
-        ...options, 
-        align: 'center',
-        maxWidth: options?.maxWidth || 120
-      })
-    }
-  }
-  
-  // Helper to split Arabic text into lines
-  private splitArabicText(text: string, maxWidth: number): string[] {
-    const words = text.split(' ')
-    const lines: string[] = []
-    let currentLine = ''
-    
-    for (const word of words) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word
-      // Rough estimate: Arabic characters are about 8 units wide
-      if (testLine.length * 6 < maxWidth) {
-        currentLine = testLine
-      } else {
-        if (currentLine) {
-          lines.push(currentLine)
-          currentLine = word
-        } else {
-          lines.push(word)
-        }
-      }
-    }
-    
-    if (currentLine) {
-      lines.push(currentLine)
-    }
-    
-    return lines.length > 0 ? lines : [text]
-  }
+  // Note: Arabic text helpers removed - using transliteration approach for better PDF compatibility
 
   // Generate Clean Themed Dua PDF
   async generateDuaPDF(duaData: {
@@ -240,45 +174,54 @@ class PDFService {
     doc.setFontSize(18)
     doc.setTextColor(textColor.r, textColor.g, textColor.b)
     
-    // Add Arabic text with fallback to transliteration
-    if (duaData.arabicText && duaData.arabicText.trim()) {
-      this.addArabicText(doc, duaData.arabicText, pageWidth - 35, yPosition + 15, {
-        fontSize: 16,
-        maxWidth: pageWidth - 70,
-        align: 'right'
-      })
-    } else if (duaData.transliteration && duaData.transliteration.trim()) {
-      // Use transliteration as fallback
-      doc.setFontSize(16)
-      doc.setFont('helvetica', 'italic')
-      doc.text(`(${duaData.transliteration})`, pageWidth / 2, yPosition + 20, {
-        align: 'center',
-        maxWidth: pageWidth - 70
-      })
-    } else {
-      doc.text('(Arabic du\'a text preserved in authentic Islamic sources)', pageWidth / 2, yPosition + 20, {
-        align: 'center',
-        maxWidth: pageWidth - 70
-      })
-    }
-    
-    // Add transliteration if available and different from Arabic fallback
-    if (duaData.transliteration && duaData.transliteration.trim() && duaData.arabicText && duaData.arabicText.trim()) {
-      yPosition += 25
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'italic') 
-      doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
-      doc.text('PRONUNCIATION:', pageWidth / 2, yPosition, { align: 'center' })
-      yPosition += 8
+    // ALWAYS use transliteration for PDF to avoid Arabic display issues
+    if (duaData.transliteration && duaData.transliteration.trim()) {
+      // Use clear transliteration for perfect readability
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
       doc.setTextColor(textColor.r, textColor.g, textColor.b)
+      
+      // Split transliteration into lines for better display
       const transliterationLines = doc.splitTextToSize(duaData.transliteration, pageWidth - 60)
+      let lineY = yPosition + 20
+      
       transliterationLines.forEach((line: string) => {
-        doc.text(line, pageWidth / 2, yPosition, { align: 'center' })
-        yPosition += 6
+        doc.text(line.trim(), pageWidth / 2, lineY, { align: 'center' })
+        lineY += 8
       })
-      yPosition += 10
+      
+      yPosition = lineY + 10
+      
+      // Add note about Arabic
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'italic')
+      doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+      doc.text('(Arabic pronunciation guide provided above)', pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 15
+      
+    } else if (duaData.arabicText && duaData.arabicText.trim()) {
+      // Fallback: show a note about Arabic content
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(textColor.r, textColor.g, textColor.b)
+      doc.text('[Arabic Dua - Authentic Islamic Supplication]', pageWidth / 2, yPosition + 20, {
+        align: 'center',
+        maxWidth: pageWidth - 60
+      })
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'italic')
+      doc.text('For proper Arabic text, please refer to authentic Islamic sources', pageWidth / 2, yPosition + 32, {
+        align: 'center',
+        maxWidth: pageWidth - 60
+      })
+      yPosition += 50
     } else {
-      yPosition += arabicHeight + 10
+      // Final fallback
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(textColor.r, textColor.g, textColor.b)
+      doc.text('Authentic Islamic Dua', pageWidth / 2, yPosition + 25, { align: 'center' })
+      yPosition += 40
     }
 
     // Translation section
