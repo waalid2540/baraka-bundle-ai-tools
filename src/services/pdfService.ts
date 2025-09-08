@@ -31,21 +31,27 @@ class PDFService {
     return this.doc
   }
 
-  // Add Islamic border design
+  // Add Premium Islamic border design
   private addIslamicBorder(doc: jsPDF): void {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     
-    // Outer border
+    // Gradient-like outer border with multiple lines
     doc.setDrawColor(COLORS.gold)
-    doc.setLineWidth(2)
-    doc.rect(10, 10, pageWidth - 20, pageHeight - 20)
+    doc.setLineWidth(3)
+    doc.rect(8, 8, pageWidth - 16, pageHeight - 16)
+    
+    // Middle decorative border
+    doc.setLineWidth(1)
+    doc.setDrawColor(COLORS.darkGold)
+    doc.rect(12, 12, pageWidth - 24, pageHeight - 24)
     
     // Inner decorative border
     doc.setLineWidth(0.5)
+    doc.setDrawColor(COLORS.gold)
     doc.rect(15, 15, pageWidth - 30, pageHeight - 30)
     
-    // Corner ornaments (simplified geometric patterns)
+    // Corner ornaments with star pattern
     const corners = [
       { x: 10, y: 10 },
       { x: pageWidth - 10, y: 10 },
@@ -54,31 +60,58 @@ class PDFService {
     ]
     
     corners.forEach(corner => {
+      // Outer circle
       doc.setFillColor(COLORS.gold)
+      doc.circle(corner.x, corner.y, 5, 'F')
+      // Inner circle
+      doc.setFillColor(COLORS.white)
       doc.circle(corner.x, corner.y, 3, 'F')
+      // Center dot
+      doc.setFillColor(COLORS.gold)
+      doc.circle(corner.x, corner.y, 1, 'F')
     })
+    
+    // Top center ornament
+    doc.setFillColor(COLORS.gold)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(20)
+    doc.text('✦', pageWidth / 2, 20, { align: 'center' })
   }
 
-  // Add header with title
+  // Add fancy header with title
   private addHeader(doc: jsPDF, title: string, subtitle?: string): void {
     const pageWidth = doc.internal.pageSize.getWidth()
     
-    // Title
-    doc.setFontSize(24)
+    // Decorative element above title
+    doc.setFontSize(16)
+    doc.setTextColor(COLORS.gold)
+    doc.text('۝', pageWidth / 2, 30, { align: 'center' })
+    
+    // Title with shadow effect (by drawing twice)
+    doc.setFontSize(28)
+    doc.setTextColor(COLORS.darkGold)
+    doc.text(title, pageWidth / 2 + 0.5, 40.5, { align: 'center' })
     doc.setTextColor(COLORS.slate)
-    doc.text(title, pageWidth / 2, 35, { align: 'center' })
+    doc.text(title, pageWidth / 2, 40, { align: 'center' })
     
     // Subtitle
     if (subtitle) {
-      doc.setFontSize(12)
-      doc.setTextColor(COLORS.darkGold)
-      doc.text(subtitle, pageWidth / 2, 45, { align: 'center' })
+      doc.setFontSize(14)
+      doc.setTextColor(COLORS.gold)
+      doc.text(subtitle, pageWidth / 2, 50, { align: 'center' })
     }
     
-    // Decorative line
+    // Fancy decorative line with dots
+    const lineY = 56
     doc.setDrawColor(COLORS.gold)
     doc.setLineWidth(0.5)
-    doc.line(30, 50, pageWidth - 30, 50)
+    doc.line(50, lineY, pageWidth - 50, lineY)
+    
+    // Add decorative dots
+    doc.setFillColor(COLORS.gold)
+    doc.circle(45, lineY, 1, 'F')
+    doc.circle(pageWidth - 45, lineY, 1, 'F')
+    doc.circle(pageWidth / 2, lineY, 1.5, 'F')
   }
 
   // Add Arabic text with proper RTL support
@@ -100,11 +133,11 @@ class PDFService {
     const doc = this.initDocument()
     const pageWidth = doc.internal.pageSize.getWidth()
     
-    // Add border and header
+    // Add fancy border and header
     this.addIslamicBorder(doc)
-    this.addHeader(doc, 'Personalized Dua', `For ${duaData.name}`)
+    this.addHeader(doc, 'Blessed Islamic Dua', `Specially crafted for ${duaData.name}`)
     
-    let yPosition = 65
+    let yPosition = 70
     
     // Situation
     doc.setFontSize(12)

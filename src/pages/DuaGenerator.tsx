@@ -270,19 +270,96 @@ const DuaGenerator = () => {
           )}
 
           {generatedDua && (
-            <div className="mt-8 p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
-              <h3 className="text-green-400 font-semibold mb-4">✅ Your Duʿā Has Been Generated!</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-yellow-400 font-semibold mb-2">Arabic:</h4>
-                  <p className="text-white text-xl text-right" dir="rtl">{generatedDua.arabicText}</p>
+            <div className="mt-8">
+              {/* Success Header */}
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <span className="text-4xl">✨</span>
                 </div>
-                <div>
-                  <h4 className="text-yellow-400 font-semibold mb-2">Translation ({generatedDua.language}):</h4>
-                  <p className="text-gray-300">{generatedDua.translation}</p>
+                <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400 mb-2">
+                  Your Beautiful Duʿā is Ready!
+                </h3>
+                <p className="text-gray-400">A powerful supplication crafted just for you</p>
+              </div>
+
+              {/* Fancy Dua Display */}
+              <div className="relative">
+                {/* Decorative Corner Elements */}
+                <div className="absolute -top-3 -left-3 w-12 h-12 border-t-2 border-l-2 border-yellow-400/50 rounded-tl-2xl"></div>
+                <div className="absolute -top-3 -right-3 w-12 h-12 border-t-2 border-r-2 border-yellow-400/50 rounded-tr-2xl"></div>
+                <div className="absolute -bottom-3 -left-3 w-12 h-12 border-b-2 border-l-2 border-yellow-400/50 rounded-bl-2xl"></div>
+                <div className="absolute -bottom-3 -right-3 w-12 h-12 border-b-2 border-r-2 border-yellow-400/50 rounded-br-2xl"></div>
+                
+                <div className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-yellow-500/20">
+                  {/* Arabic Section */}
+                  <div className="text-center mb-8">
+                    <div className="inline-block px-4 py-1 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-full mb-4">
+                      <span className="text-yellow-400 text-sm font-semibold">✦ ARABIC SUPPLICATION ✦</span>
+                    </div>
+                    <div className="bg-black/30 rounded-xl p-6 border border-yellow-500/10">
+                      <p className="text-3xl md:text-4xl leading-loose text-white font-arabic text-center" dir="rtl" style={{
+                        textShadow: '0 0 30px rgba(250, 204, 21, 0.3)',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {generatedDua.arabicText}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Decorative Divider */}
+                  <div className="flex items-center justify-center my-8">
+                    <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent flex-1"></div>
+                    <div className="mx-4">
+                      <span className="text-yellow-400 text-2xl">◆</span>
+                    </div>
+                    <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent flex-1"></div>
+                  </div>
+
+                  {/* Translation Section */}
+                  <div className="text-center">
+                    <div className="inline-block px-4 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full mb-4">
+                      <span className="text-emerald-400 text-sm font-semibold">✦ {generatedDua.language.toUpperCase()} TRANSLATION ✦</span>
+                    </div>
+                    <div className="bg-black/30 rounded-xl p-6 border border-emerald-500/10">
+                      <p className="text-xl md:text-2xl text-gray-200 leading-relaxed font-light italic">
+                        "{generatedDua.translation}"
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button
+                      onClick={async () => {
+                        const pdfBlob = await pdfService.generateDuaPDF(generatedDua)
+                        pdfService.downloadPDF(pdfBlob, `Dua_${generatedDua.name}_Premium`)
+                      }}
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
+                    >
+                      <span>📥</span>
+                      <span>Download Premium PDF</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGeneratedDua(null)
+                        setShowPayment(false)
+                        setFormData({ name: '', situation: '', language: 'English' })
+                      }}
+                      className="flex-1 bg-slate-800/50 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700/50 transition-all duration-300 border border-slate-700 flex items-center justify-center gap-2"
+                    >
+                      <span>✨</span>
+                      <span>Generate Another Dua</span>
+                    </button>
+                  </div>
+
+                  {/* Bottom Note */}
+                  <div className="mt-6 text-center">
+                    <p className="text-gray-500 text-sm">
+                      🌙 May Allah accept your dua and grant you the best in this world and the hereafter
+                    </p>
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-400 mt-4">Your PDF has been downloaded automatically.</p>
             </div>
           )}
         </div>
