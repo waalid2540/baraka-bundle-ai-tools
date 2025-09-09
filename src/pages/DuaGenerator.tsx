@@ -22,49 +22,47 @@ const DuaGenerator = () => {
   const languages = openaiService.getSupportedLanguages()
   const themeNames = getThemeNames()
 
-  // Predefined Duas
-  const prophetDuas = [
+  // Prophet's Dua Categories for AI to generate
+  const prophetDuaCategories = [
     {
       id: 'rizq',
       name: 'Dua for Rizq (Sustenance)',
-      arabic: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رِزْقِكَ الْحَلَالِ',
-      transliteration: 'Allahumma iftah li abwaba rizqika al-halal',
-      translation: 'O Allah, open for me the doors of Your lawful sustenance'
+      description: 'Authentic prophetic dua for lawful sustenance and provision'
     },
     {
       id: 'protection',
       name: 'Dua for Protection',
-      arabic: 'أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
-      transliteration: 'A\'udhu bi kalimati\'llahi\'t-tammati min sharri ma khalaq',
-      translation: 'I seek refuge in the perfect words of Allah from the evil of what He has created'
+      description: 'Authentic prophetic dua for protection from evil and harm'
     },
     {
       id: 'guidance',
       name: 'Dua for Guidance',
-      arabic: 'اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ',
-      transliteration: 'Allahumma ihdini fiman hadayt',
-      translation: 'O Allah, guide me among those You have guided'
+      description: 'Authentic prophetic dua for guidance and right path'
     },
     {
       id: 'forgiveness',
       name: 'Dua for Forgiveness',
-      arabic: 'رَبِّ اغْفِرْ لِي ذَنْبِي وَخَطَئِي وَجَهْلِي',
-      transliteration: 'Rabbi ighfir li dhanbi wa khatai wa jahli',
-      translation: 'My Lord, forgive me my sin, my error, and my ignorance'
+      description: 'Authentic prophetic dua for forgiveness of sins'
     },
     {
       id: 'health',
       name: 'Dua for Health',
-      arabic: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي',
-      transliteration: 'Allahumma \'afini fi badani, Allahumma \'afini fi sam\'i, Allahumma \'afini fi basari',
-      translation: 'O Allah, grant me health in my body, O Allah, grant me health in my hearing, O Allah, grant me health in my sight'
+      description: 'Authentic prophetic dua for physical and spiritual health'
     },
     {
       id: 'knowledge',
       name: 'Dua for Knowledge',
-      arabic: 'رَبِّ زِدْنِي عِلْماً',
-      transliteration: 'Rabbi zidni \'ilman',
-      translation: 'My Lord, increase me in knowledge'
+      description: 'Authentic prophetic dua for increase in beneficial knowledge'
+    },
+    {
+      id: 'travel',
+      name: 'Dua for Travel',
+      description: 'Authentic prophetic dua for safe and blessed travel'
+    },
+    {
+      id: 'sleep',
+      name: 'Dua before Sleep',
+      description: 'Authentic prophetic dua to recite before sleeping'
     }
   ]
 
@@ -164,17 +162,42 @@ const DuaGenerator = () => {
       let duaData: any
 
       if (formData.duaCategory === 'prophet') {
-        // Use predefined Prophet's dua
-        const selectedProphetDua = prophetDuas.find(dua => dua.id === formData.selectedDua)
-        if (selectedProphetDua) {
-          duaData = {
-            arabicText: selectedProphetDua.arabic,
-            transliteration: selectedProphetDua.transliteration,
-            translation: selectedProphetDua.translation,
-            name: 'User',
-            situation: selectedProphetDua.name,
-            language: formData.language,
-            theme: formData.theme
+        // Generate authentic Prophet's dua using OpenAI
+        const selectedCategory = prophetDuaCategories.find(dua => dua.id === formData.selectedDua)
+        if (selectedCategory) {
+          const prophetDuaPrompt = `Generate an authentic prophetic dua from Quran and Sunnah for: ${selectedCategory.description}. 
+          IMPORTANT: Only provide AUTHENTIC duas that are found in Quran, authentic Hadith, or established Islamic sources. 
+          Do not create new duas. Provide the exact Arabic text with proper diacritical marks, accurate transliteration, and ${formData.language} translation.
+          
+          Format:
+          **Arabic:** [Authentic Arabic text with diacritics]
+          **Transliteration:** [Accurate pronunciation]
+          **Translation:** [Meaning in ${formData.language}]`
+
+          const response = await openaiService.generateDua(
+            'User',
+            prophetDuaPrompt,
+            formData.language
+          )
+
+          if (response.success && response.data) {
+            const content = response.data.content
+            const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
+            const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
+            const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*([\s\S]*?)(?=\n\n|$)/i)
+            
+            duaData = {
+              arabicText: arabicMatch ? arabicMatch[1].trim() : '',
+              transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
+              translation: translationMatch ? translationMatch[1].trim() : '',
+              name: 'User',
+              situation: selectedCategory.name,
+              language: formData.language,
+              theme: formData.theme
+            }
+          } else {
+            setError(response.error || 'Failed to generate Prophet\'s dua')
+            return
           }
         }
       } else {
@@ -310,21 +333,20 @@ const DuaGenerator = () => {
                     <label className="block text-yellow-400 font-semibold mb-3">
                       Select Prophet's Du'a
                     </label>
-                    <div className="grid gap-3">
-                      {prophetDuas.map((dua) => (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {prophetDuaCategories.map((category) => (
                         <button
-                          key={dua.id}
+                          key={category.id}
                           type="button"
-                          onClick={() => setFormData({ ...formData, selectedDua: dua.id })}
+                          onClick={() => setFormData({ ...formData, selectedDua: category.id })}
                           className={`p-4 text-left rounded-xl border-2 transition-all ${
-                            formData.selectedDua === dua.id
+                            formData.selectedDua === category.id
                               ? 'border-yellow-500 bg-yellow-500/10'
                               : 'border-slate-700 bg-slate-800/50 hover:border-yellow-500/50'
                           }`}
                         >
-                          <div className="font-semibold text-white mb-1">{dua.name}</div>
-                          <div className="text-sm text-gray-400 mb-2">{dua.transliteration}</div>
-                          <div className="text-sm text-gray-300">{dua.translation}</div>
+                          <div className="font-semibold text-white mb-2">{category.name}</div>
+                          <div className="text-sm text-gray-400">{category.description}</div>
                         </button>
                       ))}
                     </div>
