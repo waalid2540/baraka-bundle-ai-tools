@@ -628,6 +628,16 @@ const DuaGenerator = () => {
                       <span>Download Arabic PDF</span>
                     </button>
                     <button
+                      onClick={async () => {
+                        const pdfBlob = await arabicPdfGenerator.generateRandomPdf(generatedDua)
+                        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Creator_${Date.now()}`)
+                      }}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-purple-500/25 flex items-center justify-center gap-2"
+                    >
+                      <span>🎨</span>
+                      <span>Creator Random Theme</span>
+                    </button>
+                    <button
                       onClick={() => {
                         setGeneratedDua(null)
                         setShowPayment(false)
