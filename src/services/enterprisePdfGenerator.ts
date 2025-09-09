@@ -45,16 +45,15 @@ class EnterprisePdfGenerator {
           body {
             width: 794px;
             height: 1123px;
-            background: linear-gradient(180deg, 
-              #1a1a2e 0%, 
-              #16213e 20%, 
-              #0f3460 40%, 
-              #16213e 60%, 
-              #1a1a2e 100%);
+            background: 
+              linear-gradient(135deg, rgba(255,223,186,0.3) 0%, transparent 40%),
+              linear-gradient(225deg, rgba(255,182,193,0.3) 0%, transparent 40%),
+              linear-gradient(45deg, rgba(152,251,152,0.2) 0%, transparent 40%),
+              linear-gradient(to bottom, #fef5e7 0%, #fbeee6 50%, #fef5e7 100%);
             font-family: 'Poppins', sans-serif;
             position: relative;
             overflow: hidden;
-            color: #ffffff;
+            color: #2c3e50;
           }
           
           /* Premium Overlay Pattern */
@@ -74,19 +73,18 @@ class EnterprisePdfGenerator {
           /* Luxury Gold Frame */
           .luxury-frame {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: 4px solid transparent;
-            border-image: ${goldGradient};
-            border-image-slice: 1;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 3px solid #d4af37;
             border-radius: 20px;
             box-shadow: 
-              0 0 50px rgba(255, 215, 0, 0.3),
-              inset 0 0 50px rgba(255, 215, 0, 0.1),
-              0 10px 30px rgba(0, 0, 0, 0.5);
+              0 0 30px rgba(212, 175, 55, 0.4),
+              inset 0 0 30px rgba(212, 175, 55, 0.1),
+              0 8px 20px rgba(0, 0, 0, 0.1);
             z-index: 2;
+            background: rgba(255, 255, 255, 0.5);
           }
           
           .luxury-frame::before {
@@ -103,24 +101,78 @@ class EnterprisePdfGenerator {
           /* Islamic Geometric Corners */
           .islamic-corner {
             position: absolute;
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             z-index: 3;
           }
           
           .islamic-corner::before {
-            content: '';
+            content: '❋';
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: ${goldGradient};
-            clip-path: polygon(
-              0 0, 30% 0, 50% 20%, 70% 0, 100% 0,
-              100% 30%, 80% 50%, 100% 70%, 100% 100%,
-              70% 100%, 50% 80%, 30% 100%, 0 100%,
-              0 70%, 20% 50%, 0 30%
-            );
-            opacity: 0.8;
+            font-size: 60px;
+            color: #d4af37;
+            opacity: 0.4;
+          }
+          
+          /* Additional Islamic Patterns */
+          .pattern-top {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+          }
+          
+          .pattern-top::before {
+            content: '◈ ◆ ◈ ◆ ◈ ◆ ◈';
+            color: #d4af37;
+            opacity: 0.3;
+            font-size: 14pt;
+          }
+          
+          .pattern-bottom {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+          }
+          
+          .pattern-bottom::before {
+            content: '◆ ◈ ◆ ◈ ◆ ◈ ◆';
+            color: #d4af37;
+            opacity: 0.3;
+            font-size: 14pt;
+          }
+          
+          /* Side Decorations */
+          .side-decoration {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 200px;
+            z-index: 3;
+          }
+          
+          .side-decoration.left {
+            left: 25px;
+            border-left: 2px solid rgba(212, 175, 55, 0.2);
+          }
+          
+          .side-decoration.right {
+            right: 25px;
+            border-right: 2px solid rgba(212, 175, 55, 0.2);
           }
           
           .islamic-corner.top-left { top: 15px; left: 15px; }
@@ -132,32 +184,33 @@ class EnterprisePdfGenerator {
           .content-wrapper {
             position: relative;
             z-index: 10;
-            padding: 60px 50px;
+            padding: 40px 45px;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between;
           }
           
           /* Premium Header */
           .premium-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             position: relative;
           }
           
           .premium-badge {
             display: inline-block;
-            background: ${goldGradient};
-            color: #1a1a2e;
-            padding: 8px 20px;
+            background: linear-gradient(135deg, #d4af37, #f4a460);
+            color: #ffffff;
+            padding: 6px 18px;
             border-radius: 20px;
-            font-size: 10pt;
-            font-weight: 700;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            font-size: 9pt;
+            font-weight: 600;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
           }
           
           .bismillah-container {
@@ -167,26 +220,21 @@ class EnterprisePdfGenerator {
           
           .bismillah {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 36pt;
+            font-size: 32pt;
             font-weight: 700;
-            background: ${goldGradient};
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #d4af37;
             text-shadow: 
-              0 0 30px rgba(255, 215, 0, 0.5),
-              0 0 60px rgba(255, 215, 0, 0.3);
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+              2px 2px 4px rgba(0, 0, 0, 0.1),
+              0 0 20px rgba(212, 175, 55, 0.3);
           }
           
           .main-title {
             font-family: 'Playfair Display', serif;
-            font-size: 32pt;
+            font-size: 28pt;
             font-weight: 900;
-            color: #ffffff;
+            color: #2c3e50;
             text-shadow: 
-              0 4px 8px rgba(0, 0, 0, 0.5),
-              0 0 20px rgba(255, 215, 0, 0.2);
+              2px 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 10px;
           }
           
@@ -235,23 +283,22 @@ class EnterprisePdfGenerator {
           /* Arabic Section - Premium */
           .arabic-container {
             width: 100%;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
             position: relative;
           }
           
           .arabic-frame {
-            background: linear-gradient(135deg, 
-              rgba(255, 255, 255, 0.05) 0%, 
-              rgba(255, 215, 0, 0.05) 50%, 
-              rgba(255, 255, 255, 0.05) 100%);
-            border: 2px solid rgba(255, 215, 0, 0.3);
+            background: 
+              linear-gradient(135deg, rgba(255, 248, 220, 0.5) 0%, rgba(255, 255, 255, 0.8) 100%),
+              radial-gradient(circle at center, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            border: 2px solid #d4af37;
             border-radius: 20px;
-            padding: 40px;
+            padding: 35px 30px;
             position: relative;
             overflow: hidden;
             box-shadow: 
-              0 10px 40px rgba(0, 0, 0, 0.3),
-              inset 0 0 60px rgba(255, 215, 0, 0.05);
+              0 8px 25px rgba(0, 0, 0, 0.08),
+              inset 0 0 40px rgba(212, 175, 55, 0.08);
           }
           
           .arabic-frame::before {
@@ -275,22 +322,21 @@ class EnterprisePdfGenerator {
           
           .arabic-text {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 38pt;
-            line-height: 2.5;
+            font-size: 34pt;
+            line-height: 2.2;
             text-align: center;
             direction: rtl;
             font-weight: 700;
             background: linear-gradient(135deg, 
-              #FFD700 0%, 
-              #FFA500 25%, 
-              ${emeraldGreen} 50%, 
-              #FFA500 75%, 
-              #FFD700 100%);
+              #d4af37 0%, 
+              #f4a460 35%, 
+              #50C878 50%, 
+              #f4a460 65%, 
+              #d4af37 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-            animation: shimmer 3s ease-in-out infinite;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
           }
           
           @keyframes shimmer {
@@ -305,23 +351,24 @@ class EnterprisePdfGenerator {
           /* Transliteration Section */
           .transliteration-container {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             background: linear-gradient(135deg, 
-              rgba(80, 200, 120, 0.1) 0%, 
-              transparent 100%);
-            border-left: 4px solid ${emeraldGreen};
+              rgba(240, 255, 240, 0.7) 0%, 
+              rgba(255, 255, 255, 0.5) 100%);
+            border-left: 3px solid #50C878;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
           }
           
           .transliteration-text {
             font-family: 'Poppins', sans-serif;
-            font-size: 16pt;
-            color: #ffffff;
+            font-size: 14pt;
+            color: #27ae60;
             text-align: center;
             font-style: italic;
-            font-weight: 300;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
           }
           
           /* Translation Section - Luxury */
@@ -332,14 +379,14 @@ class EnterprisePdfGenerator {
           }
           
           .translation-frame {
-            background: linear-gradient(135deg,
-              rgba(107, 58, 160, 0.1) 0%,
-              rgba(232, 180, 184, 0.05) 50%,
-              rgba(107, 58, 160, 0.1) 100%);
-            border: 1px solid rgba(232, 180, 184, 0.3);
+            background: 
+              linear-gradient(135deg, rgba(255, 240, 245, 0.6) 0%, rgba(255, 250, 240, 0.6) 100%),
+              radial-gradient(circle at top right, rgba(232, 180, 184, 0.2) 0%, transparent 50%);
+            border: 1.5px solid rgba(232, 180, 184, 0.4);
             border-radius: 15px;
-            padding: 30px;
+            padding: 25px;
             position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
           }
           
           .translation-label {
@@ -358,12 +405,12 @@ class EnterprisePdfGenerator {
           
           .translation-text {
             font-family: 'Playfair Display', serif;
-            font-size: 18pt;
-            color: #ffffff;
+            font-size: 16pt;
+            color: #2c3e50;
             text-align: center;
             line-height: 1.8;
             font-style: italic;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
           }
           
           .translation-text::before,
@@ -377,13 +424,14 @@ class EnterprisePdfGenerator {
           /* Guidance Section - Premium */
           .guidance-container {
             width: 100%;
-            margin-bottom: 30px;
-            background: linear-gradient(135deg,
-              rgba(0, 107, 107, 0.1) 0%,
-              transparent 100%);
+            margin-bottom: 20px;
+            background: 
+              linear-gradient(135deg, rgba(240, 255, 255, 0.6) 0%, rgba(245, 255, 250, 0.6) 100%),
+              radial-gradient(circle at bottom left, rgba(0, 107, 107, 0.1) 0%, transparent 50%);
             border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(0, 107, 107, 0.2);
+            padding: 20px;
+            border: 1.5px solid rgba(0, 107, 107, 0.25);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
           }
           
           .guidance-title {
@@ -403,12 +451,12 @@ class EnterprisePdfGenerator {
           
           .guidance-list li {
             font-family: 'Poppins', sans-serif;
-            font-size: 11pt;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 10px 0;
-            padding-left: 30px;
+            font-size: 10pt;
+            color: #34495e;
+            margin: 8px 0;
+            padding-left: 25px;
             position: relative;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            line-height: 1.6;
           }
           
           .guidance-list li::before {
@@ -435,11 +483,11 @@ class EnterprisePdfGenerator {
           
           .footer-blessing {
             font-family: 'Playfair Display', serif;
-            font-size: 12pt;
-            color: ${emeraldGreen};
-            margin-bottom: 10px;
+            font-size: 11pt;
+            color: #50C878;
+            margin-bottom: 8px;
             font-style: italic;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
           }
           
           .footer-brand {
@@ -458,10 +506,10 @@ class EnterprisePdfGenerator {
           
           .footer-tagline {
             font-family: 'Poppins', sans-serif;
-            font-size: 9pt;
-            color: rgba(255, 255, 255, 0.6);
+            font-size: 8pt;
+            color: #7f8c8d;
             margin-top: 5px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
           }
           
           /* Decorative Elements */
@@ -503,10 +551,10 @@ class EnterprisePdfGenerator {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 180pt;
-            color: rgba(255, 215, 0, 0.02);
+            font-size: 140pt;
+            color: rgba(212, 175, 55, 0.03);
             font-weight: 900;
-            letter-spacing: 50px;
+            letter-spacing: 40px;
             z-index: 0;
             font-family: 'Playfair Display', serif;
           }
@@ -525,13 +573,21 @@ class EnterprisePdfGenerator {
         <div class="islamic-corner bottom-left"></div>
         <div class="islamic-corner bottom-right"></div>
         
+        <!-- Additional Patterns -->
+        <div class="pattern-top"></div>
+        <div class="pattern-bottom"></div>
+        
+        <!-- Side Decorations -->
+        <div class="side-decoration left"></div>
+        <div class="side-decoration right"></div>
+        
         <!-- Floating Stars -->
         <div class="floating-star">✦</div>
         <div class="floating-star">✦</div>
         <div class="floating-star">✦</div>
         
         <!-- Premium Watermark -->
-        <div class="premium-watermark">PREMIUM</div>
+        <div class="premium-watermark">BARAKAH</div>
         
         <!-- Content -->
         <div class="content-wrapper">
