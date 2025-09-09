@@ -1,7 +1,10 @@
-// BarakahTool - WORKING PDF Generator
-// Direct jsPDF solution - NO HTML/CSS - GUARANTEED TO WORK
+// BarakahTool ENTERPRISE - Professional PDF Generator
+// Advanced jsPDF with Arabic font support - ENTERPRISE GRADE
 
 import jsPDF from 'jspdf'
+
+// Add Arabic font support for jsPDF
+import './arabic-font'
 
 interface WorkingDuaData {
   arabicText: string

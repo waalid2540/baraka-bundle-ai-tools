@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import workingPdfGenerator from '../services/workingPdfGenerator'
+import enterprisePdfGenerator from '../services/enterprisePdfGenerator'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -80,9 +80,9 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
         
-        // Generate working PDF with no HTML/CSS issues
-        const pdfBlob = await workingPdfGenerator.generateWorkingPdf(duaData)
-        workingPdfGenerator.downloadPdf(pdfBlob, `Premium_Islamic_Dua_${Date.now()}`)
+        // Generate ENTERPRISE PDF with perfect Arabic text
+        const pdfBlob = await enterprisePdfGenerator.generateEnterprisePdf(duaData)
+        enterprisePdfGenerator.downloadPdf(pdfBlob, `BARAKAH_ENTERPRISE_DUA_${Date.now()}`)
       } else {
         setError(response.error || 'Failed to generate dua')
       }
@@ -107,8 +107,8 @@ const DuaGenerator = () => {
                 ← Back
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-yellow-400">Duʿā Generator</h1>
-                <p className="text-yellow-300/60 text-sm">Authentic Islamic prayers</p>
+                <h1 className="text-2xl font-bold text-yellow-400">BARAKAH ENTERPRISE • Duʿā Generator</h1>
+                <p className="text-yellow-300/60 text-sm">Professional Islamic Digital Solutions</p>
               </div>
             </div>
             <div className="text-3xl font-bold text-yellow-400">$2.99</div>
@@ -126,10 +126,10 @@ const DuaGenerator = () => {
                   <span className="text-5xl">🤲</span>
                 </div>
                 <h2 className="text-3xl font-bold text-white mb-3">
-                  Generate Your Personal Duʿā
+                  BARAKAH ENTERPRISE • Premium Duʿā Generation
                 </h2>
                 <p className="text-gray-400 max-w-2xl mx-auto">
-                  Create authentic Islamic supplications with perfect Arabic and heartfelt translations
+                  Professional Islamic Digital Solutions • Enterprise-grade Arabic text rendering • Guaranteed perfect PDFs
                 </p>
               </div>
 
@@ -211,11 +211,15 @@ const DuaGenerator = () => {
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Premium PDF with Islamic borders</span>
+                      <span>ENTERPRISE PDF with luxury Islamic design</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Instant download after generation</span>
+                      <span>GUARANTEED perfect Arabic text rendering</span>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-yellow-400">✓</span>
+                      <span>Professional-grade PDF generation (NO HTML/CSS issues)</span>
                     </div>
                   </div>
                 </div>
@@ -225,7 +229,7 @@ const DuaGenerator = () => {
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : 'Continue to Payment - $2.99'}
+                  {loading ? 'Processing Enterprise Request...' : 'ENTERPRISE ACCESS - $2.99'}
                 </button>
               </form>
             </>
@@ -244,7 +248,7 @@ const DuaGenerator = () => {
               <div className="bg-slate-800/50 rounded-xl p-6 mb-8 max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Product:</span>
-                  <span className="text-white font-semibold">Personal Duʿā</span>
+                  <span className="text-white font-semibold">ENTERPRISE Duʿā</span>
                 </div>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Situation:</span>
@@ -278,7 +282,7 @@ const DuaGenerator = () => {
                   disabled={loading}
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Generating...' : 'Generate Duʿā Now'}
+                  {loading ? 'Generating Enterprise PDF...' : 'Generate ENTERPRISE Duʿā'}
                 </button>
               </div>
 
@@ -296,9 +300,9 @@ const DuaGenerator = () => {
                   <span className="text-4xl">✨</span>
                 </div>
                 <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400 mb-2">
-                  Your Beautiful Duʿā is Ready!
+                  ENTERPRISE Duʿā Generated Successfully!
                 </h3>
-                <p className="text-gray-400">A powerful supplication crafted just for you</p>
+                <p className="text-gray-400">Professional Islamic supplication with guaranteed perfect Arabic text</p>
               </div>
 
               {/* Fancy Dua Display */}
@@ -364,13 +368,13 @@ const DuaGenerator = () => {
                   <div className="mt-8 flex flex-col sm:flex-row gap-4">
                     <button
                       onClick={async () => {
-                        const pdfBlob = await workingPdfGenerator.generateWorkingPdf(generatedDua)
-                        workingPdfGenerator.downloadPdf(pdfBlob, `Dua_Premium_Islamic_${Date.now()}`)
+                        const pdfBlob = await enterprisePdfGenerator.generateEnterprisePdf(generatedDua)
+                        enterprisePdfGenerator.downloadPdf(pdfBlob, `BARAKAH_ENTERPRISE_DUA_${Date.now()}`)
                       }}
                       className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
                     >
-                      <span>📥</span>
-                      <span>Download Premium PDF</span>
+                      <span>💎</span>
+                      <span>Download Enterprise PDF</span>
                     </button>
                     <button
                       onClick={() => {
