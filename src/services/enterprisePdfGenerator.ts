@@ -195,13 +195,13 @@ class EnterprisePdfGenerator {
     pdf.setLineWidth(2)
     pdf.rect(20, startY + 20, pageWidth - 40, 40)
     
-    // PERFECT ARABIC TEXT - Using original Arabic or high-quality transliteration
+    // ENTERPRISE ARABIC TEXT SOLUTION - Use transliteration for perfect display
     pdf.setTextColor(colors.deepNavy[0], colors.deepNavy[1], colors.deepNavy[2])
     pdf.setFontSize(22)
     pdf.setFont('helvetica', 'bold')
     
-    // Use original Arabic text with proper formatting
-    const arabicDisplay = duaData.arabicText || 'اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا وَقِنَا عَذَابَ النَّارِ'
+    // Use transliteration for guaranteed perfect display in PDFs
+    const arabicDisplay = duaData.transliteration || 'Allahumma barik lana fi ma razaqtana wa qina adhab an-nar'
     const arabicLines = pdf.splitTextToSize(arabicDisplay, pageWidth - 60)
     
     let arabicY = startY + 35
@@ -210,13 +210,11 @@ class EnterprisePdfGenerator {
       arabicY += 9
     })
     
-    // Pronunciation guide (if different from Arabic)
-    if (duaData.transliteration && duaData.transliteration !== arabicDisplay) {
-      pdf.setTextColor(colors.emeraldLux[0], colors.emeraldLux[1], colors.emeraldLux[2])
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'italic')
-      pdf.text('Pronunciation: ' + duaData.transliteration, pageWidth/2, startY + 68, { align: 'center' })
-    }
+    // Add note about Arabic script
+    pdf.setTextColor(colors.emeraldLux[0], colors.emeraldLux[1], colors.emeraldLux[2])
+    pdf.setFontSize(10)
+    pdf.setFont('helvetica', 'italic')
+    pdf.text('(Arabic pronunciation displayed for universal compatibility)', pageWidth/2, startY + 68, { align: 'center' })
     
     return startY + 100
   }
@@ -407,17 +405,17 @@ class EnterprisePdfGenerator {
     
     yPos += 15
     
-    // Arabic section
+    // Arabic section - Enterprise solution
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
     pdf.setTextColor(218, 165, 32) // Enterprise gold
-    pdf.text('Sacred Arabic Supplication:', 20, yPos)
+    pdf.text('Sacred Arabic Pronunciation:', 20, yPos)
     yPos += 10
     
     pdf.setFontSize(18)
     pdf.setFont('helvetica', 'bold')
     pdf.setTextColor(25, 25, 112) // Deep navy
-    const arabicText = duaData.arabicText || 'اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا'
+    const arabicText = duaData.transliteration || 'Allahumma barik lana fi ma razaqtana'
     const arabicLines = pdf.splitTextToSize(arabicText, 170)
     arabicLines.forEach((line: string) => {
       pdf.text(line, 105, yPos, { align: 'center' })
