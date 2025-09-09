@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import simplePdfGenerator from '../services/simplePdfGenerator'
+import workingPdfGenerator from '../services/workingPdfGenerator'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -80,18 +80,9 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
         
-        // Generate simple working PDF
-        const pdfBlob = await simplePdfGenerator.generateSimplePdf(duaData)
-        
-        // Download the PDF
-        const url = URL.createObjectURL(pdfBlob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `Premium_Islamic_Dua_${Date.now()}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+        // Generate working PDF with no HTML/CSS issues
+        const pdfBlob = await workingPdfGenerator.generateWorkingPdf(duaData)
+        workingPdfGenerator.downloadPdf(pdfBlob, `Premium_Islamic_Dua_${Date.now()}`)
       } else {
         setError(response.error || 'Failed to generate dua')
       }
@@ -256,8 +247,8 @@ const DuaGenerator = () => {
                   <span className="text-white font-semibold">Personal Duʿā</span>
                 </div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">For:</span>
-                  <span className="text-white">{formData.name}</span>
+                  <span className="text-gray-400">Situation:</span>
+                  <span className="text-white text-sm">{formData.situation.substring(0, 30)}...</span>
                 </div>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400">Language:</span>
@@ -373,8 +364,8 @@ const DuaGenerator = () => {
                   <div className="mt-8 flex flex-col sm:flex-row gap-4">
                     <button
                       onClick={async () => {
-                        const pdfBlob = await pdfService.generateDuaPDF(generatedDua)
-                        pdfService.downloadPDF(pdfBlob, `Dua_for_${generatedDua.name.replace(/\s+/g, '_')}_Clear`)
+                        const pdfBlob = await workingPdfGenerator.generateWorkingPdf(generatedDua)
+                        workingPdfGenerator.downloadPdf(pdfBlob, `Dua_Premium_Islamic_${Date.now()}`)
                       }}
                       className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
                     >
@@ -385,7 +376,7 @@ const DuaGenerator = () => {
                       onClick={() => {
                         setGeneratedDua(null)
                         setShowPayment(false)
-                        setFormData({ name: '', situation: '', language: 'English' })
+                        setFormData({ situation: '', language: 'English', theme: 'royalGold' })
                       }}
                       className="flex-1 bg-slate-800/50 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700/50 transition-all duration-300 border border-slate-700 flex items-center justify-center gap-2"
                     >
