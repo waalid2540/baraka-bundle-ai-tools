@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import simplePdfGeneratorFixed from '../services/simplePdfGeneratorFixed'
+import arabicPdfGenerator from '../services/arabicPdfGenerator'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -80,9 +80,9 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
         
-        // Generate simple, working PDF
-        const pdfBlob = await simplePdfGeneratorFixed.generatePdf(duaData)
-        simplePdfGeneratorFixed.downloadPdf(pdfBlob, `BarakahTool_Dua_${Date.now()}`)
+        // Generate PDF with REAL Arabic text
+        const pdfBlob = await arabicPdfGenerator.generatePdf(duaData)
+        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
       } else {
         setError(response.error || 'Failed to generate dua')
       }
@@ -368,13 +368,13 @@ const DuaGenerator = () => {
                   <div className="mt-8 flex flex-col sm:flex-row gap-4">
                     <button
                       onClick={async () => {
-                        const pdfBlob = await simplePdfGeneratorFixed.generatePdf(generatedDua)
-                        simplePdfGeneratorFixed.downloadPdf(pdfBlob, `BarakahTool_Dua_${Date.now()}`)
+                        const pdfBlob = await arabicPdfGenerator.generatePdf(generatedDua)
+                        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
                       }}
                       className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
                     >
-                      <span>📥</span>
-                      <span>Download PDF</span>
+                      <span>🕌</span>
+                      <span>Download Arabic PDF</span>
                     </button>
                     <button
                       onClick={() => {
