@@ -10,7 +10,9 @@ const DuaGenerator = () => {
   const [formData, setFormData] = useState({
     situation: '',
     language: 'English',
-    theme: 'royalGold'
+    theme: 'royalGold',
+    duaCategory: 'general', // 'prophet' or 'general'
+    selectedDua: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -20,11 +22,120 @@ const DuaGenerator = () => {
   const languages = openaiService.getSupportedLanguages()
   const themeNames = getThemeNames()
 
+  // Predefined Duas
+  const prophetDuas = [
+    {
+      id: 'rizq',
+      name: 'Dua for Rizq (Sustenance)',
+      arabic: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رِزْقِكَ الْحَلَالِ',
+      transliteration: 'Allahumma iftah li abwaba rizqika al-halal',
+      translation: 'O Allah, open for me the doors of Your lawful sustenance'
+    },
+    {
+      id: 'protection',
+      name: 'Dua for Protection',
+      arabic: 'أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
+      transliteration: 'A\'udhu bi kalimati\'llahi\'t-tammati min sharri ma khalaq',
+      translation: 'I seek refuge in the perfect words of Allah from the evil of what He has created'
+    },
+    {
+      id: 'guidance',
+      name: 'Dua for Guidance',
+      arabic: 'اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ',
+      transliteration: 'Allahumma ihdini fiman hadayt',
+      translation: 'O Allah, guide me among those You have guided'
+    },
+    {
+      id: 'forgiveness',
+      name: 'Dua for Forgiveness',
+      arabic: 'رَبِّ اغْفِرْ لِي ذَنْبِي وَخَطَئِي وَجَهْلِي',
+      transliteration: 'Rabbi ighfir li dhanbi wa khatai wa jahli',
+      translation: 'My Lord, forgive me my sin, my error, and my ignorance'
+    },
+    {
+      id: 'health',
+      name: 'Dua for Health',
+      arabic: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي',
+      transliteration: 'Allahumma \'afini fi badani, Allahumma \'afini fi sam\'i, Allahumma \'afini fi basari',
+      translation: 'O Allah, grant me health in my body, O Allah, grant me health in my hearing, O Allah, grant me health in my sight'
+    },
+    {
+      id: 'knowledge',
+      name: 'Dua for Knowledge',
+      arabic: 'رَبِّ زِدْنِي عِلْماً',
+      transliteration: 'Rabbi zidni \'ilman',
+      translation: 'My Lord, increase me in knowledge'
+    }
+  ]
+
+  const generalDuas = [
+    {
+      id: 'success_work',
+      name: 'Success in Work/Business',
+      situation: 'Success in my work and business ventures'
+    },
+    {
+      id: 'family_protection',
+      name: 'Family Protection',
+      situation: 'Protection and blessings for my family'
+    },
+    {
+      id: 'marriage',
+      name: 'Finding a Spouse',
+      situation: 'Finding a righteous spouse and blessed marriage'
+    },
+    {
+      id: 'children',
+      name: 'Righteous Children',
+      situation: 'Righteous and healthy children'
+    },
+    {
+      id: 'debt_relief',
+      name: 'Relief from Debt',
+      situation: 'Relief from financial difficulties and debt'
+    },
+    {
+      id: 'travel_safety',
+      name: 'Safe Travel',
+      situation: 'Safety and blessings during travel'
+    },
+    {
+      id: 'exam_success',
+      name: 'Success in Exams/Studies',
+      situation: 'Success in my studies and examinations'
+    },
+    {
+      id: 'illness_recovery',
+      name: 'Recovery from Illness',
+      situation: 'Healing and recovery from illness'
+    },
+    {
+      id: 'anxiety_peace',
+      name: 'Peace from Anxiety',
+      situation: 'Peace of mind and relief from anxiety'
+    },
+    {
+      id: 'custom',
+      name: 'Custom Request',
+      situation: 'custom' // Will show text input
+    }
+  ]
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.situation.trim()) {
-      setError('Please describe your situation')
+    if (formData.duaCategory === 'general' && formData.selectedDua === 'custom' && !formData.situation.trim()) {
+      setError('Please describe your custom situation')
+      return
+    }
+    
+    if (formData.duaCategory === 'general' && !formData.selectedDua) {
+      setError('Please select a dua category')
+      return
+    }
+    
+    if (formData.duaCategory === 'prophet' && !formData.selectedDua) {
+      setError('Please select a Prophet\'s dua')
       return
     }
 
@@ -50,42 +161,65 @@ const DuaGenerator = () => {
       setLoading(true)
       setError('')
 
-      // Generate dua using OpenAI
-      const response = await openaiService.generateDua(
-        'User',
-        formData.situation,
-        formData.language
-      )
+      let duaData: any
 
-      if (response.success && response.data) {
-        // Parse the response to extract Arabic, transliteration, and translation
-        const content = response.data.content
-        const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-        const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-        const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*([\s\S]*?)(?=\n\n|$)/i)
-        
-        const duaData = {
-          arabicText: arabicMatch ? arabicMatch[1].trim() : '',
-          transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-          translation: translationMatch ? translationMatch[1].trim() : '',
-          name: 'User',
-          situation: formData.situation,
-          language: formData.language,
-          theme: formData.theme
+      if (formData.duaCategory === 'prophet') {
+        // Use predefined Prophet's dua
+        const selectedProphetDua = prophetDuas.find(dua => dua.id === formData.selectedDua)
+        if (selectedProphetDua) {
+          duaData = {
+            arabicText: selectedProphetDua.arabic,
+            transliteration: selectedProphetDua.transliteration,
+            translation: selectedProphetDua.translation,
+            name: 'User',
+            situation: selectedProphetDua.name,
+            language: formData.language,
+            theme: formData.theme
+          }
         }
-
-        // Debug: Log the parsed data
-        console.log('Generated Dua Data:', duaData)
-        console.log('Original content:', content)
-
-        setGeneratedDua(duaData)
-        
-        // Generate PDF with REAL Arabic text
-        const pdfBlob = await arabicPdfGenerator.generatePdf(duaData)
-        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
       } else {
-        setError(response.error || 'Failed to generate dua')
+        // Generate dua using OpenAI for general requests
+        const situation = formData.selectedDua === 'custom' 
+          ? formData.situation 
+          : generalDuas.find(dua => dua.id === formData.selectedDua)?.situation || formData.situation
+
+        const response = await openaiService.generateDua(
+          'User',
+          situation,
+          formData.language
+        )
+
+        if (response.success && response.data) {
+          // Parse the response to extract Arabic, transliteration, and translation
+          const content = response.data.content
+          const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
+          const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
+          const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*([\s\S]*?)(?=\n\n|$)/i)
+          
+          duaData = {
+            arabicText: arabicMatch ? arabicMatch[1].trim() : '',
+            transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
+            translation: translationMatch ? translationMatch[1].trim() : '',
+            name: 'User',
+            situation: situation,
+            language: formData.language,
+            theme: formData.theme
+          }
+        } else {
+          setError(response.error || 'Failed to generate dua')
+          return
+        }
       }
+
+      // Debug: Log the parsed data
+      console.log('Generated Dua Data:', duaData)
+
+      setGeneratedDua(duaData)
+      
+      // Generate PDF with REAL Arabic text
+      const pdfBlob = await arabicPdfGenerator.generatePdf(duaData)
+      arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
+      
     } catch (err) {
       setError('An error occurred. Please try again.')
     } finally {
@@ -134,18 +268,113 @@ const DuaGenerator = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Dua Category Selection */}
                 <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    What do you need duʿā for?
+                  <label className="block text-yellow-400 font-semibold mb-3">
+                    Choose Dua Category
                   </label>
-                  <textarea
-                    value={formData.situation}
-                    onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors h-32 resize-none"
-                    placeholder="E.g., Protection for my family, Success in my studies, Healing from illness, Guidance in making a decision..."
-                    required
-                  />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, duaCategory: 'prophet', selectedDua: '' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        formData.duaCategory === 'prophet'
+                          ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
+                          : 'border-slate-600 bg-slate-800/30 text-gray-300 hover:border-yellow-500/50'
+                      }`}
+                    >
+                      <div className="text-2xl mb-2">📿</div>
+                      <div className="font-semibold">Prophet's Du'a</div>
+                      <div className="text-sm opacity-80">Authentic duas from Quran & Sunnah</div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, duaCategory: 'general', selectedDua: '' })}
+                      className={`p-4 rounded-xl border-2 transition-all ${
+                        formData.duaCategory === 'general'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                          : 'border-slate-600 bg-slate-800/30 text-gray-300 hover:border-emerald-500/50'
+                      }`}
+                    >
+                      <div className="text-2xl mb-2">🤲</div>
+                      <div className="font-semibold">General Du'a</div>
+                      <div className="text-sm opacity-80">AI-generated for specific needs</div>
+                    </button>
+                  </div>
                 </div>
+
+                {/* Prophet's Dua Selection */}
+                {formData.duaCategory === 'prophet' && (
+                  <div>
+                    <label className="block text-yellow-400 font-semibold mb-3">
+                      Select Prophet's Du'a
+                    </label>
+                    <div className="grid gap-3">
+                      {prophetDuas.map((dua) => (
+                        <button
+                          key={dua.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, selectedDua: dua.id })}
+                          className={`p-4 text-left rounded-xl border-2 transition-all ${
+                            formData.selectedDua === dua.id
+                              ? 'border-yellow-500 bg-yellow-500/10'
+                              : 'border-slate-700 bg-slate-800/50 hover:border-yellow-500/50'
+                          }`}
+                        >
+                          <div className="font-semibold text-white mb-1">{dua.name}</div>
+                          <div className="text-sm text-gray-400 mb-2">{dua.transliteration}</div>
+                          <div className="text-sm text-gray-300">{dua.translation}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* General Dua Selection */}
+                {formData.duaCategory === 'general' && (
+                  <div>
+                    <label className="block text-emerald-400 font-semibold mb-3">
+                      Select Your Need
+                    </label>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {generalDuas.map((dua) => (
+                        <button
+                          key={dua.id}
+                          type="button"
+                          onClick={() => setFormData({ 
+                            ...formData, 
+                            selectedDua: dua.id,
+                            situation: dua.id === 'custom' ? formData.situation : dua.situation
+                          })}
+                          className={`p-3 text-left rounded-xl border-2 transition-all ${
+                            formData.selectedDua === dua.id
+                              ? 'border-emerald-500 bg-emerald-500/10'
+                              : 'border-slate-700 bg-slate-800/50 hover:border-emerald-500/50'
+                          }`}
+                        >
+                          <div className="font-semibold text-white text-sm">{dua.name}</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Custom input for general dua */}
+                    {formData.selectedDua === 'custom' && (
+                      <div className="mt-4">
+                        <label className="block text-emerald-400 font-semibold mb-2">
+                          Describe your specific need
+                        </label>
+                        <textarea
+                          value={formData.situation}
+                          onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-colors h-24 resize-none"
+                          placeholder="E.g., Protection for my family, Success in my studies, Healing from illness..."
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -380,7 +609,13 @@ const DuaGenerator = () => {
                       onClick={() => {
                         setGeneratedDua(null)
                         setShowPayment(false)
-                        setFormData({ situation: '', language: 'English', theme: 'royalGold' })
+                        setFormData({ 
+                          situation: '', 
+                          language: 'English', 
+                          theme: 'royalGold',
+                          duaCategory: 'general',
+                          selectedDua: ''
+                        })
                       }}
                       className="flex-1 bg-slate-800/50 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700/50 transition-all duration-300 border border-slate-700 flex items-center justify-center gap-2"
                     >
