@@ -41,9 +41,9 @@ class ProfessionalPdfGenerator {
           }
           
           body {
-            width: 794px;
-            height: 1123px;
-            padding: 80px 60px;
+            width: 595px;
+            height: 842px;
+            padding: 60px 50px;
             background: linear-gradient(135deg, #fefefe 0%, #f9f7f0 50%, #fdfbf7 100%);
             font-family: 'Noto Sans', Arial, sans-serif;
             position: relative;
@@ -51,6 +51,7 @@ class ProfessionalPdfGenerator {
             flex-direction: column;
             align-items: center;
             overflow: hidden;
+            margin: 0;
           }
           
           /* Islamic Geometric Pattern Background */
@@ -77,10 +78,10 @@ class ProfessionalPdfGenerator {
             opacity: 0.08;
           }
           
-          .star-pattern.top-left { top: 40px; left: 40px; }
-          .star-pattern.top-right { top: 40px; right: 40px; }
-          .star-pattern.bottom-left { bottom: 40px; left: 40px; }
-          .star-pattern.bottom-right { bottom: 40px; right: 40px; }
+          .star-pattern.top-left { top: 30px; left: 30px; }
+          .star-pattern.top-right { top: 30px; right: 30px; }
+          .star-pattern.bottom-left { bottom: 30px; left: 30px; }
+          .star-pattern.bottom-right { bottom: 30px; right: 30px; }
           
           .star-pattern::before {
             content: '✦';
@@ -101,10 +102,10 @@ class ProfessionalPdfGenerator {
           /* Professional Gold Frame */
           .gold-frame {
             position: absolute;
-            top: 50px;
-            left: 50px;
-            right: 50px;
-            bottom: 50px;
+            top: 40px;
+            left: 40px;
+            right: 40px;
+            bottom: 40px;
             border: 3px solid ${borderColor};
             border-radius: 12px;
             box-shadow: 
@@ -169,7 +170,7 @@ class ProfessionalPdfGenerator {
           /* Header Section */
           .header {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             z-index: 10;
             width: 100%;
             position: relative;
@@ -177,9 +178,9 @@ class ProfessionalPdfGenerator {
           
           .bismillah {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 26pt;
+            font-size: 22pt;
             color: ${primaryColor};
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-weight: 700;
             text-shadow: 
               0 2px 4px rgba(0,0,0,0.1),
@@ -188,7 +189,7 @@ class ProfessionalPdfGenerator {
           
           .title {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 20pt;
+            font-size: 18pt;
             color: ${accentColor};
             font-weight: 600;
             letter-spacing: 2px;
@@ -220,7 +221,7 @@ class ProfessionalPdfGenerator {
           .divider {
             width: 100%;
             text-align: center;
-            margin: 40px 0;
+            margin: 25px 0;
             position: relative;
             z-index: 10;
           }
@@ -250,7 +251,7 @@ class ProfessionalPdfGenerator {
           /* Main Content */
           .content {
             width: 100%;
-            max-width: 650px;
+            max-width: 500px;
             z-index: 10;
             position: relative;
           }
@@ -258,8 +259,8 @@ class ProfessionalPdfGenerator {
           /* Arabic Section */
           .arabic-section {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 35px;
+            margin-bottom: 25px;
+            padding: 25px;
             background: 
               radial-gradient(circle at center, rgba(255,255,255,0.95), rgba(253,251,247,0.8)),
               linear-gradient(135deg, ${borderColor}10, transparent);
@@ -284,7 +285,7 @@ class ProfessionalPdfGenerator {
           
           .arabic-text {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 32pt;
+            font-size: 24pt;
             line-height: 2.3;
             color: #1a1a1a;
             direction: rtl;
@@ -330,7 +331,7 @@ class ProfessionalPdfGenerator {
           
           .translation-text {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 14pt;
+            font-size: 12pt;
             color: #333;
             line-height: 1.8;
             font-style: italic;
@@ -542,8 +543,8 @@ class ProfessionalPdfGenerator {
     container.style.position = 'absolute'
     container.style.top = '-9999px'
     container.style.left = '-9999px'
-    container.style.width = '794px'
-    container.style.height = '1123px'
+    container.style.width = '595px'
+    container.style.height = '842px'
     container.style.backgroundColor = 'white'
     container.innerHTML = this.generateProfessionalHtml(duaData)
     document.body.appendChild(container)
@@ -554,29 +555,29 @@ class ProfessionalPdfGenerator {
       
       // Convert to canvas with high quality
       const canvas = await html2canvas(container, {
-        scale: 2, // Good balance between quality and performance
+        scale: 2, // High quality
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        width: 794, // A4 width in pixels at 96 DPI
-        height: 1123, // A4 height in pixels at 96 DPI
-        windowWidth: 794,
-        windowHeight: 1123,
-        x: 0,
-        y: 0
+        width: 595,
+        height: 842
       })
       
-      // Create PDF
+      // Create PDF with exact A4 dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
+        unit: 'pt',
+        format: [595, 842], // A4 size in points (72 DPI)
         compress: true
       })
       
-      // Add image to PDF
+      // Calculate scaling to fit perfectly
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      
+      // Add image to PDF with proper scaling
       const imgData = canvas.toDataURL('image/png', 1.0)
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, '', 'FAST')
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'SLOW')
       
       // Clean up
       document.body.removeChild(container)
