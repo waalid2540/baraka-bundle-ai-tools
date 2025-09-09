@@ -192,8 +192,6 @@ class ProfessionalPdfGenerator {
             font-size: 18pt;
             color: ${accentColor};
             font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
             margin-bottom: 15px;
             position: relative;
           }
@@ -323,8 +321,6 @@ class ProfessionalPdfGenerator {
             font-family: 'Noto Sans', sans-serif;
             font-size: 10pt;
             color: ${accentColor};
-            text-transform: uppercase;
-            letter-spacing: 2px;
             margin-bottom: 5mm;
             font-weight: 600;
           }
@@ -361,8 +357,6 @@ class ProfessionalPdfGenerator {
             text-align: center;
             margin-bottom: 5mm;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
           }
           
           .notes-list {
@@ -413,7 +407,6 @@ class ProfessionalPdfGenerator {
             font-size: 11pt;
             color: ${primaryColor};
             font-weight: 600;
-            letter-spacing: 1px;
           }
           
           /* Islamic Decorative Elements */
@@ -505,7 +498,7 @@ class ProfessionalPdfGenerator {
           
           <!-- Translation Section -->
           <div class="translation-section">
-            <div class="translation-label">${duaData.language} Translation</div>
+            <div class="translation-label">${duaData.language === 'English' ? 'English' : duaData.language} Translation</div>
             <div class="translation-text">
               ${duaData.translation || 'O Allah, open for me the doors of success in every matter'}
             </div>
@@ -527,7 +520,7 @@ class ProfessionalPdfGenerator {
         <!-- Footer -->
         <div class="footer">
           <div class="footer-text">May Allah accept your supplication and grant you success</div>
-          <div class="footer-brand">BARAKAHTOOL • PREMIUM ISLAMIC PLATFORM</div>
+          <div class="footer-brand">BarakahTool • Premium Islamic Platform</div>
         </div>
       </body>
       </html>
