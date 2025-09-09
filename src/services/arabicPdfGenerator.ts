@@ -13,39 +13,47 @@ interface DuaData {
 class ArabicPdfGenerator {
   
   private getRandomContentCreatorTheme(): any {
-    // Random themes for content creators who want variety
+    // Professional content creator themes with perfect readability
     const creatorThemes = [
       {
-        primary: '#FF6B6B', secondary: '#FF8E53', accent: '#FFE66D', bg: '#FFF3E0',
-        pattern: '🌺', symbol: '🌸', name: 'Coral Blossom'
+        primary: '#2E86AB', secondary: '#A23B72', accent: '#F18F01', bg: '#FFFFFF',
+        textColor: '#1A1A1A', headerBg: 'linear-gradient(135deg, #2E86AB, #A23B72)',
+        pattern: '✨', symbol: '🕌', name: 'Ocean Professional'
       },
       {
-        primary: '#4ECDC4', secondary: '#44A08D', accent: '#C7F0DB', bg: '#E8F6F3',
-        pattern: '🌊', symbol: '💎', name: 'Ocean Mint'
+        primary: '#6A994E', secondary: '#A7C957', accent: '#F2E8CF', bg: '#FFFFFF',
+        textColor: '#2D3748', headerBg: 'linear-gradient(135deg, #6A994E, #A7C957)',
+        pattern: '🌿', symbol: '⭐', name: 'Nature Elite'
       },
       {
-        primary: '#9B59B6', secondary: '#8E44AD', accent: '#F4D7F4', bg: '#F8F4FF',
-        pattern: '🔮', symbol: '⚡', name: 'Mystic Purple'
+        primary: '#7209B7', secondary: '#A663CC', accent: '#F8BBD9', bg: '#FFFFFF',
+        textColor: '#2D1B69', headerBg: 'linear-gradient(135deg, #7209B7, #A663CC)',
+        pattern: '💜', symbol: '🌙', name: 'Royal Purple'
       },
       {
-        primary: '#E67E22', secondary: '#D35400', accent: '#FDEAA7', bg: '#FDF4E3',
-        pattern: '🦋', symbol: '🌅', name: 'Sunset Orange'
+        primary: '#D4A574', secondary: '#E76F51', accent: '#F4A261', bg: '#FFFFFF',
+        textColor: '#8B4513', headerBg: 'linear-gradient(135deg, #D4A574, #E76F51)',
+        pattern: '🌟', symbol: '🕌', name: 'Desert Gold'
       },
       {
-        primary: '#1ABC9C', secondary: '#16A085', accent: '#A8E6CF', bg: '#E8F8F5',
-        pattern: '🌿', symbol: '🍃', name: 'Emerald Garden'
+        primary: '#2A9D8F', secondary: '#264653', accent: '#E9C46A', bg: '#FFFFFF',
+        textColor: '#1A5490', headerBg: 'linear-gradient(135deg, #2A9D8F, #264653)',
+        pattern: '🌊', symbol: '💎', name: 'Teal Professional'
       },
       {
-        primary: '#3498DB', secondary: '#2980B9', accent: '#AED6F1', bg: '#EBF5FB',
-        pattern: '☁️', symbol: '⭐', name: 'Sky Blue'
+        primary: '#E63946', secondary: '#F77F00', accent: '#FCBF49', bg: '#FFFFFF',
+        textColor: '#8B0000', headerBg: 'linear-gradient(135deg, #E63946, #F77F00)',
+        pattern: '🔥', symbol: '⚡', name: 'Sunset Bold'
       },
       {
-        primary: '#E91E63', secondary: '#C2185B', accent: '#F8BBD9', bg: '#FCE4EC',
-        pattern: '💖', symbol: '🌹', name: 'Rose Pink'
+        primary: '#4361EE', secondary: '#7209B7', accent: '#F72585', bg: '#FFFFFF',
+        textColor: '#1A202C', headerBg: 'linear-gradient(135deg, #4361EE, #7209B7)',
+        pattern: '💫', symbol: '🌟', name: 'Electric Blue'
       },
       {
-        primary: '#795548', secondary: '#5D4037', accent: '#D7CCC8', bg: '#F3E5F5',
-        pattern: '🏔️', symbol: '🌳', name: 'Earth Brown'
+        primary: '#2F4858', secondary: '#33658A', accent: '#86BBD8', bg: '#FFFFFF',
+        textColor: '#1A365D', headerBg: 'linear-gradient(135deg, #2F4858, #33658A)',
+        pattern: '⚡', symbol: '🏛️', name: 'Corporate Steel'
       }
     ]
     
@@ -55,40 +63,49 @@ class ArabicPdfGenerator {
   private getIslamicTheme(duaType: string): any {
     const themes = {
       'rizq': {
-        primary: '#228B22', secondary: '#32CD32', accent: '#90EE90', bg: '#F0FFF0',
-        pattern: '💰', symbol: '🌾', name: 'Rizq Green'
+        primary: '#2E7D32', secondary: '#4CAF50', accent: '#C8E6C9', bg: '#FFFFFF',
+        textColor: '#1B5E20', headerBg: 'linear-gradient(135deg, #2E7D32, #4CAF50)',
+        pattern: '💰', symbol: '🌾', name: 'Rizq Professional'
       },
       'protection': {
-        primary: '#4169E1', secondary: '#1E90FF', accent: '#87CEEB', bg: '#F0F8FF',
-        pattern: '🛡️', symbol: '⚔️', name: 'Protection Blue'
+        primary: '#1565C0', secondary: '#2196F3', accent: '#BBDEFB', bg: '#FFFFFF',
+        textColor: '#0D47A1', headerBg: 'linear-gradient(135deg, #1565C0, #2196F3)',
+        pattern: '🛡️', symbol: '⚔️', name: 'Protection Elite'
       },
       'guidance': {
-        primary: '#FFD700', secondary: '#FFA500', accent: '#FFFFE0', bg: '#FFFACD',
-        pattern: '⭐', symbol: '🧭', name: 'Guidance Gold'
+        primary: '#F57C00', secondary: '#FF9800', accent: '#FFE0B2', bg: '#FFFFFF',
+        textColor: '#E65100', headerBg: 'linear-gradient(135deg, #F57C00, #FF9800)',
+        pattern: '⭐', symbol: '🧭', name: 'Guidance Premium'
       },
       'forgiveness': {
-        primary: '#8A2BE2', secondary: '#9370DB', accent: '#DDA0DD', bg: '#F8F8FF',
-        pattern: '✨', symbol: '🤲', name: 'Forgiveness Purple'
+        primary: '#7B1FA2', secondary: '#9C27B0', accent: '#E1BEE7', bg: '#FFFFFF',
+        textColor: '#4A148C', headerBg: 'linear-gradient(135deg, #7B1FA2, #9C27B0)',
+        pattern: '✨', symbol: '🤲', name: 'Forgiveness Royal'
       },
       'health': {
-        primary: '#DC143C', secondary: '#FF6347', accent: '#FFB6C1', bg: '#FFF0F5',
-        pattern: '❤️', symbol: '🏥', name: 'Health Crimson'
+        primary: '#C62828', secondary: '#F44336', accent: '#FFCDD2', bg: '#FFFFFF',
+        textColor: '#B71C1C', headerBg: 'linear-gradient(135deg, #C62828, #F44336)',
+        pattern: '❤️', symbol: '🏥', name: 'Health Professional'
       },
       'knowledge': {
-        primary: '#2F4F4F', secondary: '#708090', accent: '#D3D3D3', bg: '#F5F5F5',
-        pattern: '📚', symbol: '🎓', name: 'Knowledge Gray'
+        primary: '#455A64', secondary: '#607D8B', accent: '#CFD8DC', bg: '#FFFFFF',
+        textColor: '#263238', headerBg: 'linear-gradient(135deg, #455A64, #607D8B)',
+        pattern: '📚', symbol: '🎓', name: 'Knowledge Executive'
       },
       'travel': {
-        primary: '#FF8C00', secondary: '#FF4500', accent: '#FFDAB9', bg: '#FFF8DC',
-        pattern: '🗺️', symbol: '✈️', name: 'Travel Orange'
+        primary: '#FF6F00', secondary: '#FF8F00', accent: '#FFE0B2', bg: '#FFFFFF',
+        textColor: '#E65100', headerBg: 'linear-gradient(135deg, #FF6F00, #FF8F00)',
+        pattern: '🗺️', symbol: '✈️', name: 'Travel Premium'
       },
       'sleep': {
-        primary: '#483D8B', secondary: '#6A5ACD', accent: '#E6E6FA', bg: '#F0F8FF',
-        pattern: '🌙', symbol: '💤', name: 'Sleep Indigo'
+        primary: '#3F51B5', secondary: '#5C6BC0', accent: '#C5CAE9', bg: '#FFFFFF',
+        textColor: '#283593', headerBg: 'linear-gradient(135deg, #3F51B5, #5C6BC0)',
+        pattern: '🌙', symbol: '💤', name: 'Sleep Professional'
       },
       'default': {
-        primary: '#d4af37', secondary: '#b8860b', accent: '#fff8dc', bg: '#faf0e6',
-        pattern: '🕌', symbol: '☪️', name: 'Classic Islamic'
+        primary: '#8D6E63', secondary: '#A1887F', accent: '#D7CCC8', bg: '#FFFFFF',
+        textColor: '#5D4037', headerBg: 'linear-gradient(135deg, #8D6E63, #A1887F)',
+        pattern: '🕌', symbol: '☪️', name: 'Classic Professional'
       }
     }
     
@@ -197,7 +214,7 @@ class ArabicPdfGenerator {
 
           <!-- Bismillah Header -->
           <div style="
-            background: linear-gradient(135deg, ${theme.primary}, ${theme.secondary}, ${theme.primary});
+            background: ${theme.headerBg || `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`};
             color: white;
             padding: 25px;
             text-align: center;
@@ -230,10 +247,10 @@ class ArabicPdfGenerator {
             <div style="position: absolute; top: -2px; left: -2px; width: 20px; height: 20px; border-top: 4px solid ${theme.secondary}; border-left: 4px solid ${theme.secondary};"></div>
             <div style="position: absolute; top: -2px; right: -2px; width: 20px; height: 20px; border-top: 4px solid ${theme.secondary}; border-right: 4px solid ${theme.secondary};"></div>
             
-            <h3 style="color: ${theme.secondary}; margin: 0 0 15px 0; font-size: 16px; text-align: center;">
+            <h3 style="color: ${theme.textColor || '#2c1810'}; margin: 0 0 15px 0; font-size: 16px; text-align: center; font-weight: 700;">
               ${theme.pattern} Your Spiritual Request ${theme.symbol}
             </h3>
-            <p style="margin: 0; font-size: 15px; text-align: center; line-height: 1.6; color: ${theme.primary}; font-weight: 600;">${duaData.situation}</p>
+            <p style="margin: 0; font-size: 15px; text-align: center; line-height: 1.6; color: ${theme.textColor || '#2c1810'}; font-weight: 600;">${duaData.situation}</p>
           </div>
 
           <!-- Arabic Text - Main Feature -->
@@ -264,13 +281,11 @@ class ArabicPdfGenerator {
             ">${theme.pattern}</div>
             
             <h3 style="
-              color: ${theme.primary}; 
+              color: #ffffff; 
               margin: 0 0 20px 0; 
               font-size: 18px;
-              background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary}, ${theme.primary});
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              background-clip: text;
+              font-weight: 700;
+              text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
             ">${theme.pattern} Sacred Arabic Supplication ${theme.symbol}</h3>
             
             <div style="
@@ -278,17 +293,13 @@ class ArabicPdfGenerator {
               line-height: 2;
               direction: rtl;
               font-family: 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', 'Times New Roman', serif;
-              color: ${theme.primary};
-              font-weight: bold;
-              background: linear-gradient(135deg, ${theme.primary}, ${theme.secondary}, ${theme.primary});
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              background-clip: text;
-              text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-              padding: 15px;
-              border: 2px dashed ${theme.primary}50;
-              border-radius: 10px;
-              background-color: rgba(255,255,255,0.8);
+              color: ${theme.textColor || '#1a1a1a'};
+              font-weight: 800;
+              text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+              padding: 20px;
+              border: 3px solid ${theme.primary};
+              border-radius: 12px;
+              background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
             ">
               ${duaData.arabicText || 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رِزْقِكَ الْحَلَالِ'}
             </div>
@@ -313,7 +324,7 @@ class ArabicPdfGenerator {
               font-size: 12px;
             ">${theme.pattern} ${theme.symbol} ${theme.pattern}</div>
             
-            <h3 style="color: ${theme.primary}; margin: 0 0 12px 0; font-size: 15px; text-align: center;">
+            <h3 style="color: ${theme.textColor || '#2c1810'}; margin: 0 0 12px 0; font-size: 15px; text-align: center; font-weight: 700;">
               ${theme.pattern} Pronunciation Guide ${theme.symbol}
             </h3>
             <p style="
@@ -322,7 +333,7 @@ class ArabicPdfGenerator {
               font-size: 14px; 
               text-align: center;
               line-height: 1.5;
-              color: ${theme.secondary};
+              color: ${theme.textColor || '#1a5490'};
               font-weight: 600;
             ">${duaData.transliteration}</p>
           </div>
@@ -354,23 +365,24 @@ class ArabicPdfGenerator {
             ">${theme.pattern} Translation ${theme.symbol}</div>
             
             <h3 style="
-              color: ${theme.secondary}; 
+              color: ${theme.textColor || '#2c1810'}; 
               margin: 15px 0 20px 0; 
               font-size: 18px;
-              font-weight: bold;
+              font-weight: 700;
             ">${theme.pattern} ${duaData.language} Translation ${theme.symbol}</h3>
             
             <div style="
               font-size: 18px; 
               font-style: italic;
               line-height: 1.8;
-              color: ${theme.primary};
+              color: ${theme.textColor || '#1a4d72'};
               font-weight: 600;
-              border-left: 4px solid ${theme.secondary};
-              border-right: 4px solid ${theme.secondary};
-              padding: 15px 20px;
-              background: rgba(255,255,255,0.7);
-              border-radius: 8px;
+              border-left: 4px solid ${theme.primary};
+              border-right: 4px solid ${theme.primary};
+              padding: 20px;
+              background: rgba(255,255,255,0.95);
+              border-radius: 12px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             ">"${duaData.translation}"</div>
           </div>
 
@@ -382,10 +394,10 @@ class ArabicPdfGenerator {
             padding: 20px;
             margin-bottom: 30px;
           ">
-            <h3 style="color: ${theme.secondary}; margin: 0 0 15px 0; font-size: 16px; text-align: center;">
+            <h3 style="color: ${theme.textColor || '#2c1810'}; margin: 0 0 15px 0; font-size: 16px; text-align: center; font-weight: 700;">
               ${theme.pattern} Spiritual Guidance ${theme.symbol}
             </h3>
-            <div style="color: ${theme.primary}; font-size: 12px; line-height: 1.6; font-weight: 600;">
+            <div style="color: ${theme.textColor || '#1a4d72'}; font-size: 12px; line-height: 1.6; font-weight: 600;">
               🌙 <strong>Best Times:</strong> Last third of night, between Maghrib & Isha<br>
               🤲 <strong>Recitation:</strong> With complete sincerity and focus<br>
               🔢 <strong>Repetition:</strong> 3, 7, or 33 times for increased blessing<br>
@@ -412,7 +424,7 @@ class ArabicPdfGenerator {
           bottom: 20px;
           left: 40px;
           right: 40px;
-          background: linear-gradient(135deg, ${theme.primary}, ${theme.secondary}, ${theme.primary});
+          background: ${theme.headerBg || `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`};
           color: white;
           padding: 18px;
           text-align: center;
