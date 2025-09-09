@@ -41,48 +41,97 @@ class ProfessionalPdfGenerator {
           }
           
           body {
-            width: 210mm;
-            height: 297mm;
-            padding: 25mm 20mm;
-            background: linear-gradient(to bottom, #ffffff, #fdfbf7);
+            width: 794px;
+            height: 1123px;
+            padding: 80px 60px;
+            background: linear-gradient(135deg, #fefefe 0%, #f9f7f0 50%, #fdfbf7 100%);
             font-family: 'Noto Sans', Arial, sans-serif;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow: hidden;
+          }
+          
+          /* Islamic Geometric Pattern Background */
+          .islamic-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.04;
+            background-image: 
+              repeating-linear-gradient(45deg, ${primaryColor} 0, ${primaryColor} 1px, transparent 1px, transparent 15px),
+              repeating-linear-gradient(-45deg, ${primaryColor} 0, ${primaryColor} 1px, transparent 1px, transparent 15px),
+              repeating-linear-gradient(90deg, ${primaryColor} 0, ${primaryColor} 1px, transparent 1px, transparent 15px),
+              repeating-linear-gradient(180deg, ${primaryColor} 0, ${primaryColor} 1px, transparent 1px, transparent 15px);
+            z-index: 0;
+          }
+          
+          /* Islamic Star Pattern */
+          .star-pattern {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            opacity: 0.08;
+          }
+          
+          .star-pattern.top-left { top: 40px; left: 40px; }
+          .star-pattern.top-right { top: 40px; right: 40px; }
+          .star-pattern.bottom-left { bottom: 40px; left: 40px; }
+          .star-pattern.bottom-right { bottom: 40px; right: 40px; }
+          
+          .star-pattern::before {
+            content: '✦';
+            position: absolute;
+            font-size: 60px;
+            color: ${borderColor};
+            transform: rotate(0deg);
+          }
+          
+          .star-pattern::after {
+            content: '✦';
+            position: absolute;
+            font-size: 60px;
+            color: ${borderColor};
+            transform: rotate(45deg);
           }
           
           /* Professional Gold Frame */
           .gold-frame {
             position: absolute;
-            top: 15mm;
-            left: 15mm;
-            right: 15mm;
-            bottom: 15mm;
-            border: 2px solid ${borderColor};
-            border-radius: 2mm;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            border: 3px solid ${borderColor};
+            border-radius: 12px;
             box-shadow: 
               inset 0 0 0 1px ${borderColor}40,
-              0 0 20px ${borderColor}20;
+              0 0 30px ${borderColor}30,
+              inset 0 0 60px ${borderColor}10;
+            z-index: 1;
           }
           
           .gold-frame::before {
             content: '';
             position: absolute;
-            top: 5mm;
-            left: 5mm;
-            right: 5mm;
-            bottom: 5mm;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
             border: 1px solid ${borderColor}60;
-            border-radius: 1mm;
+            border-radius: 8px;
           }
           
           /* Corner Ornaments */
           .corner-ornament {
             position: absolute;
-            width: 15mm;
-            height: 15mm;
-            border: 2px solid ${borderColor};
+            width: 60px;
+            height: 60px;
+            border: 3px solid ${borderColor};
+            z-index: 2;
           }
           
           .corner-ornament.top-left {
@@ -120,29 +169,45 @@ class ProfessionalPdfGenerator {
           /* Header Section */
           .header {
             text-align: center;
-            margin-bottom: 20mm;
+            margin-bottom: 50px;
             z-index: 10;
             width: 100%;
+            position: relative;
           }
           
           .bismillah {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 22pt;
+            font-size: 26pt;
             color: ${primaryColor};
-            margin-bottom: 10mm;
+            margin-bottom: 25px;
             font-weight: 700;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 
+              0 2px 4px rgba(0,0,0,0.1),
+              0 0 30px ${borderColor}30;
           }
           
           .title {
             font-family: 'Noto Sans', sans-serif;
-            font-size: 18pt;
+            font-size: 20pt;
             color: ${accentColor};
             font-weight: 600;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            margin-bottom: 5mm;
+            margin-bottom: 15px;
+            position: relative;
           }
+          
+          .title::before,
+          .title::after {
+            content: '◈';
+            position: absolute;
+            color: ${borderColor};
+            font-size: 16pt;
+            top: 2px;
+          }
+          
+          .title::before { left: -40px; }
+          .title::after { right: -40px; }
           
           .subtitle {
             font-family: 'Noto Sans', sans-serif;
@@ -155,8 +220,9 @@ class ProfessionalPdfGenerator {
           .divider {
             width: 100%;
             text-align: center;
-            margin: 15mm 0;
+            margin: 40px 0;
             position: relative;
+            z-index: 10;
           }
           
           .divider::before,
@@ -164,9 +230,9 @@ class ProfessionalPdfGenerator {
             content: '';
             position: absolute;
             top: 50%;
-            width: 30%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, ${borderColor}, transparent);
+            width: 35%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, ${borderColor}, ${accentColor}, ${borderColor}, transparent);
           }
           
           .divider::before { left: 0; }
@@ -175,37 +241,57 @@ class ProfessionalPdfGenerator {
           .divider-symbol {
             display: inline-block;
             color: ${borderColor};
-            font-size: 16pt;
-            padding: 0 10mm;
-            background: linear-gradient(to bottom, #ffffff, #fdfbf7);
+            font-size: 20pt;
+            padding: 0 30px;
+            background: linear-gradient(135deg, #fefefe, #fdfbf7);
+            text-shadow: 0 0 10px ${borderColor}40;
           }
           
           /* Main Content */
           .content {
             width: 100%;
-            max-width: 160mm;
+            max-width: 650px;
             z-index: 10;
+            position: relative;
           }
           
           /* Arabic Section */
           .arabic-section {
             text-align: center;
-            margin-bottom: 15mm;
-            padding: 10mm;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(253,251,247,0.7));
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            padding: 35px;
+            background: 
+              radial-gradient(circle at center, rgba(255,255,255,0.95), rgba(253,251,247,0.8)),
+              linear-gradient(135deg, ${borderColor}10, transparent);
+            border-radius: 15px;
+            box-shadow: 
+              0 4px 20px rgba(0,0,0,0.08),
+              inset 0 0 40px ${borderColor}08;
+            border: 1px solid ${borderColor}20;
+            position: relative;
           }
+          
+          .arabic-section::before,
+          .arabic-section::after {
+            content: '۞';
+            position: absolute;
+            font-size: 40px;
+            color: ${borderColor}20;
+          }
+          
+          .arabic-section::before { top: 10px; left: 10px; }
+          .arabic-section::after { bottom: 10px; right: 10px; transform: rotate(180deg); }
           
           .arabic-text {
             font-family: 'Amiri', 'Noto Naskh Arabic', serif;
-            font-size: 28pt;
-            line-height: 2.2;
+            font-size: 32pt;
+            line-height: 2.3;
             color: #1a1a1a;
             direction: rtl;
             text-align: center;
             font-weight: 400;
-            margin: 10mm 0;
+            margin: 20px 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
           }
           
           /* Transliteration */
@@ -329,22 +415,48 @@ class ProfessionalPdfGenerator {
             letter-spacing: 1px;
           }
           
-          /* Watermark */
-          .watermark {
+          /* Islamic Decorative Elements */
+          .mosque-silhouette {
             position: absolute;
-            top: 50%;
+            bottom: 100px;
             left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 120pt;
-            color: ${borderColor}08;
-            font-weight: bold;
-            letter-spacing: 20px;
-            z-index: 1;
-            user-select: none;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            opacity: 0.06;
+            z-index: 0;
           }
+          
+          .mosque-silhouette::before {
+            content: 'ὔC';
+            position: absolute;
+            font-size: 100px;
+            color: ${primaryColor};
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          
+          .crescent-moon {
+            position: absolute;
+            font-size: 40px;
+            color: ${borderColor}15;
+            opacity: 0.5;
+          }
+          
+          .crescent-moon.left { top: 150px; left: 80px; transform: rotate(-20deg); }
+          .crescent-moon.right { top: 150px; right: 80px; transform: rotate(20deg); }
         </style>
       </head>
       <body>
+        <!-- Islamic Pattern Background -->
+        <div class="islamic-pattern"></div>
+        
+        <!-- Islamic Star Decorations -->
+        <div class="star-pattern top-left"></div>
+        <div class="star-pattern top-right"></div>
+        <div class="star-pattern bottom-left"></div>
+        <div class="star-pattern bottom-right"></div>
+        
         <!-- Gold Frame -->
         <div class="gold-frame">
           <div class="corner-ornament top-left"></div>
@@ -353,8 +465,12 @@ class ProfessionalPdfGenerator {
           <div class="corner-ornament bottom-right"></div>
         </div>
         
-        <!-- Watermark -->
-        <div class="watermark">BARAKAH</div>
+        <!-- Crescent Moon Decorations -->
+        <div class="crescent-moon left">☪</div>
+        <div class="crescent-moon right">☪</div>
+        
+        <!-- Mosque Silhouette -->
+        <div class="mosque-silhouette"></div>
         
         <!-- Header -->
         <div class="header">
@@ -424,26 +540,30 @@ class ProfessionalPdfGenerator {
     // Create temporary container
     const container = document.createElement('div')
     container.style.position = 'absolute'
+    container.style.top = '-9999px'
     container.style.left = '-9999px'
-    container.style.width = '210mm'
-    container.style.height = '297mm'
+    container.style.width = '794px'
+    container.style.height = '1123px'
+    container.style.backgroundColor = 'white'
     container.innerHTML = this.generateProfessionalHtml(duaData)
     document.body.appendChild(container)
     
     try {
       // Wait for fonts to load
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
       // Convert to canvas with high quality
       const canvas = await html2canvas(container, {
-        scale: 3, // Higher scale for better quality
+        scale: 2, // Good balance between quality and performance
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         width: 794, // A4 width in pixels at 96 DPI
         height: 1123, // A4 height in pixels at 96 DPI
         windowWidth: 794,
-        windowHeight: 1123
+        windowHeight: 1123,
+        x: 0,
+        y: 0
       })
       
       // Create PDF
