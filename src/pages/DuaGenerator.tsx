@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import enterprisePdfGenerator from '../services/enterprisePdfGenerator'
+import simplePdfGenerator from '../services/simplePdfGenerator'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -80,8 +80,8 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
         
-        // Generate enterprise-grade PDF with premium design
-        const pdfBlob = await enterprisePdfGenerator.generateEnterprisePdf(duaData)
+        // Generate simple working PDF
+        const pdfBlob = await simplePdfGenerator.generateSimplePdf(duaData)
         
         // Download the PDF
         const url = URL.createObjectURL(pdfBlob)
