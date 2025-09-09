@@ -233,7 +233,7 @@ class ArabicPdfGenerator {
             <h3 style="color: ${theme.secondary}; margin: 0 0 15px 0; font-size: 16px; text-align: center;">
               ${theme.pattern} Your Spiritual Request ${theme.symbol}
             </h3>
-            <p style="margin: 0; font-size: 15px; text-align: center; line-height: 1.6; color: #2c1810;">${duaData.situation}</p>
+            <p style="margin: 0; font-size: 15px; text-align: center; line-height: 1.6; color: ${theme.primary}; font-weight: 600;">${duaData.situation}</p>
           </div>
 
           <!-- Arabic Text - Main Feature -->
@@ -278,9 +278,9 @@ class ArabicPdfGenerator {
               line-height: 2;
               direction: rtl;
               font-family: 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', 'Times New Roman', serif;
-              color: #191970;
+              color: ${theme.primary};
               font-weight: bold;
-              background: linear-gradient(135deg, #191970, #4169e1, #191970);
+              background: linear-gradient(135deg, ${theme.primary}, ${theme.secondary}, ${theme.primary});
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               background-clip: text;
@@ -322,7 +322,8 @@ class ArabicPdfGenerator {
               font-size: 14px; 
               text-align: center;
               line-height: 1.5;
-              color: #2d5a2d;
+              color: ${theme.secondary};
+              font-weight: 600;
             ">${duaData.transliteration}</p>
           </div>
           ` : ''}
@@ -363,7 +364,8 @@ class ArabicPdfGenerator {
               font-size: 18px; 
               font-style: italic;
               line-height: 1.8;
-              color: #2c1810;
+              color: ${theme.primary};
+              font-weight: 600;
               border-left: 4px solid ${theme.secondary};
               border-right: 4px solid ${theme.secondary};
               padding: 15px 20px;
@@ -380,10 +382,10 @@ class ArabicPdfGenerator {
             padding: 20px;
             margin-bottom: 30px;
           ">
-            <h3 style="color: #4682b4; margin: 0 0 15px 0; font-size: 16px; text-align: center;">
-              ✨ Spiritual Guidance ✨
+            <h3 style="color: ${theme.secondary}; margin: 0 0 15px 0; font-size: 16px; text-align: center;">
+              ${theme.pattern} Spiritual Guidance ${theme.symbol}
             </h3>
-            <div style="color: #2c5aa0; font-size: 12px; line-height: 1.6;">
+            <div style="color: ${theme.primary}; font-size: 12px; line-height: 1.6; font-weight: 600;">
               🌙 <strong>Best Times:</strong> Last third of night, between Maghrib & Isha<br>
               🤲 <strong>Recitation:</strong> With complete sincerity and focus<br>
               🔢 <strong>Repetition:</strong> 3, 7, or 33 times for increased blessing<br>
