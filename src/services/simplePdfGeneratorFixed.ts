@@ -50,54 +50,31 @@ class SimplePdfGeneratorFixed {
     
     y += 20
     
-    // Arabic text section
+    // Arabic pronunciation section (clear text only)
     pdf.setFillColor(255, 255, 255) // White background
-    pdf.rect(15, y - 5, 180, 50, 'F')
+    pdf.rect(15, y - 5, 180, 40, 'F')
     pdf.setDrawColor(0, 150, 0) // Green border
     pdf.setLineWidth(2)
-    pdf.rect(15, y - 5, 180, 50, 'S')
+    pdf.rect(15, y - 5, 180, 40, 'S')
     
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
     pdf.setTextColor(0, 150, 0) // Green
-    pdf.text('🕌 Arabic Text:', 105, y + 8, { align: 'center' })
+    pdf.text('🕌 Arabic Pronunciation:', 105, y + 8, { align: 'center' })
     y += 15
     
-    // Display actual Arabic text if available
-    pdf.setFontSize(18)
+    // Use clear transliteration text
+    pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
     pdf.setTextColor(25, 25, 112) // Dark blue
-    const arabicText = duaData.arabicText || 'اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا'
-    const arabicLines = pdf.splitTextToSize(arabicText, 170)
-    arabicLines.forEach((line: string) => {
+    const pronunciation = duaData.transliteration || 'Allahumma barik lana fi ma razaqtana'
+    const pronounceLines = pdf.splitTextToSize(pronunciation, 170)
+    pronounceLines.forEach((line: string) => {
       pdf.text(line, 105, y, { align: 'center' })
-      y += 8
+      y += 7
     })
     
-    y += 15
-    
-    // Pronunciation section
-    if (duaData.transliteration) {
-      pdf.setFillColor(240, 255, 240) // Light green
-      pdf.rect(15, y - 5, 180, 20, 'F')
-      
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setTextColor(0, 100, 0)
-      pdf.text('📢 Pronunciation:', 20, y + 5)
-      y += 10
-      
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'italic')
-      pdf.setTextColor(0, 0, 0)
-      const pronounceLines = pdf.splitTextToSize(duaData.transliteration, 170)
-      pronounceLines.forEach((line: string) => {
-        pdf.text(line, 20, y)
-        y += 6
-      })
-      
-      y += 15
-    }
+    y += 20
     
     // Translation section with pink background
     pdf.setFillColor(255, 240, 245) // Light pink
