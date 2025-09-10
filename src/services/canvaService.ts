@@ -20,12 +20,43 @@ interface CanvaDesignElement {
 }
 
 class CanvaService {
-  private apiKey: string
+  private clientId: string
+  private clientSecret: string
+  private accessToken: string | null = null
   private baseUrl = 'https://api.canva.com/rest/v1'
   
   constructor() {
-    // You'll need to set up these environment variables
-    this.apiKey = process.env.REACT_APP_CANVA_API_KEY || ''
+    // Canva OAuth credentials
+    this.clientId = process.env.REACT_APP_CANVA_CLIENT_ID || ''
+    this.clientSecret = process.env.REACT_APP_CANVA_CLIENT_SECRET || ''
+  }
+
+  // Get OAuth access token
+  private async getAccessToken(): Promise<string> {
+    if (this.accessToken) return this.accessToken
+
+    try {
+      const response = await axios.post(
+        'https://api.canva.com/rest/v1/oauth/token',
+        {
+          grant_type: 'client_credentials',
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+          scope: 'design:content:read design:content:write asset:read asset:write'
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      )
+
+      this.accessToken = response.data.access_token
+      return this.accessToken
+    } catch (error) {
+      console.error('Failed to get Canva access token:', error)
+      throw new Error('Canva authentication failed')
+    }
   }
 
   // Professional Islamic PDF templates using Canva API
@@ -65,6 +96,7 @@ class CanvaService {
   async createIslamicDesign(duaData: DuaData, theme = 'default'): Promise<string> {
     try {
       const template = this.getIslamicTemplate(theme)
+      const accessToken = await this.getAccessToken()
       
       // Step 1: Create a new design from template
       const designResponse = await axios.post(
@@ -76,7 +108,7 @@ class CanvaService {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         }
@@ -98,7 +130,7 @@ class CanvaService {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         }
@@ -251,7 +283,7 @@ class CanvaService {
         element,
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         }
