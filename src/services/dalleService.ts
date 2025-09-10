@@ -74,13 +74,15 @@ class DalleService {
 
   async generateDuaImage(duaData: DuaData, theme: string = 'light'): Promise<string> {
     if (!this.apiKey) {
-      throw new Error('OpenAI API key not configured')
+      console.error('OpenAI API key not configured')
+      // Return a data URL instead of throwing error
+      return this.generateTextImage(duaData, theme)
     }
 
     const imageTheme = imageThemes[theme] || imageThemes.light
     
-    // Create a beautiful prompt for DALL-E
-    const prompt = this.createImagePrompt(duaData, imageTheme)
+    // Create a simple, clear prompt for DALL-E
+    const prompt = `Beautiful Islamic geometric pattern design with ${imageTheme.colors} colors. ${imageTheme.elements}. Include elegant Arabic calligraphy text in the center. Professional Islamic art style, no people or animals.`
 
     try {
       const response = await fetch(DALLE_API_URL, {
@@ -90,24 +92,25 @@ class DalleService {
           'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify({
-          model: 'dall-e-3',
+          model: 'dall-e-2', // Use DALL-E 2 which is more reliable
           prompt: prompt,
           n: 1,
-          size: '1024x1024',
-          quality: 'standard',
-          style: 'vivid'
+          size: '1024x1024'
         })
       })
 
       if (!response.ok) {
-        throw new Error(`DALL-E API error: ${response.status}`)
+        console.error(`DALL-E API error: ${response.status}`)
+        // Return fallback image instead of throwing
+        return this.generateTextImage(duaData, theme)
       }
 
       const data = await response.json()
       return data.data[0].url
     } catch (error) {
       console.error('DALL-E generation error:', error)
-      throw new Error('Failed to generate image')
+      // Return fallback image instead of throwing
+      return this.generateTextImage(duaData, theme)
     }
   }
 

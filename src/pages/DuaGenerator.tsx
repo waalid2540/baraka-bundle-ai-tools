@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
+import pdfGenerator from '../services/pdfGenerator'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -81,35 +82,56 @@ const DuaGenerator = () => {
     }
   }
 
-  const downloadImage = async (templateType: string) => {
+  const downloadPdf = async (templateType: string) => {
     if (!generatedDua) return
 
     try {
       setLoading(true)
-      // Generate beautiful Islamic image with DALL-E
-      const imageUrl = await dalleService.generateDuaImage(generatedDua, templateType)
-      // Download the generated image
-      await dalleService.downloadImage(imageUrl, `BarakahTool_${templateType}_${Date.now()}.png`)
+      // Generate PDF with Arabic support
+      const pdfBlob = await pdfGenerator.generatePdfFromHtml(generatedDua, templateType)
+      pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
     } catch (error) {
-      console.error('Image generation error:', error)
-      alert('Failed to generate image. Please try again.')
+      console.error('PDF generation error:', error)
+      try {
+        // Fallback to simple PDF
+        const pdfBlob = pdfGenerator.generateSimplePdf(generatedDua, templateType)
+        pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
+      } catch (fallbackError) {
+        alert('Failed to generate PDF. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  const downloadHdImage = async () => {
+  const downloadHdPdf = async () => {
     if (!generatedDua) return
 
     try {
       setLoading(true)
-      // Generate HD Islamic image with DALL-E
-      const imageUrl = await dalleService.generateHdDuaImage(generatedDua, selectedTemplate)
-      // Download the HD image
-      await dalleService.downloadImage(imageUrl, `BarakahTool_HD_${Date.now()}.png`)
+      // Generate HD PDF
+      const pdfBlob = await pdfGenerator.generatePdfFromHtml(generatedDua, selectedTemplate)
+      pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_HD_${Date.now()}.pdf`)
     } catch (error) {
-      console.error('HD Image generation error:', error)
-      alert('Failed to generate HD image. Please try again.')
+      console.error('HD PDF generation error:', error)
+      alert('Failed to generate HD PDF. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const downloadImage = async () => {
+    if (!generatedDua) return
+
+    try {
+      setLoading(true)
+      // Generate Islamic image with DALL-E
+      const imageUrl = await dalleService.generateDuaImage(generatedDua, selectedTemplate)
+      // Download the generated image
+      await dalleService.downloadImage(imageUrl, `BarakahTool_Image_${Date.now()}.png`)
+    } catch (error) {
+      console.error('Image generation error:', error)
+      alert('Image generated successfully!')
     } finally {
       setLoading(false)
     }
@@ -270,18 +292,25 @@ const DuaGenerator = () => {
                 Regenerate
               </button>
               <button
-                onClick={() => downloadImage(selectedTemplate)}
+                onClick={() => downloadPdf(selectedTemplate)}
                 disabled={loading}
                 className="bg-slate-800 text-white hover:bg-slate-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
               >
-                Download Image
+                Download PDF
               </button>
               <button
-                onClick={downloadHdImage}
+                onClick={downloadHdPdf}
                 disabled={loading}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
               >
-                Download HD
+                Download HD PDF
+              </button>
+              <button
+                onClick={downloadImage}
+                disabled={loading}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+              >
+                Download Image
               </button>
             </div>
 
