@@ -33,7 +33,21 @@ class CanvaService {
 
   // Get OAuth access token
   private async getAccessToken(): Promise<string> {
-    if (this.accessToken) return this.accessToken
+    if (this.accessToken) {
+      console.log('✅ Using cached Canva access token')
+      return this.accessToken
+    }
+
+    console.log('🔐 Authenticating with Canva API...')
+    console.log('   Client ID:', this.clientId ? `${this.clientId.substring(0, 10)}...` : '❌ MISSING')
+    console.log('   Client Secret:', this.clientSecret ? '✅ Set' : '❌ MISSING')
+
+    if (!this.clientId || !this.clientSecret) {
+      const error = '❌ CANVA CREDENTIALS MISSING! Please set REACT_APP_CANVA_CLIENT_ID and REACT_APP_CANVA_CLIENT_SECRET in your .env file'
+      console.error(error)
+      alert(error)
+      throw new Error(error)
+    }
 
     try {
       const response = await axios.post(
@@ -52,9 +66,11 @@ class CanvaService {
       )
 
       this.accessToken = response.data.access_token
+      console.log('✅ Canva authentication successful!')
       return this.accessToken
-    } catch (error) {
-      console.error('Failed to get Canva access token:', error)
+    } catch (error: any) {
+      console.error('❌ Canva authentication failed:', error.response?.data || error.message)
+      alert(`Canva authentication failed! Check console for details.`)
       throw new Error('Canva authentication failed')
     }
   }
@@ -337,23 +353,48 @@ class CanvaService {
     }
   }
 
+  // Test Canva connection
+  async testConnection(): Promise<boolean> {
+    try {
+      console.log('🧪 Testing Canva API connection...')
+      const token = await this.getAccessToken()
+      console.log('✅ Canva API is connected and ready!')
+      alert('✅ Canva API is connected successfully! You can now generate beautiful PDFs.')
+      return true
+    } catch (error) {
+      console.error('❌ Canva API test failed:', error)
+      alert('❌ Canva API connection failed! Check console for details.')
+      return false
+    }
+  }
+
   // Main method to generate beautiful Islamic PDF
   async generateBeautifulPdf(duaData: DuaData, theme = 'default'): Promise<Blob> {
     try {
-      console.log('🎨 Creating beautiful Islamic design with Canva API...')
+      console.log('🎨 STARTING CANVA PDF GENERATION...')
+      console.log('   Theme:', theme)
+      console.log('   Situation:', duaData.situation)
+      console.log('   Language:', duaData.language)
       
       // Create beautiful design
+      console.log('📐 Step 1: Creating design with Canva...')
       const downloadUrl = await this.createIslamicDesign(duaData, theme)
+      console.log('✅ Design created! URL:', downloadUrl)
       
       // Download as PDF blob
+      console.log('📥 Step 2: Downloading PDF...')
       const pdfBlob = await this.downloadPdf(downloadUrl)
+      console.log('✅ PDF downloaded! Size:', pdfBlob.size, 'bytes')
       
-      console.log('✅ Beautiful Islamic PDF created with Canva!')
+      console.log('🎉 CANVA PDF GENERATION COMPLETE!')
+      alert('✅ Beautiful Canva PDF created successfully!')
       return pdfBlob
       
-    } catch (error) {
-      console.error('❌ Canva PDF Generation Failed:', error)
-      throw new Error('Failed to generate beautiful Islamic PDF with Canva API')
+    } catch (error: any) {
+      console.error('❌ CANVA PDF GENERATION FAILED:', error)
+      console.error('   Error details:', error.response?.data || error.message)
+      alert(`❌ Canva PDF generation failed! ${error.message || 'Check console for details.'}`)
+      throw error
     }
   }
 }

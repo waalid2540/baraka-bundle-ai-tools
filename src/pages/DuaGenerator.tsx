@@ -625,9 +625,20 @@ const DuaGenerator = () => {
                         <h3 className="text-lg font-bold text-white mb-2 text-center">
                           🎨 CANVA BEAUTIFUL DESIGNS 🎨
                         </h3>
-                        <p className="text-sm text-gray-300 mb-4 text-center">
+                        <p className="text-sm text-gray-300 mb-2 text-center">
                           Professional content creator quality using Canva API
                         </p>
+                        
+                        {/* Test Connection Button */}
+                        <button
+                          onClick={async () => {
+                            console.log('🧪 Testing Canva connection...')
+                            await canvaService.testConnection()
+                          }}
+                          className="w-full mb-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 text-sm"
+                        >
+                          🧪 Test Canva Connection
+                        </button>
                         <div className="flex flex-col sm:flex-row gap-3">
                           <button
                             onClick={async () => {
