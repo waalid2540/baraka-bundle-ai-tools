@@ -1,4 +1,4 @@
-# 🌟 Baraka Bundle – AI Tools for the Ummah
+# 🌟 Baraka Bundle – AI Tools for the Ummah (with Canva Integration)
 
 Professional Islamic AI tools platform providing authentic, smart, and beneficial tools for Muslims worldwide.
 
