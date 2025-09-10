@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
-import arabicPdfGenerator from '../services/arabicPdfGenerator'
 import canvaService from '../services/canvaService'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
@@ -239,10 +238,6 @@ const DuaGenerator = () => {
       console.log('Generated Dua Data:', duaData)
 
       setGeneratedDua(duaData)
-      
-      // Generate PDF with REAL Arabic text
-      const pdfBlob = await arabicPdfGenerator.generatePdf(duaData)
-      arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
       
     } catch (err) {
       setError('An error occurred. Please try again.')
@@ -696,43 +691,12 @@ const DuaGenerator = () => {
                       </div>
                     </div>
 
-                    {/* Basic PDF Options */}
-                    <div className="bg-gradient-to-r from-gray-600 to-gray-700 p-1 rounded-2xl">
-                      <div className="bg-slate-800 rounded-2xl p-4">
-                        <h3 className="text-md font-bold text-white mb-2 text-center">
-                          Basic PDF Options
-                        </h3>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            onClick={async () => {
-                              const pdfBlob = await arabicPdfGenerator.generatePdf(generatedDua)
-                              arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
-                            }}
-                            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
-                          >
-                            <span>🕌</span>
-                            <span>Basic Arabic PDF</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              const pdfBlob = await arabicPdfGenerator.generateRandomPdf(generatedDua)
-                              arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Creator_${Date.now()}`)
-                            }}
-                            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-purple-500/25 flex items-center justify-center gap-2"
-                          >
-                            <span>🎨</span>
-                            <span>Basic Random Theme</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Canva Professional PDF Options */}
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
                       <div className="bg-slate-800 rounded-2xl p-4">
-                        <h3 className="text-md font-bold text-white mb-2 text-center flex items-center justify-center gap-2">
+                        <h3 className="text-lg font-bold text-white mb-3 text-center flex items-center justify-center gap-2">
                           <span>🎨</span>
-                          Professional Canva PDFs
+                          Beautiful Islamic PDF Designs
                           <span>✨</span>
                         </h3>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
