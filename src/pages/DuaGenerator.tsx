@@ -5,27 +5,37 @@ import canvaService from '../services/canvaService'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    situation: '',
-    language: 'English'
-  })
+  const [selectedTopic, setSelectedTopic] = useState('')
+  const [customRequest, setCustomRequest] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState('light')
 
-  const languages = [
-    'English', 'Arabic', 'Somali', 'Urdu', 'Turkish', 'Indonesian',
-    'French', 'Spanish', 'Malay', 'Bengali', 'Swahili', 'German'
+  const duaTopics = [
+    { id: 'forgiveness', name: 'Seeking Forgiveness', icon: '🤲', color: 'from-purple-500 to-indigo-600' },
+    { id: 'guidance', name: 'Seeking Guidance', icon: '🌟', color: 'from-yellow-500 to-orange-600' },
+    { id: 'protection', name: 'Protection & Safety', icon: '🛡️', color: 'from-blue-500 to-cyan-600' },
+    { id: 'health', name: 'Health & Healing', icon: '💚', color: 'from-green-500 to-emerald-600' },
+    { id: 'sustenance', name: 'Rizq & Sustenance', icon: '💰', color: 'from-emerald-500 to-teal-600' },
+    { id: 'knowledge', name: 'Knowledge & Wisdom', icon: '📚', color: 'from-indigo-500 to-purple-600' },
+    { id: 'travel', name: 'Travel & Journey', icon: '✈️', color: 'from-sky-500 to-blue-600' },
+    { id: 'family', name: 'Family & Children', icon: '👨‍👩‍👧‍👦', color: 'from-pink-500 to-rose-600' },
+    { id: 'marriage', name: 'Marriage & Relationships', icon: '💕', color: 'from-rose-500 to-pink-600' },
+    { id: 'success', name: 'Success & Achievement', icon: '🏆', color: 'from-amber-500 to-yellow-600' },
+    { id: 'patience', name: 'Patience & Strength', icon: '💪', color: 'from-stone-500 to-zinc-600' },
+    { id: 'gratitude', name: 'Gratitude & Thanks', icon: '🙏', color: 'from-teal-500 to-cyan-600' }
   ]
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  const templates = [
+    { id: 'light', name: 'Light', preview: 'bg-white text-gray-800 border border-gray-200' },
+    { id: 'night', name: 'Night', preview: 'bg-gray-900 text-white border border-gray-700' },
+    { id: 'gold', name: 'Gold', preview: 'bg-gradient-to-br from-yellow-100 to-amber-100 text-amber-900 border border-amber-200' }
+  ]
 
   const generateDua = async () => {
-    if (!formData.situation.trim()) {
-      setError('Please describe your situation')
+    if (!selectedTopic && !customRequest.trim()) {
+      setError('Please select a topic or describe your request')
       return
     }
 
@@ -33,33 +43,25 @@ const DuaGenerator = () => {
       setLoading(true)
       setError('')
 
-      const prompt = `Generate a beautiful, authentic Islamic dua for: "${formData.situation}"
+      const request = selectedTopic 
+        ? duaTopics.find(topic => topic.id === selectedTopic)?.name || selectedTopic
+        : customRequest
 
-      Please provide:
-      1. Authentic Arabic text with proper diacritics
-      2. Clear transliteration for pronunciation
-      3. Meaningful translation in ${formData.language}
-      
-      Format exactly as:
-      **Arabic:** [Arabic text]
-      **Transliteration:** [Pronunciation guide]
-      **Translation:** [Meaning in ${formData.language}]`
-
-      const response = await openaiService.generateDua('User', formData.situation, formData.language)
+      const response = await openaiService.generateDua('User', request, 'English')
 
       if (response.success && response.data) {
-        // The OpenAI service returns the content in response.data.content
         const content = response.data.content
         const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
         const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const translationMatch = content.match(/\*\*Translation:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*(.+?)(?=\*\*|$)/s)
 
         const duaData = {
-          arabicText: arabicMatch ? arabicMatch[1].trim() : 'اللَّهُمَّ بَارِكْ لَنَا فِيمَا أَعْطَيْتَنَا',
+          arabicText: arabicMatch ? arabicMatch[1].trim() : 'اللَّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
           transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
           translation: translationMatch ? translationMatch[1].trim() : '',
-          situation: formData.situation,
-          language: formData.language
+          situation: request,
+          language: 'English',
+          topic: selectedTopic
         }
 
         setGeneratedDua(duaData)
@@ -73,16 +75,22 @@ const DuaGenerator = () => {
     }
   }
 
-  const downloadCanvaPdf = async (theme: string) => {
+  const regenerateDua = () => {
+    if (generatedDua) {
+      generateDua()
+    }
+  }
+
+  const downloadPdf = async (templateType: string) => {
     if (!generatedDua) return
 
     try {
       setLoading(true)
-      const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, theme)
+      const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, templateType)
       const url = URL.createObjectURL(pdfBlob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `BarakahTool_${theme}_${Date.now()}.pdf`
+      link.download = `BarakahTool_${templateType}_${Date.now()}.pdf`
       link.click()
       URL.revokeObjectURL(url)
     } catch (error) {
@@ -93,30 +101,32 @@ const DuaGenerator = () => {
     }
   }
 
-  const resetForm = () => {
-    setFormData({ situation: '', language: 'English' })
+  const resetGenerator = () => {
     setGeneratedDua(null)
+    setSelectedTopic('')
+    setCustomRequest('')
     setError('')
+    setSelectedTemplate('light')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Header */}
-      <div className="bg-slate-900/50 border-b border-slate-700">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <span className="text-xl">🤲</span>
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <span className="text-xl text-white">🤲</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Dua Generator</h1>
-                <p className="text-sm text-slate-400">Powered by GPT-5 & Canva</p>
+                <h1 className="text-xl font-bold text-slate-800">Du'a Generator</h1>
+                <p className="text-sm text-slate-500">Powered by AI & Islamic teachings</p>
               </div>
             </div>
             <button
               onClick={() => navigate('/')}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-slate-500 hover:text-slate-700 transition-colors font-medium"
             >
               ← Back to Home
             </button>
@@ -126,63 +136,74 @@ const DuaGenerator = () => {
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         {!generatedDua ? (
-          // Input Form
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-3">Request Your Personal Dua</h2>
-              <p className="text-slate-300 text-lg">Describe your situation and get an authentic Islamic dua</p>
+          // Topic Selection Interface
+          <div className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-slate-800 mb-3">What do you need a du'a for?</h2>
+              <p className="text-slate-600 text-lg">Select a topic or describe your specific need</p>
             </div>
 
-            <div className="space-y-6">
-              {/* Language Selection */}
-              <div>
-                <label className="block text-white font-semibold mb-3">Language</label>
-                <select
-                  name="language"
-                  value={formData.language}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  {languages.map(lang => (
-                    <option key={lang} value={lang}>{lang}</option>
-                  ))}
-                </select>
+            {/* Topic Grid */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-700 mb-6">Or select a topic:</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {duaTopics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    onClick={() => {
+                      setSelectedTopic(topic.id)
+                      setCustomRequest('')
+                    }}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${
+                      selectedTopic === topic.id
+                        ? `bg-gradient-to-br ${topic.color} text-white border-transparent shadow-lg`
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{topic.icon}</div>
+                    <div className="font-semibold text-sm leading-tight">{topic.name}</div>
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Situation Input */}
-              <div>
-                <label className="block text-white font-semibold mb-3">Your Situation</label>
-                <textarea
-                  name="situation"
-                  value={formData.situation}
-                  onChange={handleInputChange}
-                  placeholder="Describe what you need dua for... (e.g., success in work, protection from harm, guidance in decisions)"
-                  rows={4}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                />
+            {/* Custom Request */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4">Or describe your specific need:</h3>
+              <textarea
+                value={customRequest}
+                onChange={(e) => {
+                  setCustomRequest(e.target.value)
+                  if (e.target.value.trim()) setSelectedTopic('')
+                }}
+                placeholder="Describe what you need du'a for... (e.g., guidance in making an important decision, healing for a family member)"
+                rows={3}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                <p className="text-red-600 font-medium">{error}</p>
               </div>
+            )}
 
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <p className="text-red-400">{error}</p>
-                </div>
-              )}
-
-              {/* Generate Button */}
+            {/* Generate Button */}
+            <div className="text-center">
               <button
                 onClick={generateDua}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-xl hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                disabled={loading || (!selectedTopic && !customRequest.trim())}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mx-auto min-w-[200px]"
               >
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Generating Your Dua...</span>
+                    <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <span>🤲</span>
-                    <span>Generate My Dua</span>
+                    <span className="text-xl">🤲</span>
+                    <span>Generate Du'a</span>
                   </>
                 )}
               </button>
@@ -192,121 +213,96 @@ const DuaGenerator = () => {
           // Generated Dua Display
           <div className="space-y-8">
             {/* Dua Content */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Your Personal Dua</h2>
-                <p className="text-slate-400">For: {generatedDua.situation}</p>
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">الدعاء</h2>
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent mx-auto"></div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Arabic Text */}
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-3">Arabic</h3>
-                  <div className="bg-slate-700/50 rounded-xl p-6 border border-slate-600">
-                    <p className="text-2xl text-white leading-relaxed" dir="rtl" lang="ar">
+                  <div className="bg-slate-50 rounded-xl p-8 border border-slate-100">
+                    <p className="text-2xl md:text-3xl text-slate-800 leading-relaxed font-arabic" dir="rtl" lang="ar">
                       {generatedDua.arabicText}
                     </p>
                   </div>
                 </div>
 
-                {/* Transliteration */}
-                {generatedDua.transliteration && (
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-white mb-3">Pronunciation</h3>
-                    <div className="bg-slate-700/50 rounded-xl p-6 border border-slate-600">
-                      <p className="text-lg text-slate-300 italic leading-relaxed">
-                        {generatedDua.transliteration}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Translation */}
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-3">Meaning</h3>
-                  <div className="bg-slate-700/50 rounded-xl p-6 border border-slate-600">
-                    <p className="text-lg text-slate-300 leading-relaxed">
-                      "{generatedDua.translation}"
+                <div>
+                  <h3 className="text-lg font-bold text-slate-700 mb-4">Translation</h3>
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                    <p className="text-lg text-slate-700 leading-relaxed italic">
+                      {generatedDua.translation}
                     </p>
                   </div>
+                </div>
+
+                {/* Source */}
+                <div className="text-center">
+                  <p className="text-sm text-slate-500 font-medium">Source: Inspired by Islamic teachings</p>
                 </div>
               </div>
             </div>
 
-            {/* PDF Download Options */}
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
-              <div className="bg-slate-800 rounded-2xl p-6">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-white mb-2">Download Beautiful PDF</h3>
-                  <p className="text-slate-300">Choose your favorite design theme</p>
-                </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={regenerateDua}
+                disabled={loading}
+                className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+              >
+                Regenerate
+              </button>
+              <button
+                onClick={() => downloadPdf(selectedTemplate)}
+                disabled={loading}
+                className="bg-slate-800 text-white hover:bg-slate-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+              >
+                Download
+              </button>
+              <button
+                onClick={() => downloadPdf('hd')}
+                disabled={loading}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+              >
+                Download HD
+              </button>
+            </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Template Selection */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4 text-center">Choose a template for download:</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {templates.map((template) => (
                   <button
-                    onClick={() => downloadCanvaPdf('rizq')}
-                    disabled={loading}
-                    className="bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 flex flex-col items-center gap-2"
+                    key={template.id}
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={`p-6 rounded-xl transition-all duration-200 ${template.preview} ${
+                      selectedTemplate === template.id
+                        ? 'ring-2 ring-purple-500 ring-offset-2 scale-105'
+                        : 'hover:scale-102'
+                    }`}
                   >
-                    <span className="text-2xl">💰</span>
-                    <span className="text-sm">Sustenance</span>
+                    <div className="text-center">
+                      <div className="w-full h-16 rounded-lg mb-3 flex items-center justify-center text-2xl">
+                        🤲
+                      </div>
+                      <p className="font-semibold">{template.name}</p>
+                    </div>
                   </button>
-                  
-                  <button
-                    onClick={() => downloadCanvaPdf('protection')}
-                    disabled={loading}
-                    className="bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 flex flex-col items-center gap-2"
-                  >
-                    <span className="text-2xl">🛡️</span>
-                    <span className="text-sm">Protection</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => downloadCanvaPdf('guidance')}
-                    disabled={loading}
-                    className="bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 flex flex-col items-center gap-2"
-                  >
-                    <span className="text-2xl">⭐</span>
-                    <span className="text-sm">Guidance</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => downloadCanvaPdf('forgiveness')}
-                    disabled={loading}
-                    className="bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 flex flex-col items-center gap-2"
-                  >
-                    <span className="text-2xl">✨</span>
-                    <span className="text-sm">Forgiveness</span>
-                  </button>
-                </div>
-
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={async () => {
-                      try {
-                        const success = await canvaService.testConnection()
-                        if (success) {
-                          alert('✅ Canva is connected and ready!')
-                        }
-                      } catch (error) {
-                        console.error('Canva test error:', error)
-                      }
-                    }}
-                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors"
-                  >
-                    🧪 Test Canva Connection
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
 
             {/* Reset Button */}
             <div className="text-center">
               <button
-                onClick={resetForm}
-                className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 flex items-center gap-2 mx-auto"
+                onClick={resetGenerator}
+                className="text-slate-500 hover:text-slate-700 font-medium transition-colors"
               >
-                <span>✨</span>
-                <span>Generate Another Dua</span>
+                ← Generate another du'a
               </button>
             </div>
           </div>
