@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
 import arabicPdfGenerator from '../services/arabicPdfGenerator'
+import canvaService from '../services/canvaService'
 import { getThemeNames, getTheme } from '../services/pdfTemplates'
 
 const DuaGenerator = () => {
@@ -616,27 +617,104 @@ const DuaGenerator = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                    <button
-                      onClick={async () => {
-                        const pdfBlob = await arabicPdfGenerator.generatePdf(generatedDua)
-                        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
-                      }}
-                      className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
-                    >
-                      <span>🕌</span>
-                      <span>Download Arabic PDF</span>
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const pdfBlob = await arabicPdfGenerator.generateRandomPdf(generatedDua)
-                        arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Creator_${Date.now()}`)
-                      }}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-purple-500/25 flex items-center justify-center gap-2"
-                    >
-                      <span>🎨</span>
-                      <span>Creator Random Theme</span>
-                    </button>
+                  <div className="mt-8 flex flex-col gap-4">
+                    
+                    {/* Canva Beautiful Designs */}
+                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
+                      <div className="bg-slate-800 rounded-2xl p-4">
+                        <h3 className="text-lg font-bold text-white mb-2 text-center">
+                          🎨 CANVA BEAUTIFUL DESIGNS 🎨
+                        </h3>
+                        <p className="text-sm text-gray-300 mb-4 text-center">
+                          Professional content creator quality using Canva API
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'default')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Beautiful_${Date.now()}.pdf`
+                                document.body.appendChild(link)
+                                link.click()
+                                document.body.removeChild(link)
+                                URL.revokeObjectURL(url)
+                                setLoading(false)
+                              } catch (error) {
+                                console.error('Canva PDF Error:', error)
+                                setError('Canva API error. Please check your API credentials.')
+                                setLoading(false)
+                              }
+                            }}
+                            disabled={loading}
+                            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-xl hover:shadow-emerald-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            <span>✨</span>
+                            <span>{loading ? 'Creating...' : 'Canva Beautiful PDF'}</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'rizq')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Premium_${Date.now()}.pdf`
+                                document.body.appendChild(link)
+                                link.click()
+                                document.body.removeChild(link)
+                                URL.revokeObjectURL(url)
+                                setLoading(false)
+                              } catch (error) {
+                                console.error('Canva PDF Error:', error)
+                                setError('Canva API error. Please check your API credentials.')
+                                setLoading(false)
+                              }
+                            }}
+                            disabled={loading}
+                            className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-rose-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-rose-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            <span>🌟</span>
+                            <span>{loading ? 'Creating...' : 'Canva Premium Theme'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Basic PDF Options */}
+                    <div className="bg-gradient-to-r from-gray-600 to-gray-700 p-1 rounded-2xl">
+                      <div className="bg-slate-800 rounded-2xl p-4">
+                        <h3 className="text-md font-bold text-white mb-2 text-center">
+                          Basic PDF Options
+                        </h3>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={async () => {
+                              const pdfBlob = await arabicPdfGenerator.generatePdf(generatedDua)
+                              arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Arabic_Dua_${Date.now()}`)
+                            }}
+                            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-xl hover:shadow-yellow-500/25 flex items-center justify-center gap-2"
+                          >
+                            <span>🕌</span>
+                            <span>Basic Arabic PDF</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const pdfBlob = await arabicPdfGenerator.generateRandomPdf(generatedDua)
+                              arabicPdfGenerator.downloadPdf(pdfBlob, `BarakahTool_Creator_${Date.now()}`)
+                            }}
+                            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-purple-500/25 flex items-center justify-center gap-2"
+                          >
+                            <span>🎨</span>
+                            <span>Basic Random Theme</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                     <button
                       onClick={() => {
                         setGeneratedDua(null)

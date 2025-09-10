@@ -1,0 +1,330 @@
+// Canva API Integration for Beautiful Islamic PDF Designs
+// Professional content creator quality using Canva's design capabilities
+
+import axios from 'axios'
+
+interface DuaData {
+  arabicText: string
+  transliteration?: string
+  translation: string
+  language: string
+  situation: string
+}
+
+interface CanvaDesignElement {
+  type: 'text' | 'image' | 'shape'
+  content: string
+  position: { x: number; y: number }
+  size: { width: number; height: number }
+  style: any
+}
+
+class CanvaService {
+  private apiKey: string
+  private baseUrl = 'https://api.canva.com/rest/v1'
+  
+  constructor() {
+    // You'll need to set up these environment variables
+    this.apiKey = process.env.REACT_APP_CANVA_API_KEY || ''
+  }
+
+  // Professional Islamic PDF templates using Canva API
+  private getIslamicTemplate(theme: string): any {
+    const templates = {
+      'rizq': {
+        templateId: 'BAGlmwTumq0', // Professional green Islamic design
+        colors: ['#2E7D32', '#4CAF50', '#81C784'],
+        patterns: ['💰', '🌾', '🕌']
+      },
+      'protection': {
+        templateId: 'BAGl8rKq4fE', // Professional blue Islamic design
+        colors: ['#1565C0', '#2196F3', '#64B5F6'],
+        patterns: ['🛡️', '⚔️', '🕌']
+      },
+      'guidance': {
+        templateId: 'BAGkxzRqm8A', // Professional gold Islamic design
+        colors: ['#F57C00', '#FF9800', '#FFB74D'],
+        patterns: ['⭐', '🧭', '🕌']
+      },
+      'forgiveness': {
+        templateId: 'BAGmKwVq2nE', // Professional purple Islamic design
+        colors: ['#7B1FA2', '#9C27B0', '#BA68C8'],
+        patterns: ['✨', '🤲', '🕌']
+      },
+      'default': {
+        templateId: 'BAFnvTium8k', // Professional default Islamic design
+        colors: ['#8D6E63', '#A1887F', '#BCAAA4'],
+        patterns: ['🕌', '☪️', '✨']
+      }
+    }
+    
+    return templates[theme] || templates.default
+  }
+
+  // Create beautiful Islamic design using Canva API
+  async createIslamicDesign(duaData: DuaData, theme = 'default'): Promise<string> {
+    try {
+      const template = this.getIslamicTemplate(theme)
+      
+      // Step 1: Create a new design from template
+      const designResponse = await axios.post(
+        `${this.baseUrl}/designs`,
+        {
+          design_type: 'PDF',
+          template_id: template.templateId,
+          title: `BarakahTool - ${duaData.situation}`
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const designId = designResponse.data.design.id
+
+      // Step 2: Add Islamic elements to the design
+      await this.addIslamicElements(designId, duaData, template)
+
+      // Step 3: Export as high-quality PDF
+      const exportResponse = await axios.post(
+        `${this.baseUrl}/designs/${designId}/export`,
+        {
+          format: {
+            type: 'pdf',
+            quality: 'high'
+          }
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const jobId = exportResponse.data.job.id
+      
+      // Step 4: Wait for export to complete and get download URL
+      const downloadUrl = await this.waitForExport(jobId)
+      
+      return downloadUrl
+
+    } catch (error) {
+      console.error('❌ Canva API Error:', error)
+      throw new Error('Failed to create beautiful Islamic design with Canva API')
+    }
+  }
+
+  // Add Islamic elements to the Canva design
+  private async addIslamicElements(designId: string, duaData: DuaData, template: any): Promise<void> {
+    const elements: CanvaDesignElement[] = [
+      // Bismillah header
+      {
+        type: 'text',
+        content: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        position: { x: 400, y: 50 },
+        size: { width: 600, height: 40 },
+        style: {
+          font_family: 'Arabic Typesetting',
+          font_size: 24,
+          color: '#FFFFFF',
+          text_align: 'center',
+          font_weight: 'bold'
+        }
+      },
+      
+      // App title
+      {
+        type: 'text',
+        content: 'BarakahTool - Islamic Dua',
+        position: { x: 400, y: 100 },
+        size: { width: 600, height: 30 },
+        style: {
+          font_family: 'Montserrat',
+          font_size: 20,
+          color: '#FFFFFF',
+          text_align: 'center',
+          font_weight: 'bold'
+        }
+      },
+
+      // Situation request
+      {
+        type: 'text',
+        content: `${template.patterns[0]} Your Spiritual Request ${template.patterns[1]}\n\n${duaData.situation}`,
+        position: { x: 50, y: 200 },
+        size: { width: 700, height: 80 },
+        style: {
+          font_family: 'Open Sans',
+          font_size: 16,
+          color: template.colors[2],
+          text_align: 'center',
+          font_weight: '600'
+        }
+      },
+
+      // Arabic text (main feature)
+      {
+        type: 'text',
+        content: duaData.arabicText || 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رِزْقِكَ الْحَلَالِ',
+        position: { x: 50, y: 320 },
+        size: { width: 700, height: 120 },
+        style: {
+          font_family: 'Traditional Arabic',
+          font_size: 28,
+          color: template.colors[0],
+          text_align: 'center',
+          font_weight: 'bold',
+          direction: 'rtl'
+        }
+      },
+
+      // Pronunciation guide
+      ...(duaData.transliteration ? [{
+        type: 'text' as const,
+        content: `📢 Pronunciation Guide 📢\n\n${duaData.transliteration}`,
+        position: { x: 50, y: 480 },
+        size: { width: 700, height: 60 },
+        style: {
+          font_family: 'Open Sans',
+          font_size: 14,
+          color: template.colors[1],
+          text_align: 'center',
+          font_style: 'italic',
+          font_weight: '600'
+        }
+      }] : []),
+
+      // Translation
+      {
+        type: 'text',
+        content: `💖 ${duaData.language} Translation 💖\n\n"${duaData.translation}"`,
+        position: { x: 50, y: 580 },
+        size: { width: 700, height: 100 },
+        style: {
+          font_family: 'Crimson Text',
+          font_size: 16,
+          color: template.colors[0],
+          text_align: 'center',
+          font_style: 'italic',
+          font_weight: '600'
+        }
+      },
+
+      // Islamic guidance
+      {
+        type: 'text',
+        content: `✨ Spiritual Guidance ✨\n\n🌙 Best Times: Last third of night, between Maghrib & Isha\n🤲 Recitation: With complete sincerity and focus\n🔢 Repetition: 3, 7, or 33 times for increased blessing\n🧘 Etiquette: Face Qibla and maintain wudu if possible`,
+        position: { x: 50, y: 720 },
+        size: { width: 700, height: 120 },
+        style: {
+          font_family: 'Open Sans',
+          font_size: 12,
+          color: template.colors[1],
+          text_align: 'left',
+          font_weight: '600'
+        }
+      },
+
+      // Footer
+      {
+        type: 'text',
+        content: `🌟 BarakahTool - Islamic Digital Platform 🌟\nMay Allah accept your supplication and grant you success • ${new Date().toLocaleDateString()}`,
+        position: { x: 50, y: 880 },
+        size: { width: 700, height: 40 },
+        style: {
+          font_family: 'Montserrat',
+          font_size: 14,
+          color: '#FFFFFF',
+          text_align: 'center',
+          font_weight: 'bold'
+        }
+      }
+    ]
+
+    // Add elements to the design
+    for (const element of elements) {
+      await axios.post(
+        `${this.baseUrl}/designs/${designId}/elements`,
+        element,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+  }
+
+  // Wait for Canva export to complete and return download URL
+  private async waitForExport(jobId: string, maxAttempts = 30): Promise<string> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await axios.get(
+          `${this.baseUrl}/export/${jobId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`
+            }
+          }
+        )
+
+        const job = response.data.job
+        
+        if (job.status === 'success') {
+          return job.result.url
+        } else if (job.status === 'failed') {
+          throw new Error('Canva export failed')
+        }
+        
+        // Wait before next attempt (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt), 10000)))
+        
+      } catch (error) {
+        console.error(`Export check attempt ${attempt + 1} failed:`, error)
+      }
+    }
+    
+    throw new Error('Export timeout - Canva taking too long')
+  }
+
+  // Download the PDF from Canva and return as Blob
+  async downloadPdf(downloadUrl: string): Promise<Blob> {
+    try {
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob'
+      })
+      
+      return new Blob([response.data], { type: 'application/pdf' })
+    } catch (error) {
+      console.error('❌ PDF Download Error:', error)
+      throw new Error('Failed to download beautiful PDF from Canva')
+    }
+  }
+
+  // Main method to generate beautiful Islamic PDF
+  async generateBeautifulPdf(duaData: DuaData, theme = 'default'): Promise<Blob> {
+    try {
+      console.log('🎨 Creating beautiful Islamic design with Canva API...')
+      
+      // Create beautiful design
+      const downloadUrl = await this.createIslamicDesign(duaData, theme)
+      
+      // Download as PDF blob
+      const pdfBlob = await this.downloadPdf(downloadUrl)
+      
+      console.log('✅ Beautiful Islamic PDF created with Canva!')
+      return pdfBlob
+      
+    } catch (error) {
+      console.error('❌ Canva PDF Generation Failed:', error)
+      throw new Error('Failed to generate beautiful Islamic PDF with Canva API')
+    }
+  }
+}
+
+export const canvaService = new CanvaService()
+export default canvaService
