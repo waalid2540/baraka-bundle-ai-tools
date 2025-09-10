@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
-import canvaService from '../services/canvaService'
+import dalleService from '../services/dalleService'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -81,21 +81,35 @@ const DuaGenerator = () => {
     }
   }
 
-  const downloadPdf = async (templateType: string) => {
+  const downloadImage = async (templateType: string) => {
     if (!generatedDua) return
 
     try {
       setLoading(true)
-      const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, templateType)
-      const url = URL.createObjectURL(pdfBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `BarakahTool_${templateType}_${Date.now()}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+      // Generate beautiful Islamic image with DALL-E
+      const imageUrl = await dalleService.generateDuaImage(generatedDua, templateType)
+      // Download the generated image
+      await dalleService.downloadImage(imageUrl, `BarakahTool_${templateType}_${Date.now()}.png`)
     } catch (error) {
-      console.error('PDF generation error:', error)
-      alert('Failed to generate PDF. Please check your Canva credentials.')
+      console.error('Image generation error:', error)
+      alert('Failed to generate image. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const downloadHdImage = async () => {
+    if (!generatedDua) return
+
+    try {
+      setLoading(true)
+      // Generate HD Islamic image with DALL-E
+      const imageUrl = await dalleService.generateHdDuaImage(generatedDua, selectedTemplate)
+      // Download the HD image
+      await dalleService.downloadImage(imageUrl, `BarakahTool_HD_${Date.now()}.png`)
+    } catch (error) {
+      console.error('HD Image generation error:', error)
+      alert('Failed to generate HD image. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -256,14 +270,14 @@ const DuaGenerator = () => {
                 Regenerate
               </button>
               <button
-                onClick={() => downloadPdf(selectedTemplate)}
+                onClick={() => downloadImage(selectedTemplate)}
                 disabled={loading}
                 className="bg-slate-800 text-white hover:bg-slate-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
               >
-                Download
+                Download Image
               </button>
               <button
-                onClick={() => downloadPdf('hd')}
+                onClick={downloadHdImage}
                 disabled={loading}
                 className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
               >
