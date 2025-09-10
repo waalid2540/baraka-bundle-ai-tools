@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import pdfGenerator from '../services/pdfGenerator'
+import islamicPdfTemplates from '../services/islamicPdfTemplates'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -87,18 +87,12 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate PDF with Arabic support
-      const pdfBlob = await pdfGenerator.generatePdfFromHtml(generatedDua, templateType)
-      pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
+      // Generate beautiful Islamic PDF
+      const pdfBlob = await islamicPdfTemplates.generateIslamicPdf(generatedDua, templateType)
+      islamicPdfTemplates.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
-      try {
-        // Fallback to simple PDF
-        const pdfBlob = pdfGenerator.generateSimplePdf(generatedDua, templateType)
-        pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
-      } catch (fallbackError) {
-        alert('Failed to generate PDF. Please try again.')
-      }
+      alert('Failed to generate PDF. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -109,9 +103,9 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate HD PDF
-      const pdfBlob = await pdfGenerator.generatePdfFromHtml(generatedDua, selectedTemplate)
-      pdfGenerator.downloadPdf(pdfBlob, `BarakahTool_HD_${Date.now()}.pdf`)
+      // Generate HD Islamic PDF
+      const pdfBlob = await islamicPdfTemplates.generateIslamicPdf(generatedDua, selectedTemplate)
+      islamicPdfTemplates.downloadPdf(pdfBlob, `BarakahTool_HD_Premium_${Date.now()}.pdf`)
     } catch (error) {
       console.error('HD PDF generation error:', error)
       alert('Failed to generate HD PDF. Please try again.')

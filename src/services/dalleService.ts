@@ -152,15 +152,27 @@ class DalleService {
   }
 
   private createImagePrompt(duaData: DuaData, theme: ImageTheme): string {
-    // Create a detailed prompt for beautiful Islamic art
-    return `Create a beautiful Islamic art piece in ${theme.style} style with ${theme.colors} colors. 
-    Include ${theme.elements}. 
-    The image should have a serene, spiritual atmosphere suitable for a dua (Islamic prayer).
-    At the center, elegantly display the Arabic text: "${duaData.arabicText}" in beautiful Arabic calligraphy.
-    Below it, add the English translation in elegant typography: "${duaData.translation}".
-    Make it suitable for ${duaData.situation || 'spiritual reflection'}.
-    The overall design should be respectful, beautiful, and suitable for sharing or printing.
-    Style: Professional Islamic digital art, high quality, no portraits of people or animals.`
+    // Create a detailed prompt for stunning Islamic art
+    return `Create an exquisite Islamic art masterpiece featuring:
+    
+    DESIGN STYLE: ${theme.style} with ${theme.colors} color palette
+    DECORATIVE ELEMENTS: ${theme.elements}, intricate geometric patterns, ornate borders
+    LAYOUT: Centered composition with elegant symmetry
+    
+    VISUAL ELEMENTS:
+    - Stunning Islamic geometric mandala patterns
+    - Ornate golden borders with traditional Islamic motifs  
+    - Beautiful mosque silhouettes or Islamic architecture elements
+    - Decorative crescents, stars, and geometric flourishes
+    - Elegant Arabic calligraphy styling (decorative, not readable text)
+    - Sophisticated color gradients and lighting effects
+    
+    ATMOSPHERE: Peaceful, spiritual, majestic, and deeply reverent
+    QUALITY: Museum-quality Islamic art, professional digital illustration
+    STYLE: Traditional Islamic geometric art meets modern design aesthetics
+    
+    NO TEXT, NO PEOPLE, NO ANIMALS - Pure decorative Islamic geometric art only.
+    Perfect for social media sharing and printing as spiritual wall art.`
   }
 
   async downloadImage(imageUrl: string, filename: string): Promise<void> {
