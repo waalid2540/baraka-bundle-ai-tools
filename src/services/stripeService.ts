@@ -6,8 +6,8 @@ import { loadStripe } from '@stripe/stripe-js'
 const STRIPE_PUBLIC_KEY = process.env.REACT_APP_STRIPE_PUBLIC_KEY || ''
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api'
 
-// Initialize Stripe
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
+// Initialize Stripe only if public key is available
+const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null
 
 export interface Product {
   id: string
@@ -139,7 +139,7 @@ class StripeService {
     const stripe = await stripePromise
     
     if (!stripe) {
-      throw new Error('Stripe not initialized')
+      throw new Error('Stripe not available - please configure REACT_APP_STRIPE_PUBLIC_KEY')
     }
 
     const { error } = await stripe.redirectToCheckout({

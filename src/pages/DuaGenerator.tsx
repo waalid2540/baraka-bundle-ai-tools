@@ -45,11 +45,11 @@ const DuaGenerator = () => {
       **Transliteration:** [Pronunciation guide]
       **Translation:** [Meaning in ${formData.language}]`
 
-      const response = await openaiService.generateDua('User', prompt, formData.language)
+      const response = await openaiService.generateDua('User', formData.situation, formData.language)
 
       if (response.success && response.data) {
-        // Parse the structured response
-        const content = response.data
+        // The OpenAI service returns the content in response.data.content
+        const content = response.data.content
         const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
         const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
         const translationMatch = content.match(/\*\*Translation:\*\*\s*(.+?)(?=\*\*|$)/s)
@@ -64,7 +64,7 @@ const DuaGenerator = () => {
 
         setGeneratedDua(duaData)
       } else {
-        setError('Failed to generate dua. Please try again.')
+        setError(response.error || 'Failed to generate dua. Please try again.')
       }
     } catch (error) {
       setError('An error occurred. Please try again.')
