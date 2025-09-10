@@ -12,7 +12,7 @@ interface OpenAIResponse {
 
 class OpenAIService {
   private apiKey: string
-  private model: string = 'gpt-4-turbo-preview' // Latest AI model for best results
+  private model: string = 'gpt-4o' // Latest GPT-5 powered model for best results
 
   constructor() {
     this.apiKey = OPENAI_API_KEY
