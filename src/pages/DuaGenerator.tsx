@@ -726,6 +726,125 @@ const DuaGenerator = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Canva Professional PDF Options */}
+                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
+                      <div className="bg-slate-800 rounded-2xl p-4">
+                        <h3 className="text-md font-bold text-white mb-2 text-center flex items-center justify-center gap-2">
+                          <span>🎨</span>
+                          Professional Canva PDFs
+                          <span>✨</span>
+                        </h3>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'rizq')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Rizq_${Date.now()}.pdf`
+                                link.click()
+                                URL.revokeObjectURL(url)
+                              } catch (error) {
+                                console.error('Error generating Canva PDF:', error)
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 flex items-center justify-center gap-1"
+                          >
+                            <span>💰</span>
+                            <span>Rizq</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'protection')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Protection_${Date.now()}.pdf`
+                                link.click()
+                                URL.revokeObjectURL(url)
+                              } catch (error) {
+                                console.error('Error generating Canva PDF:', error)
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 flex items-center justify-center gap-1"
+                          >
+                            <span>🛡️</span>
+                            <span>Protection</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'guidance')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Guidance_${Date.now()}.pdf`
+                                link.click()
+                                URL.revokeObjectURL(url)
+                              } catch (error) {
+                                console.error('Error generating Canva PDF:', error)
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 flex items-center justify-center gap-1"
+                          >
+                            <span>⭐</span>
+                            <span>Guidance</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                setLoading(true)
+                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'forgiveness')
+                                const url = URL.createObjectURL(pdfBlob)
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `BarakahTool_Canva_Forgiveness_${Date.now()}.pdf`
+                                link.click()
+                                URL.revokeObjectURL(url)
+                              } catch (error) {
+                                console.error('Error generating Canva PDF:', error)
+                              } finally {
+                                setLoading(false)
+                              }
+                            }}
+                            className="bg-gradient-to-r from-purple-500 to-violet-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-purple-600 hover:to-violet-600 transition-all duration-300 flex items-center justify-center gap-1"
+                          >
+                            <span>✨</span>
+                            <span>Forgiveness</span>
+                          </button>
+                        </div>
+                        <div className="flex justify-center">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const success = await canvaService.testConnection()
+                                if (success) {
+                                  alert('✅ Canva API connected! You can now generate professional PDFs.')
+                                }
+                              } catch (error) {
+                                console.error('Canva test error:', error)
+                              }
+                            }}
+                            className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:from-gray-600 hover:to-gray-700 transition-all duration-300"
+                          >
+                            🧪 Test Canva Connection
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <button
                       onClick={() => {
                         setGeneratedDua(null)

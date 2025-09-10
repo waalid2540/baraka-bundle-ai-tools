@@ -315,7 +315,7 @@ class CanvaService {
           `${this.baseUrl}/export/${jobId}`,
           {
             headers: {
-              'Authorization': `Bearer ${this.apiKey}`
+              'Authorization': `Bearer ${this.accessToken}`
             }
           }
         )
