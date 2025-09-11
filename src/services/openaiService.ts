@@ -60,6 +60,11 @@ ONLY provide translations for these languages: ${languageList}
 
 Do NOT include any other languages - ONLY the requested ones.`
 
+    // Build language translations dynamically
+    const languageInstructions = languages.map(lang => 
+      `**Translation in ${lang}:**\n[Duʿā meaning in ${lang}]`
+    ).join('\n\n')
+
     const payload = {
       model: this.model,
       messages: [
@@ -92,8 +97,7 @@ Format output as:
 [VERY CLEAR pronunciation guide using Latin letters - this is ESSENTIAL for PDF readability]
 Examples: "Allahumma barik lana", "Rabbi ishrah li sadri", "Rabbana atina fi'd-dunya hasanah"
 
-${languages.map(lang => `**Translation in ${lang}:**
-[Duʿā meaning in ${lang}]`).join('\n\n')}
+${languageInstructions}
 
 Tone: Uplifting, sincere, spiritually moving.
 Never include commentary - only the duʿā and translations.`
