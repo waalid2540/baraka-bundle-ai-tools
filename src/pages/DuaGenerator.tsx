@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import pdfService from '../services/pdfService'
+import workingArabicPdf from '../services/workingArabicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -99,19 +99,44 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      const pdfBlob = await pdfService.generateDuaPDF({
-        name: 'User',
-        situation: generatedDua.situation,
+      // Use workingArabicPdf which properly displays Arabic text
+      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
-        language: generatedDua.language,
-        theme: selectedTemplate
-      })
-      pdfService.downloadPDF(pdfBlob, `Islamic_Dua_${selectedTemplate}_${Date.now()}`)
+        situation: generatedDua.situation,
+        language: generatedDua.language
+      }, selectedTemplate)
+      workingArabicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${selectedTemplate}_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const downloadImage = async () => {
+    if (!generatedDua) return
+
+    try {
+      setLoading(true)
+      // Generate Islamic-themed image with DALL-E
+      const imageUrl = await dalleService.generateDuaImage(generatedDua, selectedTemplate)
+      
+      // Download the image
+      const link = document.createElement('a')
+      link.href = imageUrl
+      link.download = `Islamic_Dua_Art_${Date.now()}.png`
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      alert('Image generated successfully! Check your downloads.')
+    } catch (error) {
+      console.error('Image generation error:', error)
+      alert('Failed to generate image. Please check your OpenAI API key.')
     } finally {
       setLoading(false)
     }
@@ -336,26 +361,36 @@ const DuaGenerator = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={resetGenerator}
-                  className="flex-1 bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors"
+                  className="bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors"
                 >
                   Generate Another
                 </button>
                 <button
                   onClick={downloadPdf}
                   disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Generating PDF...' : 'Download PDF'}
+                  {loading ? 'Generating...' : '📄 Download PDF'}
+                </button>
+                <button
+                  onClick={downloadImage}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Generating...' : '🎨 Generate Art'}
                 </button>
               </div>
 
               {/* Success Message */}
               <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                <p className="text-green-400 text-center">
-                  ✅ Du'a generated successfully! Click "Download PDF" to save it.
+                <p className="text-green-400 text-center mb-2">
+                  ✅ Du'a generated successfully!
+                </p>
+                <p className="text-green-400/80 text-center text-sm">
+                  Download as PDF with Arabic text or generate beautiful Islamic art
                 </p>
               </div>
             </div>
