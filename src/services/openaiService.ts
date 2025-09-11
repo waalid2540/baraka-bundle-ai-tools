@@ -90,6 +90,9 @@ Format output as:
 [VERY CLEAR pronunciation guide using Latin letters - this is ESSENTIAL for PDF readability]
 Examples: "Allahumma barik lana", "Rabbi ishrah li sadri", "Rabbana atina fi'd-dunya hasanah"
 
+**Translation in ${language}:**
+[Duʿā meaning in ${language} - THIS IS THE PRIMARY LANGUAGE]
+
 **Translation in English:**
 [Duʿā meaning in English]
 
