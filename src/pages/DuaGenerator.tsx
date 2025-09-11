@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import workingArabicPdf from '../services/workingArabicPdf'
+import authenticIslamicPdf from '../services/authenticIslamicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -87,9 +87,9 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate PDF with READABLE Arabic text
-      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf(generatedDua, templateType)
-      workingArabicPdf.downloadPdf(pdfBlob, `BarakahTool_${templateType}_${Date.now()}.pdf`)
+      // Generate comprehensive Islamic PDF with reflections and translations
+      const pdfBlob = await authenticIslamicPdf.generateComprehensiveIslamicPdf(generatedDua, templateType)
+      authenticIslamicPdf.downloadPdf(pdfBlob, `BarakahTool_Islamic_${templateType}_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -103,9 +103,9 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate HD PDF with READABLE Arabic text
-      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf(generatedDua, selectedTemplate)
-      workingArabicPdf.downloadPdf(pdfBlob, `BarakahTool_HD_Premium_${Date.now()}.pdf`)
+      // Generate HD comprehensive Islamic PDF
+      const pdfBlob = await authenticIslamicPdf.generateComprehensiveIslamicPdf(generatedDua, selectedTemplate)
+      authenticIslamicPdf.downloadPdf(pdfBlob, `BarakahTool_HD_Islamic_Premium_${Date.now()}.pdf`)
     } catch (error) {
       console.error('HD PDF generation error:', error)
       alert('Failed to generate HD PDF. Please try again.')
