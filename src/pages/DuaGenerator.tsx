@@ -217,51 +217,63 @@ const DuaGenerator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Simple Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50">
+      {/* Beautiful Islamic Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 shadow-lg">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl">🤲</span>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+                <span className="text-white text-2xl">🤲</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Du'a Generator</h1>
-                <p className="text-sm text-gray-500">Create Islamic supplications</p>
+                <h1 className="text-2xl font-bold text-white mb-1">بركة الدعاء</h1>
+                <h2 className="text-xl font-semibold text-white/90">Barakah Du'a Generator</h2>
+                <p className="text-sm text-white/80">Authentic Islamic Supplications</p>
               </div>
             </div>
             <button
               onClick={() => navigate('/')}
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100"
+              className="text-white/90 hover:text-white px-4 py-2 rounded-xl hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-300"
             >
-              ← Back
+              ← Back to Home
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-10">
         {!generatedDua ? (
-          // Simple Generation Interface
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Generate Your Du'a</h2>
-              <p className="text-gray-600">Select languages and describe what you need</p>
+          // Beautiful Generation Interface
+          <div className="space-y-10">
+            {/* Bismillah */}
+            <div className="text-center mb-8">
+              <div className="inline-block bg-white/70 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-lg border border-emerald-200">
+                <p className="text-2xl text-emerald-800 font-arabic mb-2" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+                <p className="text-sm text-emerald-700">In the name of Allah, the Most Gracious, the Most Merciful</p>
+              </div>
             </div>
 
-            {/* Simple Language Selection */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Languages</h3>
+            <div className="text-center">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-3">Generate Your Du'a</h2>
+              <p className="text-xl text-gray-700">Create authentic Islamic supplications with divine guidance</p>
+            </div>
+
+            {/* Beautiful Language Selection */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-emerald-200">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-emerald-800 mb-2">🌍 Choose Your Languages</h3>
+                <p className="text-emerald-600">Select languages for your du'a translations</p>
+              </div>
               
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {languages.map((language) => (
                   <label
                     key={language.code}
-                    className={`p-3 rounded-lg border cursor-pointer text-center hover:shadow-md transition-all ${
+                    className={`group p-4 rounded-xl border-2 cursor-pointer text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 ${
                       selectedLanguages.includes(language.code)
-                        ? 'bg-blue-50 border-blue-300 text-blue-900'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-blue-200'
+                        ? 'bg-gradient-to-br from-emerald-500 to-blue-500 border-transparent text-white shadow-lg scale-105'
+                        : 'bg-white/80 border-emerald-200 text-gray-700 hover:border-emerald-400 hover:bg-white'
                     }`}
                   >
                     <input
@@ -271,21 +283,30 @@ const DuaGenerator = () => {
                       className="sr-only"
                     />
                     
-                    <div className="text-2xl mb-1">{language.flag}</div>
-                    <div className="text-xs font-medium">{language.name}</div>
+                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">{language.flag}</div>
+                    <div className="text-sm font-semibold">{language.name}</div>
+                    <div className={`text-xs mt-1 ${
+                      selectedLanguages.includes(language.code) ? 'text-white/80' : 'text-gray-500'
+                    }`}>{language.nativeName}</div>
                   </label>
                 ))}
               </div>
               
-              <div className="mt-4 text-center text-sm text-gray-600">
-                {selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''} selected
+              <div className="mt-6 text-center">
+                <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                  <span className="font-semibold">{selectedLanguages.length} language{selectedLanguages.length !== 1 ? 's' : ''} selected</span>
+                </div>
               </div>
             </div>
 
-            {/* Topic Grid */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-700 mb-6">Or select a topic:</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Beautiful Topic Grid */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-blue-200">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-blue-800 mb-2">🌈 Select a Du'a Topic</h3>
+                <p className="text-blue-600">Choose from authentic Islamic supplication themes</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {duaTopics.map((topic) => (
                   <button
                     key={topic.id}
@@ -293,164 +314,262 @@ const DuaGenerator = () => {
                       setSelectedTopic(topic.id)
                       setCustomRequest('')
                     }}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${
+                    className={`group p-6 rounded-xl border-2 transition-all duration-300 text-left hover:scale-105 hover:shadow-xl transform ${
                       selectedTopic === topic.id
-                        ? `bg-gradient-to-br ${topic.color} text-white border-transparent shadow-lg`
-                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:shadow-md'
+                        ? `bg-gradient-to-br ${topic.color} text-white border-transparent shadow-lg scale-105`
+                        : 'bg-white/90 text-slate-700 border-blue-200 hover:border-blue-400 hover:bg-white hover:shadow-lg'
                     }`}
                   >
-                    <div className="text-2xl mb-2">{topic.icon}</div>
-                    <div className="font-semibold text-sm leading-tight">{topic.name}</div>
+                    <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">{topic.icon}</div>
+                    <div className="font-bold text-base leading-tight">{topic.name}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Custom Request */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-700 mb-4">Or describe your specific need:</h3>
-              <textarea
-                value={customRequest}
-                onChange={(e) => {
-                  setCustomRequest(e.target.value)
-                  if (e.target.value.trim()) setSelectedTopic('')
-                }}
-                placeholder="Describe what you need du'a for... (e.g., guidance in making an important decision, healing for a family member)"
-                rows={3}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-              />
+            {/* Beautiful Custom Request */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-purple-200">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-purple-800 mb-2">✍️ Describe Your Specific Need</h3>
+                <p className="text-purple-600">Express what you need du'a for in your own words</p>
+              </div>
+              <div className="relative">
+                <textarea
+                  value={customRequest}
+                  onChange={(e) => {
+                    setCustomRequest(e.target.value)
+                    if (e.target.value.trim()) setSelectedTopic('')
+                  }}
+                  placeholder="Share your heart... What do you need Allah's guidance and blessing for? (e.g., guidance in making an important decision, healing for a loved one, success in studies, peace in family)" 
+                  rows={4}
+                  className="w-full bg-white/90 border-2 border-purple-200 rounded-xl px-6 py-4 text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-400 resize-none text-lg leading-relaxed transition-all duration-300"
+                />
+                <div className="absolute bottom-3 right-3 text-xs text-purple-400">
+                  🤲 Allah hears every whisper of the heart
+                </div>
+              </div>
             </div>
 
-            {/* Simple Error Display */}
+            {/* Beautiful Error Display */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <p className="text-red-600 font-medium">{error}</p>
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-6 text-center shadow-lg">
+                <div className="text-red-500 text-2xl mb-2">⚠️</div>
+                <p className="text-red-700 font-semibold text-lg">{error}</p>
               </div>
             )}
 
-            {/* Simple Generate Button */}
+            {/* Beautiful Generate Button */}
             <div className="text-center">
-              <button
-                onClick={generateDua}
-                disabled={loading || (!selectedTopic && !customRequest.trim()) || selectedLanguages.length === 0}
-                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-lg transition-colors"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Generating...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>🤲</span>
-                    <span>Generate Du'a</span>
-                  </div>
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-emerald-200">
+                <div className="mb-6">
+                  <p className="text-emerald-700 text-lg font-semibold mb-2">Ready to receive Allah's guidance?</p>
+                  <p className="text-emerald-600 text-sm">“And when My servants ask you concerning Me, indeed I am near. I respond to the invocation of the supplicant when he calls upon Me.” - Quran 2:186</p>
+                </div>
+                <button
+                  onClick={generateDua}
+                  disabled={loading || (!selectedTopic && !customRequest.trim()) || selectedLanguages.length === 0}
+                  className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-5 px-12 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:hover:scale-100 disabled:hover:shadow-lg"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-3 relative z-10">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span className="text-lg">Generating your du'a...</span>
+                      <span className="animate-pulse">✨</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3 relative z-10">
+                      <span className="text-2xl group-hover:scale-110 transition-transform duration-300">🤲</span>
+                      <span className="text-xl">Generate My Du'a</span>
+                      <span className="group-hover:animate-bounce">✨</span>
+                    </div>
+                  )}
+                </button>
+                {(!selectedTopic && !customRequest.trim()) && (
+                  <p className="text-amber-600 text-sm mt-3 flex items-center justify-center gap-1">
+                    <span>⚠️</span>
+                    Please select a topic or describe your need
+                  </p>
                 )}
-              </button>
+              </div>
             </div>
           </div>
         ) : (
-          // Generated Dua Display
-          <div className="space-y-8">
-            {/* Dua Content */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">الدعاء</h2>
-                <div className="w-16 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent mx-auto"></div>
+          // Beautiful Generated Dua Display  
+          <div className="space-y-10">
+            {/* Success Message */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-6 py-3 rounded-full border border-emerald-200">
+                <span className="text-xl">✨</span>
+                <span className="font-semibold">Your du'a has been created with Allah's blessing</span>
+                <span className="text-xl">✨</span>
+              </div>
+            </div>
+
+            {/* Beautiful Dua Content */}
+            <div className="bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 backdrop-blur-sm rounded-3xl p-10 shadow-2xl border border-emerald-200">
+              {/* Islamic Header */}
+              <div className="text-center mb-10">
+                <div className="inline-block bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-8 py-3 rounded-full mb-4">
+                  <h2 className="text-2xl font-bold font-arabic">الدعاء المبارك</h2>
+                </div>
+                <p className="text-lg font-semibold text-emerald-700">Blessed Supplication</p>
+                <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-blue-500 mx-auto mt-4 rounded-full"></div>
               </div>
 
-              <div className="space-y-8">
-                {/* Arabic Text */}
+              <div className="space-y-10">
+                {/* Arabic Text with Beautiful Styling */}
                 <div className="text-center">
-                  <div className="bg-slate-50 rounded-xl p-8 border border-slate-100">
-                    <p className="text-2xl md:text-3xl text-slate-800 leading-relaxed font-arabic" dir="rtl" lang="ar">
-                      {generatedDua.arabicText}
-                    </p>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-10 border-2 border-emerald-200 shadow-lg relative overflow-hidden">
+                    {/* Decorative Pattern */}
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500"></div>
+                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-emerald-200/30 rounded-full"></div>
+                    <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-blue-200/30 rounded-full"></div>
+                    
+                    <div className="relative">
+                      <div className="text-emerald-600 text-sm font-semibold mb-4 uppercase tracking-wide">Arabic Text</div>
+                      <p className="text-3xl md:text-4xl text-slate-800 leading-relaxed font-arabic mb-6" dir="rtl" lang="ar">
+                        {generatedDua.arabicText}
+                      </p>
+                      {generatedDua.transliteration && (
+                        <div className="border-t border-emerald-200 pt-6">
+                          <div className="text-emerald-600 text-sm font-semibold mb-3">Pronunciation</div>
+                          <p className="text-lg text-slate-600 italic leading-relaxed">
+                            {generatedDua.transliteration}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Translation */}
-                <div>
-                  <h3 className="text-lg font-bold text-slate-700 mb-4">Translation</h3>
-                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                    <p className="text-lg text-slate-700 leading-relaxed italic">
-                      {generatedDua.translation}
-                    </p>
+                {/* Translation with Multiple Languages */}
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-blue-800 mb-2">🌍 Translations</h3>
+                    <p className="text-blue-600">Your du'a in the languages you selected</p>
+                  </div>
+                  
+                  <div className="grid gap-6">
+                    {Object.entries(generatedDua.translations || {}).map(([language, translation]) => {
+                      const langInfo = languages.find(l => l.code.toLowerCase() === language.toLowerCase())
+                      return (
+                        <div key={language} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                          <div className="flex items-center gap-3 mb-4">
+                            <span className="text-2xl">{langInfo?.flag || '🌍'}</span>
+                            <div>
+                              <h4 className="font-bold text-blue-800 capitalize">{langInfo?.name || language}</h4>
+                              <p className="text-sm text-blue-600">{langInfo?.nativeName}</p>
+                            </div>
+                          </div>
+                          <p className="text-lg text-slate-700 leading-relaxed italic">
+                            “{translation}”
+                          </p>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
 
-                {/* Source */}
-                <div className="text-center">
-                  <p className="text-sm text-slate-500 font-medium">Source: Inspired by Islamic teachings</p>
+                {/* Islamic Source */}
+                <div className="text-center bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6 border border-purple-200">
+                  <div className="text-purple-600 text-sm font-semibold mb-2">📜 Source & Authenticity</div>
+                  <p className="text-purple-700 font-medium">Inspired by authentic Islamic teachings from the Quran and Sunnah</p>
+                  <p className="text-purple-600 text-sm mt-2">“And whatever you ask for in prayer, believing, you will receive.”</p>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={regenerateDua}
-                disabled={loading}
-                className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
-              >
-                Regenerate
-              </button>
-              <button
-                onClick={() => downloadPdf(selectedTemplate)}
-                disabled={loading}
-                className="bg-slate-800 text-white hover:bg-slate-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
-              >
-                Download PDF
-              </button>
-              <button
-                onClick={downloadHdPdf}
-                disabled={loading}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
-              >
-                Download HD PDF
-              </button>
-              <button
-                onClick={downloadImage}
-                disabled={loading}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
-              >
-                Download Image
-              </button>
+            {/* Beautiful Action Buttons */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-emerald-200">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-emerald-800 mb-2">📥 Save & Share Your Du'a</h3>
+                <p className="text-emerald-600">Download or create new supplications</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={regenerateDua}
+                  disabled={loading}
+                  className="group bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 text-slate-700 hover:text-white border-2 border-blue-200 hover:border-transparent font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xl group-hover:animate-spin">🔄</span>
+                    <span>New Du'a</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => downloadPdf(selectedTemplate)}
+                  disabled={loading}
+                  className="group bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xl group-hover:animate-bounce">📄</span>
+                    <span>Download PDF</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={downloadHdPdf}
+                  disabled={loading}
+                  className="group bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xl group-hover:animate-pulse">✨</span>
+                    <span>HD PDF</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={downloadImage}
+                  disabled={loading}
+                  className="group bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xl group-hover:animate-bounce">🖼️</span>
+                    <span>Image</span>
+                  </div>
+                </button>
+              </div>
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={resetGenerator}
+                  className="text-slate-600 hover:text-slate-800 font-medium px-4 py-2 rounded-lg hover:bg-slate-100 transition-all duration-300 border border-slate-200 hover:border-slate-300"
+                >
+                  ← Start Over
+                </button>
+              </div>
             </div>
 
-            {/* Template Selection */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-700 mb-4 text-center">Choose a template for download:</h3>
-              <div className="grid grid-cols-3 gap-4">
+            {/* Beautiful Template Selection */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-blue-200">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-blue-800 mb-2">🎨 Choose Your Template Style</h3>
+                <p className="text-blue-600">Select the visual theme for your du'a downloads</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {templates.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
-                    className={`p-6 rounded-xl transition-all duration-200 ${template.preview} ${
+                    className={`group p-6 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                       selectedTemplate === template.id
-                        ? 'ring-2 ring-purple-500 ring-offset-2 scale-105'
-                        : 'hover:scale-102'
-                    }`}
+                        ? 'ring-4 ring-blue-400 ring-offset-2 scale-105 shadow-xl'
+                        : 'hover:shadow-lg'
+                    } ${template.preview}`}
                   >
                     <div className="text-center">
-                      <div className="w-full h-16 rounded-lg mb-3 flex items-center justify-center text-2xl">
+                      <div className="w-full h-20 rounded-lg mb-4 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300 bg-gradient-to-br from-white/20 to-transparent">
                         🤲
                       </div>
-                      <p className="font-semibold">{template.name}</p>
+                      <p className="font-bold text-lg">{template.name}</p>
+                      <p className="text-sm opacity-75 mt-1">Islamic {template.name} Theme</p>
                     </div>
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Reset Button */}
-            <div className="text-center">
-              <button
-                onClick={resetGenerator}
-                className="text-slate-500 hover:text-slate-700 font-medium transition-colors"
-              >
-                ← Generate another du'a
-              </button>
             </div>
           </div>
         )}
