@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import pdfService from '../services/pdfService'
+import workingArabicPdf from '../services/workingArabicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -101,17 +101,16 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use premium pdfService with beautiful Islamic themes (same as name poster)
-      const pdfBlob = await pdfService.generateDuaPDF({
-        name: `${formData.topic || 'Custom'} Dua`,
-        situation: generatedDua.situation || formData.customRequest,
+      // Use workingArabicPdf which ACTUALLY displays Arabic text with Canvas rendering
+      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
-        language: generatedDua.language,
-        theme: selectedTemplate
-      })
-      pdfService.downloadPDF(pdfBlob, `Islamic_Dua_${selectedTemplate}_${Date.now()}`)
+        situation: generatedDua.situation || formData.customRequest,
+        language: generatedDua.language
+      }, selectedTemplate)
+      workingArabicPdf.downloadPdf(pdfBlob, `Islamic_Dua_Arabic_${selectedTemplate}_${Date.now()}.pdf`)
+      alert('📄 PDF with REAL Arabic text generated successfully!')
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')

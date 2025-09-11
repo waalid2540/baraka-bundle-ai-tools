@@ -11,10 +11,10 @@ interface DuaData {
 
 class WorkingArabicPdf {
   async generateReadableArabicPdf(duaData: DuaData, theme: string = 'light'): Promise<Blob> {
-    // Create a canvas to render Arabic text properly
+    // Create a HIGH-RESOLUTION canvas for PROFESSIONAL quality
     const canvas = document.createElement('canvas')
-    canvas.width = 794  // A4 width in pixels
-    canvas.height = 1123 // A4 height in pixels
+    canvas.width = 1200  // Higher resolution for better quality
+    canvas.height = 1600 // Higher resolution for better quality
     const ctx = canvas.getContext('2d')!
     
     // Get theme colors
@@ -77,23 +77,30 @@ class WorkingArabicPdf {
     // Arabic text container background
     this.drawTextContainer(ctx, 50, yPosition - 20, canvas.width - 100, 150, colors)
     
-    // Arabic text - Use larger size and ensure it's visible
+    // BEAUTIFUL Arabic text with REAL Arabic script rendering
     ctx.fillStyle = colors.text
-    ctx.font = 'bold 28px Arial, "Traditional Arabic", "Arial Unicode MS", monospace'
+    ctx.font = 'bold 40px Arial, "Traditional Arabic", "Arial Unicode MS", "Noto Sans Arabic", "Amiri", monospace'
     ctx.textAlign = 'center'
     ctx.direction = 'rtl'
     
     // Split Arabic text into lines and center each line
-    const arabicLines = this.wrapArabicText(ctx, duaData.arabicText, canvas.width - 120)
-    const lineHeight = 45
-    const startY = yPosition + 30
+    const arabicLines = this.wrapArabicText(ctx, duaData.arabicText, canvas.width - 150)
+    const lineHeight = 60
+    const startY = yPosition + 40
     
     arabicLines.forEach((line, index) => {
       const y = startY + (index * lineHeight)
-      // Draw text shadow for better readability
-      ctx.fillStyle = 'rgba(0,0,0,0.1)'
-      ctx.fillText(line, canvas.width / 2 + 2, y + 2)
-      // Draw main text
+      
+      // Beautiful text shadow for depth
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.fillText(line, canvas.width / 2 + 3, y + 3)
+      
+      // Gold outline for elegance
+      ctx.strokeStyle = colors.accent
+      ctx.lineWidth = 1
+      ctx.strokeText(line, canvas.width / 2, y)
+      
+      // Main Arabic text
       ctx.fillStyle = colors.text
       ctx.fillText(line, canvas.width / 2, y)
     })
@@ -298,35 +305,108 @@ class WorkingArabicPdf {
   
   private getThemeColors(theme: string) {
     const themes: any = {
+      royalGold: {
+        background: '#FFFBEB',
+        text: '#451A03',
+        primary: '#A16207',
+        secondary: '#FBBF24',
+        accent: '#F59E0B',
+        cardBg: '#FEF3C7',
+        border: '#D97706'
+      },
+      masjidGreen: {
+        background: '#F0FDF4',
+        text: '#14532D',
+        primary: '#15803D',
+        secondary: '#22C55E',
+        accent: '#FBBF24',
+        cardBg: '#DCFCE7',
+        border: '#16A34A'
+      },
+      nightPrayer: {
+        background: '#F0F9FF',
+        text: '#1E293B',
+        primary: '#1E3A8A',
+        secondary: '#60A5FA',
+        accent: '#C0C0C0',
+        cardBg: '#DBEAFE',
+        border: '#3B82F6'
+      },
+      oceanDepth: {
+        background: '#F0FDFA',
+        text: '#134E4A',
+        primary: '#0F766E',
+        secondary: '#14B8A6',
+        accent: '#06B6D4',
+        cardBg: '#CCFBF1',
+        border: '#0D9488'
+      },
+      roseGarden: {
+        background: '#FFF1F2',
+        text: '#881337',
+        primary: '#BE123C',
+        secondary: '#FB7185',
+        accent: '#FDA4AF',
+        cardBg: '#FECDD3',
+        border: '#E11D48'
+      },
+      sunsetOrange: {
+        background: '#FFF7ED',
+        text: '#7C2D12',
+        primary: '#C2410C',
+        secondary: '#FB923C',
+        accent: '#FCD34D',
+        cardBg: '#FED7AA',
+        border: '#EA580C'
+      },
+      fajrDawn: {
+        background: '#FDF4FF',
+        text: '#581C87',
+        primary: '#9333EA',
+        secondary: '#EC4899',
+        accent: '#FBBF24',
+        cardBg: '#F3E8FF',
+        border: '#A855F7'
+      },
+      midnightBlack: {
+        background: '#FAFAFA',
+        text: '#171717',
+        primary: '#000000',
+        secondary: '#525252',
+        accent: '#FBBF24',
+        cardBg: '#F5F5F5',
+        border: '#404040'
+      },
+      // Legacy themes for backward compatibility
       light: {
-        background: '#FFFFFF',
-        text: '#1A202C',
-        primary: '#2D3748',
-        secondary: '#4A5568',
-        accent: '#D69E2E',
-        cardBg: '#F7FAFC',
-        border: '#E2E8F0'
+        background: '#FFFBEB',
+        text: '#451A03',
+        primary: '#A16207',
+        secondary: '#FBBF24',
+        accent: '#F59E0B',
+        cardBg: '#FEF3C7',
+        border: '#D97706'
       },
       night: {
-        background: '#1A202C',
-        text: '#F7FAFC',
-        primary: '#F7FAFC',
-        secondary: '#E2E8F0',
-        accent: '#F6E05E',
-        cardBg: '#2D3748',
-        border: '#4A5568'
+        background: '#F0F9FF',
+        text: '#1E293B',
+        primary: '#1E3A8A',
+        secondary: '#60A5FA',
+        accent: '#C0C0C0',
+        cardBg: '#DBEAFE',
+        border: '#3B82F6'
       },
       gold: {
-        background: '#FFFAF0',
-        text: '#744210',
-        primary: '#744210',
-        secondary: '#975A16',
-        accent: '#D69E2E',
-        cardBg: '#FFF8DC',
-        border: '#D69E2E'
+        background: '#FFFBEB',
+        text: '#451A03',
+        primary: '#A16207',
+        secondary: '#FBBF24',
+        accent: '#F59E0B',
+        cardBg: '#FEF3C7',
+        border: '#D97706'
       }
     }
-    return themes[theme] || themes.light
+    return themes[theme] || themes.royalGold
   }
   
   downloadPdf(blob: Blob, filename: string): void {
