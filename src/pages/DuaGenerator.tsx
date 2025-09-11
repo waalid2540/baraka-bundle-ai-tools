@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import authenticIslamicPdf from '../services/authenticIslamicPdf'
+import pdfService from '../services/pdfService'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -11,7 +11,7 @@ const DuaGenerator = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState('light')
+  const [selectedTemplate, setSelectedTemplate] = useState('royalGold')
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['English'])
 
   const languages = [
@@ -45,9 +45,12 @@ const DuaGenerator = () => {
   ]
 
   const templates = [
-    { id: 'light', name: 'Light', preview: 'bg-white text-gray-800 border border-gray-200' },
-    { id: 'night', name: 'Night', preview: 'bg-gray-900 text-white border border-gray-700' },
-    { id: 'gold', name: 'Gold', preview: 'bg-gradient-to-br from-yellow-100 to-amber-100 text-amber-900 border border-amber-200' }
+    { id: 'royalGold', name: 'Royal Gold', preview: 'bg-gradient-to-br from-yellow-100 to-amber-100 text-amber-900 border border-amber-200' },
+    { id: 'masjidGreen', name: 'Masjid Green', preview: 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-900 border border-green-200' },
+    { id: 'nightPrayer', name: 'Night Prayer', preview: 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-900 border border-blue-200' },
+    { id: 'oceanDepth', name: 'Ocean Depth', preview: 'bg-gradient-to-br from-teal-100 to-cyan-100 text-teal-900 border border-teal-200' },
+    { id: 'roseGarden', name: 'Rose Garden', preview: 'bg-gradient-to-br from-pink-100 to-rose-100 text-pink-900 border border-pink-200' },
+    { id: 'sunsetOrange', name: 'Sunset Orange', preview: 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-900 border border-orange-200' }
   ]
 
   const generateDua = async () => {
@@ -151,9 +154,17 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate comprehensive Islamic PDF with reflections and translations
-      const pdfBlob = await authenticIslamicPdf.generateComprehensiveIslamicPdf(generatedDua, templateType)
-      authenticIslamicPdf.downloadPdf(pdfBlob, `BarakahTool_Islamic_${templateType}_${Date.now()}.pdf`)
+      // Generate beautiful themed PDF like name poster
+      const pdfBlob = await pdfService.generateDuaPDF({
+        name: 'User',
+        situation: generatedDua.situation || 'Personal supplication',
+        arabicText: generatedDua.arabicText,
+        transliteration: generatedDua.transliteration,
+        translation: generatedDua.translation,
+        language: generatedDua.language || 'English',
+        theme: templateType
+      })
+      pdfService.downloadPDF(pdfBlob, `BarakahTool_Dua_${templateType}_${Date.now()}`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -167,9 +178,17 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Generate HD comprehensive Islamic PDF
-      const pdfBlob = await authenticIslamicPdf.generateComprehensiveIslamicPdf(generatedDua, selectedTemplate)
-      authenticIslamicPdf.downloadPdf(pdfBlob, `BarakahTool_HD_Islamic_Premium_${Date.now()}.pdf`)
+      // Generate premium themed PDF like name poster
+      const pdfBlob = await pdfService.generateDuaPDF({
+        name: 'User',
+        situation: generatedDua.situation || 'Personal supplication',
+        arabicText: generatedDua.arabicText,
+        transliteration: generatedDua.transliteration,
+        translation: generatedDua.translation,
+        language: generatedDua.language || 'English',
+        theme: 'royalGold' // Premium theme for HD version
+      })
+      pdfService.downloadPDF(pdfBlob, `BarakahTool_Premium_Dua_${Date.now()}`)
     } catch (error) {
       console.error('HD PDF generation error:', error)
       alert('Failed to generate HD PDF. Please try again.')
