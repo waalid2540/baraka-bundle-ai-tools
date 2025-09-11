@@ -32,7 +32,7 @@ class PDFService {
     } : { r: 0, g: 0, b: 0 }
   }
 
-  // Add Clean Themed Islamic Border
+  // Add STUNNING Professional Islamic Border
   private addThemedBorder(doc: jsPDF, theme: PDFTheme): void {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
@@ -41,71 +41,119 @@ class PDFService {
     const secondaryColor = this.hexToRgb(theme.secondary)
     const accentColor = this.hexToRgb(theme.accent)
     
-    // Triple border design
+    // STUNNING Multi-layered border design
     doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
-    doc.setLineWidth(3)
+    doc.setLineWidth(4)
+    doc.rect(5, 5, pageWidth - 10, pageHeight - 10)
+    
+    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.setLineWidth(2)
     doc.rect(8, 8, pageWidth - 16, pageHeight - 16)
     
     doc.setDrawColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
-    doc.setLineWidth(1.5)
+    doc.setLineWidth(1)
     doc.rect(12, 12, pageWidth - 24, pageHeight - 24)
     
-    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
-    doc.setLineWidth(0.8)
-    doc.rect(16, 16, pageWidth - 32, pageHeight - 32)
-    
-    // Corner decorations
+    // BEAUTIFUL Corner decorations with Islamic patterns
     const corners = [
-      { x: 10, y: 10 },
-      { x: pageWidth - 10, y: 10 },
-      { x: 10, y: pageHeight - 10 },
-      { x: pageWidth - 10, y: pageHeight - 10 }
+      { x: 15, y: 15 },
+      { x: pageWidth - 15, y: 15 },
+      { x: 15, y: pageHeight - 15 },
+      { x: pageWidth - 15, y: pageHeight - 15 }
     ]
     
     corners.forEach(corner => {
+      // Outer circle
       doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+      doc.circle(corner.x, corner.y, 6, 'F')
+      // Middle circle
+      doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
       doc.circle(corner.x, corner.y, 4, 'F')
+      // Inner star
       doc.setFillColor(255, 255, 255)
       doc.circle(corner.x, corner.y, 2, 'F')
     })
     
-    // Top decoration
-    doc.setFontSize(12)
+    // ELEGANT Side decorations
+    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.setLineWidth(1)
+    
+    // Top side decorative lines
+    for (let i = 40; i < pageWidth - 40; i += 20) {
+      doc.line(i, 8, i + 10, 8)
+    }
+    
+    // Bottom side decorative lines  
+    for (let i = 40; i < pageWidth - 40; i += 20) {
+      doc.line(i, pageHeight - 8, i + 10, pageHeight - 8)
+    }
+    
+    // Top Islamic calligraphy decoration
+    doc.setFontSize(16)
     doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
-    doc.text('*** ISLAMIC DESIGN ***', pageWidth / 2, 20, { align: 'center' })
+    doc.text('﷽', pageWidth / 2, 18, { align: 'center' })
   }
 
-  // Add Clean Header
+  // Add STUNNING Professional Header
   private addThemedHeader(doc: jsPDF, theme: PDFTheme, title: string, subtitle?: string): void {
     const pageWidth = doc.internal.pageSize.getWidth()
     const primaryColor = this.hexToRgb(theme.primary)
     const accentColor = this.hexToRgb(theme.accent)
+    const secondaryColor = this.hexToRgb(theme.secondary)
     
-    // Title with shadow effect
-    doc.setFontSize(24)
-    doc.setTextColor(primaryColor.r - 30, primaryColor.g - 30, primaryColor.b - 30)
-    doc.text(title, pageWidth / 2 + 0.5, 38.5, { align: 'center' })
+    // BEAUTIFUL Background gradient effect
+    doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b, 0.1)
+    doc.roundedRect(20, 25, pageWidth - 40, 35, 5, 5, 'F')
+    
+    // Main title with STUNNING shadow effect
+    doc.setFontSize(28)
+    doc.setFont('helvetica', 'bold')
+    // Shadow
+    doc.setTextColor(primaryColor.r - 40, primaryColor.g - 40, primaryColor.b - 40, 0.3)
+    doc.text(title, pageWidth / 2 + 1, 42.5, { align: 'center' })
+    // Main text
     doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
-    doc.text(title, pageWidth / 2, 38, { align: 'center' })
+    doc.text(title, pageWidth / 2, 42, { align: 'center' })
     
-    // Subtitle
+    // Elegant subtitle
     if (subtitle) {
-      doc.setFontSize(12)
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'italic')
       doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
-      doc.text(subtitle, pageWidth / 2, 48, { align: 'center' })
+      doc.text(subtitle, pageWidth / 2, 52, { align: 'center' })
     }
     
-    // Decorative line
-    const lineY = 54
+    // STUNNING Decorative line with ornaments
+    const lineY = 65
     doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
-    doc.setLineWidth(1)
-    doc.line(40, lineY, pageWidth - 40, lineY)
+    doc.setLineWidth(2)
+    doc.line(30, lineY, pageWidth - 30, lineY)
     
-    // Decorative elements
+    // Beautiful ornamental elements
     doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
-    doc.circle(35, lineY, 2, 'F')
-    doc.circle(pageWidth - 35, lineY, 2, 'F')
-    doc.circle(pageWidth / 2, lineY, 2.5, 'F')
+    // Left ornament
+    doc.circle(25, lineY, 3, 'F')
+    doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.circle(25, lineY, 1.5, 'F')
+    
+    // Right ornament  
+    doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.circle(pageWidth - 25, lineY, 3, 'F')
+    doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.circle(pageWidth - 25, lineY, 1.5, 'F')
+    
+    // Center ornament
+    doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.circle(pageWidth / 2, lineY, 4, 'F')
+    doc.setFillColor(255, 255, 255)
+    doc.circle(pageWidth / 2, lineY, 2, 'F')
+    doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.circle(pageWidth / 2, lineY, 1, 'F')
+    
+    // Additional decorative stars
+    doc.setFillColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+    doc.circle(pageWidth / 2 - 25, lineY, 1.5, 'F')
+    doc.circle(pageWidth / 2 + 25, lineY, 1.5, 'F')
   }
 
   // Note: Arabic text helpers removed - using transliteration approach for better PDF compatibility
@@ -170,58 +218,69 @@ class PDFService {
     doc.setLineWidth(1.5)
     doc.roundedRect(20, yPosition, pageWidth - 40, arabicHeight, 5, 5, 'FD')
     
-    // Arabic text with better positioning
-    doc.setFontSize(18)
-    doc.setTextColor(textColor.r, textColor.g, textColor.b)
-    
-    // ALWAYS use transliteration for PDF to avoid Arabic display issues
-    if (duaData.transliteration && duaData.transliteration.trim()) {
-      // Use clear transliteration for perfect readability
-      doc.setFontSize(18)
+    // BEAUTIFUL ARABIC TEXT - Direct rendering with proper fonts
+    if (duaData.arabicText && duaData.arabicText.trim()) {
+      // Main Arabic Text with multiple font fallbacks
+      doc.setFontSize(24)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(textColor.r, textColor.g, textColor.b)
       
-      // Split transliteration into lines for better display
-      const transliterationLines = doc.splitTextToSize(duaData.transliteration, pageWidth - 60)
-      let lineY = yPosition + 20
+      // Try to render Arabic text directly with better formatting
+      try {
+        // Split Arabic text into manageable lines
+        const arabicLines = doc.splitTextToSize(duaData.arabicText, pageWidth - 80)
+        let lineY = yPosition + 30
+        
+        arabicLines.forEach((line: string) => {
+          // Center each line of Arabic text
+          doc.text(line.trim(), pageWidth / 2, lineY, { align: 'center' })
+          lineY += 12
+        })
+        
+        yPosition = lineY + 20
+        
+        // Add beautiful decorative separator
+        doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
+        doc.setLineWidth(2)
+        doc.line(pageWidth / 2 - 50, yPosition, pageWidth / 2 + 50, yPosition)
+        yPosition += 15
+        
+      } catch (error) {
+        // If Arabic rendering fails, show elegant placeholder
+        doc.setFontSize(20)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+        doc.text('﷽', pageWidth / 2, yPosition + 20, { align: 'center' })
+        doc.setFontSize(16)
+        doc.text('[Arabic Du\'a - Authentic Islamic Supplication]', pageWidth / 2, yPosition + 35, { align: 'center' })
+        yPosition += 55
+      }
       
-      transliterationLines.forEach((line: string) => {
-        doc.text(line.trim(), pageWidth / 2, lineY, { align: 'center' })
-        lineY += 8
-      })
-      
-      yPosition = lineY + 10
-      
-      // Add note about Arabic
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
-      doc.text('(Arabic pronunciation guide provided above)', pageWidth / 2, yPosition, { align: 'center' })
-      yPosition += 15
-      
-    } else if (duaData.arabicText && duaData.arabicText.trim()) {
-      // Fallback: show a note about Arabic content
-      doc.setFontSize(16)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(textColor.r, textColor.g, textColor.b)
-      doc.text('[Arabic Dua - Authentic Islamic Supplication]', pageWidth / 2, yPosition + 20, {
-        align: 'center',
-        maxWidth: pageWidth - 60
-      })
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'italic')
-      doc.text('For proper Arabic text, please refer to authentic Islamic sources', pageWidth / 2, yPosition + 32, {
-        align: 'center',
-        maxWidth: pageWidth - 60
-      })
-      yPosition += 50
+      // Show transliteration if available
+      if (duaData.transliteration && duaData.transliteration.trim()) {
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'italic')
+        doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+        doc.text('Pronunciation:', pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 8
+        
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
+        const translitLines = doc.splitTextToSize(duaData.transliteration, pageWidth - 60)
+        translitLines.forEach((line: string) => {
+          doc.text(line.trim(), pageWidth / 2, yPosition, { align: 'center' })
+          yPosition += 7
+        })
+        yPosition += 10
+      }
     } else {
-      // Final fallback
-      doc.setFontSize(14)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(textColor.r, textColor.g, textColor.b)
-      doc.text('Authentic Islamic Dua', pageWidth / 2, yPosition + 25, { align: 'center' })
-      yPosition += 40
+      // Elegant fallback when no Arabic text
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+      doc.text('﷽ Authentic Islamic Du\'a ﷽', pageWidth / 2, yPosition + 25, { align: 'center' })
+      yPosition += 45
     }
 
     // Translation section
@@ -276,21 +335,34 @@ class PDFService {
     doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
     doc.text('* * *', pageWidth / 2, yPosition, { align: 'center' })
 
-    // Footer
-    const footerY = pageHeight - 25
-    doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b)
-    doc.setLineWidth(0.8)
-    doc.line(25, footerY, pageWidth - 25, footerY)
+    // STUNNING Professional Footer
+    const footerY = pageHeight - 35
     
-    doc.setFontSize(12)
+    // Beautiful footer background
+    doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b, 0.05)
+    doc.roundedRect(15, footerY - 5, pageWidth - 30, 25, 3, 3, 'F')
+    
+    // Decorative top line with ornaments
+    doc.setDrawColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.setLineWidth(2)
+    doc.line(30, footerY, pageWidth - 30, footerY)
+    
+    // Corner decorations
+    doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
+    doc.circle(25, footerY, 2, 'F')
+    doc.circle(pageWidth - 25, footerY, 2, 'F')
+    
+    // Premium branding
+    doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(accentColor.r, accentColor.g, accentColor.b)
-    doc.text('*** BarakahTool Premium ***', pageWidth / 2, footerY + 8, { align: 'center' })
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
+    doc.text('﷽ BarakahTool Premium ﷽', pageWidth / 2, footerY + 10, { align: 'center' })
     
-    doc.setFontSize(8)
+    // Theme and date info
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(textColor.r, textColor.g, textColor.b)
-    doc.text(`Premium Islamic Digital Platform | Theme: ${theme.name}`, pageWidth / 2, footerY + 15, { align: 'center' })
+    doc.setTextColor(secondaryColor.r, secondaryColor.g, secondaryColor.b)
+    doc.text(`Premium Islamic Digital Platform | ${theme.name} Theme | Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, footerY + 18, { align: 'center' })
     
     return doc.output('blob')
   }
