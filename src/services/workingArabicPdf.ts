@@ -11,55 +11,46 @@ interface DuaData {
 
 class WorkingArabicPdf {
   async generateReadableArabicPdf(duaData: DuaData, theme: string = 'light'): Promise<Blob> {
-    // Create a HIGH-RESOLUTION canvas for PROFESSIONAL quality
+    // Create a PERFECT-SIZE canvas for professional quality
     const canvas = document.createElement('canvas')
-    canvas.width = 1200  // Higher resolution for better quality
-    canvas.height = 1600 // Higher resolution for better quality
+    canvas.width = 800   // Standard A4 width
+    canvas.height = 1100 // Standard A4 height
     const ctx = canvas.getContext('2d')!
     
     // Get theme colors
     const colors = this.getThemeColors(theme)
     
-    // Clear canvas with background
+    // Clear canvas with beautiful background
     ctx.fillStyle = colors.background
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
-    // Add gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-    gradient.addColorStop(0, colors.background)
-    gradient.addColorStop(0.3, colors.cardBg)
-    gradient.addColorStop(0.7, colors.cardBg)
-    gradient.addColorStop(1, colors.background)
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    // STUNNING Islamic border
+    this.addIslamicBorder(ctx, colors, canvas.width, canvas.height)
     
-    // Add decorative patterns
-    this.addIslamicPatterns(ctx, colors)
+    let yPosition = 60
     
-    let yPosition = 80
-    
-    // Header - Bismillah
-    ctx.fillStyle = colors.accent
-    ctx.font = 'bold 24px Arial, "Traditional Arabic", "Arial Unicode MS"'
+    // BEAUTIFUL Header with Bismillah
+    ctx.fillStyle = colors.primary
+    ctx.font = 'bold 28px Arial, "Traditional Arabic", "Arial Unicode MS"'
     ctx.textAlign = 'center'
     ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', canvas.width / 2, yPosition)
+    yPosition += 50
+    
+    // Professional App title
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText('BarakahTool Premium - Islamic Digital Platform', canvas.width / 2, yPosition)
     yPosition += 40
     
-    // App title
+    // BEAUTIFUL Title - الدعاء
     ctx.fillStyle = colors.primary
-    ctx.font = 'bold 20px Arial'
-    ctx.fillText('BarakahTool - Islamic Digital Platform', canvas.width / 2, yPosition)
-    yPosition += 60
+    ctx.font = 'bold 24px Arial, "Traditional Arabic", "Arial Unicode MS"'
+    ctx.fillText('الدعاء الشريف', canvas.width / 2, yPosition)
+    yPosition += 50
     
-    // Title - الدعاء
-    ctx.fillStyle = colors.primary
-    ctx.font = 'bold 32px Arial, "Traditional Arabic", "Arial Unicode MS"'
-    ctx.fillText('الدعاء المبارك', canvas.width / 2, yPosition)
-    yPosition += 60
-    
-    // Decorative line
-    this.drawDecorativeLine(ctx, canvas.width / 2 - 100, yPosition, 200, colors.accent)
-    yPosition += 40
+    // Elegant decorative line
+    this.drawIslamicLine(ctx, canvas.width / 2 - 120, yPosition, 240, colors)
+    yPosition += 35
     
     // Situation (if provided)
     if (duaData.situation) {
@@ -74,38 +65,33 @@ class WorkingArabicPdf {
       yPosition += 20
     }
     
-    // Arabic text container background
-    this.drawTextContainer(ctx, 50, yPosition - 20, canvas.width - 100, 150, colors)
+    // STUNNING Arabic text container
+    this.drawBeautifulContainer(ctx, 40, yPosition, canvas.width - 80, 140, colors, 'Arabic')
     
-    // BEAUTIFUL Arabic text with REAL Arabic script rendering
+    // LARGE Beautiful Arabic text
     ctx.fillStyle = colors.text
-    ctx.font = 'bold 40px Arial, "Traditional Arabic", "Arial Unicode MS", "Noto Sans Arabic", "Amiri", monospace'
+    ctx.font = 'bold 32px Arial, "Traditional Arabic", "Arial Unicode MS", "Noto Sans Arabic"'
     ctx.textAlign = 'center'
     ctx.direction = 'rtl'
     
-    // Split Arabic text into lines and center each line
-    const arabicLines = this.wrapArabicText(ctx, duaData.arabicText, canvas.width - 150)
-    const lineHeight = 60
-    const startY = yPosition + 40
+    // Split Arabic text into lines
+    const arabicLines = this.wrapArabicText(ctx, duaData.arabicText, canvas.width - 100)
+    const lineHeight = 45
+    const startY = yPosition + 35
     
     arabicLines.forEach((line, index) => {
       const y = startY + (index * lineHeight)
       
-      // Beautiful text shadow for depth
-      ctx.fillStyle = 'rgba(0,0,0,0.2)'
-      ctx.fillText(line, canvas.width / 2 + 3, y + 3)
-      
-      // Gold outline for elegance
-      ctx.strokeStyle = colors.accent
-      ctx.lineWidth = 1
-      ctx.strokeText(line, canvas.width / 2, y)
+      // Beautiful shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.15)'
+      ctx.fillText(line, canvas.width / 2 + 2, y + 2)
       
       // Main Arabic text
       ctx.fillStyle = colors.text
       ctx.fillText(line, canvas.width / 2, y)
     })
     
-    yPosition += 180
+    yPosition += 170
     
     // Transliteration (if available)
     if (duaData.transliteration) {
@@ -125,25 +111,34 @@ class WorkingArabicPdf {
       yPosition += 30
     }
     
-    // Translation
-    ctx.fillStyle = colors.secondary
-    ctx.font = 'bold 14px Arial'
+    // PROMINENT English Translation Section
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 20px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText('Translation:', canvas.width / 2, yPosition)
-    yPosition += 25
+    ctx.fillText(`${duaData.language.toUpperCase()} TRANSLATION`, canvas.width / 2, yPosition)
+    yPosition += 30
     
-    // Translation container
-    this.drawTextContainer(ctx, 50, yPosition - 10, canvas.width - 100, 120, colors)
+    // Beautiful translation container
+    this.drawBeautifulContainer(ctx, 40, yPosition, canvas.width - 80, 120, colors, 'Translation')
     
-    ctx.font = 'italic 18px Arial'
-    ctx.fillStyle = colors.primary
-    const translationLines = this.wrapText(ctx, `"${duaData.translation}"`, canvas.width - 120)
+    // LARGE, CLEAR translation text
+    ctx.font = 'bold 18px Arial'
+    ctx.fillStyle = colors.text
+    const translationLines = this.wrapText(ctx, `"${duaData.translation}"`, canvas.width - 100)
+    let translationY = yPosition + 25
+    
     translationLines.forEach(line => {
-      ctx.fillText(line, canvas.width / 2, yPosition + 20)
-      yPosition += 30
+      // Text shadow for better readability
+      ctx.fillStyle = 'rgba(0,0,0,0.1)'
+      ctx.fillText(line, canvas.width / 2 + 1, translationY + 1)
+      
+      // Main text
+      ctx.fillStyle = colors.text
+      ctx.fillText(line, canvas.width / 2, translationY)
+      translationY += 25
     })
     
-    yPosition += 80
+    yPosition += 140
     
     // Footer
     this.drawFooter(ctx, canvas, colors)
@@ -243,17 +238,103 @@ class WorkingArabicPdf {
     ctx.fill()
   }
   
-  private addIslamicPatterns(ctx: CanvasRenderingContext2D, colors: any) {
-    // Add subtle geometric patterns
-    ctx.strokeStyle = colors.accent + '20'
-    ctx.lineWidth = 1
+  private addIslamicBorder(ctx: CanvasRenderingContext2D, colors: any, width: number, height: number) {
+    // STUNNING Islamic border design
+    ctx.strokeStyle = colors.primary
+    ctx.lineWidth = 4
+    ctx.strokeRect(10, 10, width - 20, height - 20)
     
-    // Draw geometric pattern
-    for (let i = 0; i < 10; i++) {
-      const x = 100 + i * 60
-      const y = 200 + (i % 2) * 30
-      this.drawIslamicStar(ctx, x, y, 15)
-    }
+    ctx.strokeStyle = colors.accent
+    ctx.lineWidth = 2
+    ctx.strokeRect(15, 15, width - 30, height - 30)
+    
+    ctx.strokeStyle = colors.secondary
+    ctx.lineWidth = 1
+    ctx.strokeRect(20, 20, width - 40, height - 40)
+    
+    // Corner Islamic decorations
+    const corners = [
+      {x: 20, y: 20}, {x: width - 20, y: 20},
+      {x: 20, y: height - 20}, {x: width - 20, y: height - 20}
+    ]
+    
+    corners.forEach(corner => {
+      this.drawIslamicCorner(ctx, corner.x, corner.y, colors)
+    })
+  }
+  
+  private drawIslamicCorner(ctx: CanvasRenderingContext2D, x: number, y: number, colors: any) {
+    ctx.fillStyle = colors.accent
+    ctx.beginPath()
+    ctx.arc(x, y, 8, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = colors.primary
+    ctx.beginPath()
+    ctx.arc(x, y, 5, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = colors.background
+    ctx.beginPath()
+    ctx.arc(x, y, 2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  private drawIslamicLine(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, colors: any) {
+    // Main line
+    ctx.strokeStyle = colors.accent
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + width, y)
+    ctx.stroke()
+    
+    // Decorative elements
+    ctx.fillStyle = colors.accent
+    ctx.beginPath()
+    ctx.arc(x, y, 6, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + width, y, 6, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + width/2, y, 8, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  private drawBeautifulContainer(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, colors: any, type: string) {
+    // Beautiful gradient background
+    const gradient = ctx.createLinearGradient(x, y, x, y + height)
+    gradient.addColorStop(0, colors.cardBg)
+    gradient.addColorStop(1, colors.background)
+    
+    ctx.fillStyle = gradient
+    ctx.fillRect(x, y, width, height)
+    
+    // Beautiful border
+    ctx.strokeStyle = colors.accent
+    ctx.lineWidth = 2
+    ctx.strokeRect(x, y, width, height)
+    
+    // Inner decoration
+    ctx.strokeStyle = colors.secondary
+    ctx.lineWidth = 1
+    ctx.strokeRect(x + 5, y + 5, width - 10, height - 10)
+    
+    // Corner decorations
+    ctx.fillStyle = colors.accent
+    ctx.beginPath()
+    ctx.arc(x + 10, y + 10, 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + width - 10, y + 10, 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + 10, y + height - 10, 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + width - 10, y + height - 10, 3, 0, Math.PI * 2)
+    ctx.fill()
   }
   
   private drawIslamicStar(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) {
