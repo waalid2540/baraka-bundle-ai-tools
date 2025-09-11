@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import workingArabicPdf from '../services/workingArabicPdf'
+import pdfService from '../services/pdfService'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -34,12 +34,14 @@ const DuaGenerator = () => {
   ]
 
   const templates = [
-    { id: 'royalGold', name: 'Royal Gold' },
-    { id: 'masjidGreen', name: 'Masjid Green' },
-    { id: 'nightPrayer', name: 'Night Prayer' },
-    { id: 'oceanDepth', name: 'Ocean Depth' },
-    { id: 'roseGarden', name: 'Rose Garden' },
-    { id: 'sunsetOrange', name: 'Sunset Orange' }
+    { id: 'royalGold', name: '✨ Royal Gold', icon: '👑' },
+    { id: 'masjidGreen', name: '🕌 Masjid Green', icon: '🟢' },
+    { id: 'nightPrayer', name: '🌙 Night Prayer', icon: '🌃' },
+    { id: 'oceanDepth', name: '🌊 Ocean Depth', icon: '💎' },
+    { id: 'roseGarden', name: '🌹 Rose Garden', icon: '🌸' },
+    { id: 'sunsetOrange', name: '🔥 Sunset Orange', icon: '🧡' },
+    { id: 'fajrDawn', name: '🌅 Fajr Dawn', icon: '💜' },
+    { id: 'midnightBlack', name: '⚫ Midnight Black', icon: '🖤' }
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,15 +101,17 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use workingArabicPdf which properly displays Arabic text
-      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf({
+      // Use premium pdfService with beautiful Islamic themes (same as name poster)
+      const pdfBlob = await pdfService.generateDuaPDF({
+        name: `${formData.topic || 'Custom'} Dua`,
+        situation: generatedDua.situation || formData.customRequest,
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
-        situation: generatedDua.situation,
-        language: generatedDua.language
-      }, selectedTemplate)
-      workingArabicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${selectedTemplate}_${Date.now()}.pdf`)
+        language: generatedDua.language,
+        theme: selectedTemplate
+      })
+      pdfService.downloadPDF(pdfBlob, `Islamic_Dua_${selectedTemplate}_${Date.now()}`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -121,22 +125,17 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
+      
       // Generate Islamic-themed image with DALL-E
       const imageUrl = await dalleService.generateDuaImage(generatedDua, selectedTemplate)
       
-      // Download the image
-      const link = document.createElement('a')
-      link.href = imageUrl
-      link.download = `Islamic_Dua_Art_${Date.now()}.png`
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      // Download the image using dalleService's download method
+      await dalleService.downloadImage(imageUrl, `Islamic_Dua_Art_${selectedTemplate}_${Date.now()}.png`)
       
-      alert('Image generated successfully! Check your downloads.')
+      alert('🎨 Beautiful Islamic art generated and downloaded!')
     } catch (error) {
       console.error('Image generation error:', error)
-      alert('Failed to generate image. Please check your OpenAI API key.')
+      alert('Failed to generate image. Please check your OpenAI API key configuration.')
     } finally {
       setLoading(false)
     }
@@ -248,20 +247,27 @@ const DuaGenerator = () => {
                   </select>
                 </div>
 
-                {/* Template Selection */}
+                {/* Premium Template Selection */}
                 <div>
                   <label className="block text-yellow-400 font-semibold mb-2">
-                    PDF Template Style
+                    🎨 Premium PDF Theme
                   </label>
-                  <select
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                  >
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {templates.map(template => (
-                      <option key={template.id} value={template.id}>{template.name}</option>
+                      <button
+                        key={template.id}
+                        onClick={() => setSelectedTemplate(template.id)}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                          selectedTemplate === template.id
+                            ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
+                            : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{template.icon}</div>
+                        <div className="text-xs font-medium">{template.name}</div>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
                 {error && (
