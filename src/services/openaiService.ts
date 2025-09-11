@@ -54,9 +54,9 @@ class OpenAIService {
   // 🤲 1. PREMIUM Dua Generator - UNLIMITED AUTHENTIC System
   async generateDua(name: string, situation: string, language: string = 'English'): Promise<OpenAIResponse> {
     const prompt = `Generate a powerful Islamic duʿā for ${name} regarding: ${situation}.
-Language for translation: ${language}
+Primary language for translation: ${language}
 
-Follow the exact format provided in your instructions.`
+IMPORTANT: Provide translations in MULTIPLE languages as specified below.`
 
     const payload = {
       model: this.model,
@@ -90,11 +90,26 @@ Format output as:
 [VERY CLEAR pronunciation guide using Latin letters - this is ESSENTIAL for PDF readability]
 Examples: "Allahumma barik lana", "Rabbi ishrah li sadri", "Rabbana atina fi'd-dunya hasanah"
 
-**Translation in {language}:**
-[Duʿā meaning in chosen language]
+**Translation in English:**
+[Duʿā meaning in English]
+
+**Translation in Somali:**
+[Duʿā meaning in Somali (Af-Soomaali)]
+
+**Translation in Urdu:**
+[Duʿā meaning in Urdu]
+
+**Translation in Turkish:**
+[Duʿā meaning in Turkish]
+
+**Translation in Indonesian:**
+[Duʿā meaning in Indonesian (Bahasa Indonesia)]
+
+**Translation in French:**
+[Duʿā meaning in French]
 
 Tone: Uplifting, sincere, spiritually moving.
-Never include commentary - only the duʿā and translation.`
+Never include commentary - only the duʿā and translations.`
         },
         {
           role: 'user',

@@ -54,15 +54,31 @@ const DuaGenerator = () => {
         const content = response.data.content
         const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
         const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*(.+?)(?=\*\*|$)/s)
+        
+        // Parse all language translations
+        const englishMatch = content.match(/\*\*Translation in English:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const somaliMatch = content.match(/\*\*Translation in Somali:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const urduMatch = content.match(/\*\*Translation in Urdu:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const turkishMatch = content.match(/\*\*Translation in Turkish:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const indonesianMatch = content.match(/\*\*Translation in Indonesian:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const frenchMatch = content.match(/\*\*Translation in French:\*\*\s*(.+?)(?=\*\*|$)/s)
 
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : 'اللَّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
           transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-          translation: translationMatch ? translationMatch[1].trim() : '',
+          translation: englishMatch ? englishMatch[1].trim() : '',
           situation: request,
           language: 'English',
-          topic: selectedTopic
+          topic: selectedTopic,
+          // Multiple translations
+          translations: {
+            english: englishMatch ? englishMatch[1].trim() : '',
+            somali: somaliMatch ? somaliMatch[1].trim() : '',
+            urdu: urduMatch ? urduMatch[1].trim() : '',
+            turkish: turkishMatch ? turkishMatch[1].trim() : '',
+            indonesian: indonesianMatch ? indonesianMatch[1].trim() : '',
+            french: frenchMatch ? frenchMatch[1].trim() : ''
+          }
         }
 
         setGeneratedDua(duaData)

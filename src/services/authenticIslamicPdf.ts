@@ -8,6 +8,14 @@ interface DuaData {
   situation: string
   language: string
   topic?: string
+  translations?: {
+    english?: string
+    somali?: string
+    urdu?: string
+    turkish?: string
+    indonesian?: string
+    french?: string
+  }
 }
 
 interface EnhancedDuaData extends DuaData {
@@ -104,14 +112,9 @@ class AuthenticIslamicPdf {
     const benefits = this.getBenefits(duaData.situation)
     const bestTimes = this.getBestTimes()
     
-    // Simulate multiple translations (in production, call translation API)
-    const translations = {
-      english: duaData.translation,
-      somali: this.getTranslation(duaData.translation, 'somali'),
-      urdu: this.getTranslation(duaData.translation, 'urdu'),
-      turkish: this.getTranslation(duaData.translation, 'turkish'),
-      indonesian: this.getTranslation(duaData.translation, 'indonesian'),
-      french: this.getTranslation(duaData.translation, 'french')
+    // Use existing translations from OpenAI or fallback
+    const translations = (duaData as any).translations || {
+      english: duaData.translation
     }
     
     return {
@@ -419,11 +422,42 @@ class AuthenticIslamicPdf {
     ctx.fillText('✦ Translations ✦', canvas.width / 2, y)
     y += 35
     
-    // English Translation (always show)
-    if (duaData.translation) {
+    // Display all available translations
+    if (duaData.translations) {
+      const languageLabels = {
+        english: '🇬🇧 English',
+        somali: '🇸🇴 Af-Soomaali', 
+        urdu: '🇵🇰 اردو (Urdu)',
+        turkish: '🇹🇷 Türkçe',
+        indonesian: '🇮🇩 Bahasa Indonesia',
+        french: '🇫🇷 Français'
+      }
+      
+      for (const [lang, translation] of Object.entries(duaData.translations)) {
+        if (translation && translation.trim()) {
+          // Language label
+          ctx.fillStyle = colors.secondary
+          ctx.font = 'bold 14px Arial'
+          const label = languageLabels[lang as keyof typeof languageLabels] || lang
+          ctx.fillText(label, canvas.width / 2, y)
+          y += 20
+          
+          // Translation text
+          ctx.fillStyle = colors.text
+          ctx.font = lang === 'urdu' ? 'bold 16px Arial' : 'italic 16px Arial' // Bold for RTL languages
+          const lines = this.wrapText(ctx, `"${translation}"`, canvas.width - 100)
+          lines.forEach(line => {
+            ctx.fillText(line, canvas.width / 2, y)
+            y += 22
+          })
+          y += 20
+        }
+      }
+    } else if (duaData.translation) {
+      // Fallback to single translation
       ctx.fillStyle = colors.secondary
       ctx.font = 'bold 14px Arial'
-      ctx.fillText('English:', canvas.width / 2, y)
+      ctx.fillText('🇬🇧 English:', canvas.width / 2, y)
       y += 20
       
       ctx.fillStyle = colors.text
@@ -433,29 +467,7 @@ class AuthenticIslamicPdf {
         ctx.fillText(line, canvas.width / 2, y)
         y += 22
       })
-      y += 15
-    }
-    
-    // Additional translations if available
-    if (duaData.translations) {
-      // Somali
-      if (duaData.translations.somali && duaData.language === 'Somali') {
-        ctx.fillStyle = colors.secondary
-        ctx.font = 'bold 14px Arial'
-        ctx.fillText('Af-Soomaali:', canvas.width / 2, y)
-        y += 20
-        
-        ctx.fillStyle = colors.text
-        ctx.font = '16px Arial'
-        const somaliLines = this.wrapText(ctx, duaData.translations.somali, canvas.width - 100)
-        somaliLines.forEach(line => {
-          ctx.fillText(line, canvas.width / 2, y)
-          y += 22
-        })
-        y += 15
-      }
-      
-      // Add more translations as needed based on selected language
+      y += 20
     }
     
     return y
