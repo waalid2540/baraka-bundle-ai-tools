@@ -51,12 +51,14 @@ class OpenAIService {
     }
   }
 
-  // 🤲 1. PREMIUM Dua Generator - UNLIMITED AUTHENTIC System
-  async generateDua(name: string, situation: string, language: string = 'English'): Promise<OpenAIResponse> {
+  // 🤲 1. PREMIUM Dua Generator - USER CONTROLLED Languages
+  async generateDua(name: string, situation: string, languages: string[] = ['English']): Promise<OpenAIResponse> {
+    const languageList = languages.join(', ')
     const prompt = `Generate a powerful Islamic duʿā for ${name} regarding: ${situation}.
-Primary language for translation: ${language}
 
-IMPORTANT: Provide translations in MULTIPLE languages as specified below.`
+ONLY provide translations for these languages: ${languageList}
+
+Do NOT include any other languages - ONLY the requested ones.`
 
     const payload = {
       model: this.model,
@@ -90,26 +92,7 @@ Format output as:
 [VERY CLEAR pronunciation guide using Latin letters - this is ESSENTIAL for PDF readability]
 Examples: "Allahumma barik lana", "Rabbi ishrah li sadri", "Rabbana atina fi'd-dunya hasanah"
 
-**Translation in ${language}:**
-[Duʿā meaning in ${language} - THIS IS THE PRIMARY LANGUAGE]
-
-**Translation in English:**
-[Duʿā meaning in English]
-
-**Translation in Somali:**
-[Duʿā meaning in Somali (Af-Soomaali)]
-
-**Translation in Urdu:**
-[Duʿā meaning in Urdu]
-
-**Translation in Turkish:**
-[Duʿā meaning in Turkish]
-
-**Translation in Indonesian:**
-[Duʿā meaning in Indonesian (Bahasa Indonesia)]
-
-**Translation in French:**
-[Duʿā meaning in French]
+${languages.map(lang => `**Translation in ${lang}:**\n[Duʿā meaning in ${lang}]`).join('\n\n')}
 
 Tone: Uplifting, sincere, spiritually moving.
 Never include commentary - only the duʿā and translations.`

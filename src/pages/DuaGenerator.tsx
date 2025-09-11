@@ -12,7 +12,7 @@ const DuaGenerator = () => {
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
   const [selectedTemplate, setSelectedTemplate] = useState('light')
-  const [selectedLanguage, setSelectedLanguage] = useState('English')
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['English'])
 
   const languages = [
     { code: 'English', name: 'English', flag: '🇺🇸', nativeName: 'English' },
@@ -64,39 +64,32 @@ const DuaGenerator = () => {
         ? duaTopics.find(topic => topic.id === selectedTopic)?.name || selectedTopic
         : customRequest
 
-      const response = await openaiService.generateDua('User', request, selectedLanguage)
+      const response = await openaiService.generateDua('User', request, selectedLanguages)
 
       if (response.success && response.data) {
         const content = response.data.content
         const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
         const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
         
-        // Parse all language translations
-        const primaryLanguageMatch = content.match(new RegExp(`\\*\\*Translation in ${selectedLanguage}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
-        const englishMatch = content.match(/\*\*Translation in English:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const somaliMatch = content.match(/\*\*Translation in Somali:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const urduMatch = content.match(/\*\*Translation in Urdu:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const turkishMatch = content.match(/\*\*Translation in Turkish:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const indonesianMatch = content.match(/\*\*Translation in Indonesian:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const frenchMatch = content.match(/\*\*Translation in French:\*\*\s*(.+?)(?=\*\*|$)/s)
+        // Parse only selected language translations
+        const translations: Record<string, string> = {}
+        
+        selectedLanguages.forEach(language => {
+          const match = content.match(new RegExp(`\\*\\*Translation in ${language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
+          if (match) {
+            translations[language.toLowerCase()] = match[1].trim()
+          }
+        })
 
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : 'اللَّهُمَّ اغْفِرْ لِي وَارْحَمْنِي',
           transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-          translation: primaryLanguageMatch ? primaryLanguageMatch[1].trim() : (englishMatch ? englishMatch[1].trim() : ''),
+          translation: translations['english'] || Object.values(translations)[0] || '',
           situation: request,
-          language: selectedLanguage,
+          language: selectedLanguages[0] || 'English',
           topic: selectedTopic,
-          // Multiple translations
-          translations: {
-            [selectedLanguage.toLowerCase()]: primaryLanguageMatch ? primaryLanguageMatch[1].trim() : '',
-            english: englishMatch ? englishMatch[1].trim() : '',
-            somali: somaliMatch ? somaliMatch[1].trim() : '',
-            urdu: urduMatch ? urduMatch[1].trim() : '',
-            turkish: turkishMatch ? turkishMatch[1].trim() : '',
-            indonesian: indonesianMatch ? indonesianMatch[1].trim() : '',
-            french: frenchMatch ? frenchMatch[1].trim() : ''
-          }
+          // Only selected translations
+          translations: translations
         }
 
         setGeneratedDua(duaData)
@@ -165,13 +158,25 @@ const DuaGenerator = () => {
     }
   }
 
+  const toggleLanguage = (languageCode: string) => {
+    setSelectedLanguages(prev => {
+      if (prev.includes(languageCode)) {
+        // Don't allow removing all languages
+        if (prev.length === 1) return prev
+        return prev.filter(lang => lang !== languageCode)
+      } else {
+        return [...prev, languageCode]
+      }
+    })
+  }
+
   const resetGenerator = () => {
     setGeneratedDua(null)
     setSelectedTopic('')
     setCustomRequest('')
     setError('')
     setSelectedTemplate('light')
-    setSelectedLanguage('English')
+    setSelectedLanguages(['English'])
   }
 
   return (
@@ -208,56 +213,76 @@ const DuaGenerator = () => {
               <p className="text-slate-600 text-lg">Select your language, topic, or describe your specific need</p>
             </div>
 
-            {/* Modern Language Selection */}
+            {/* Language Selection - USER CHOOSES */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                   <span className="text-xl text-white">🌍</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-700">Choose Your Language</h3>
-                  <p className="text-sm text-slate-500">Primary language for your du'a translation</p>
+                  <h3 className="text-lg font-semibold text-slate-700">Select Languages You Want</h3>
+                  <p className="text-sm text-slate-500">Choose which languages to include in your du'a</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {languages.map((language) => (
-                  <button
+                  <label
                     key={language.code}
-                    onClick={() => setSelectedLanguage(language.code)}
-                    className={`group relative p-4 rounded-xl border-2 transition-all duration-300 text-center hover:scale-105 hover:shadow-lg ${
-                      selectedLanguage === language.code
-                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-lg transform scale-105'
-                        : 'bg-slate-50 hover:bg-white text-slate-700 border-slate-200 hover:border-emerald-300'
+                    className={`group relative p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-102 hover:shadow-md ${
+                      selectedLanguages.includes(language.code)
+                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white border-transparent shadow-lg'
+                        : 'bg-slate-50 hover:bg-white text-slate-700 border-slate-200 hover:border-blue-300'
                     }`}
                   >
-                    <div className="text-2xl mb-2 group-hover:animate-bounce">{language.flag}</div>
-                    <div className={`font-semibold text-xs mb-1 ${
-                      selectedLanguage === language.code ? 'text-white' : 'text-slate-700'
+                    <input
+                      type="checkbox"
+                      checked={selectedLanguages.includes(language.code)}
+                      onChange={() => toggleLanguage(language.code)}
+                      className="sr-only"
+                    />
+                    
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-2xl">{language.flag}</span>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        selectedLanguages.includes(language.code)
+                          ? 'bg-white border-white'
+                          : 'border-slate-300 group-hover:border-blue-400'
+                      }`}>
+                        {selectedLanguages.includes(language.code) && (
+                          <span className="text-blue-600 text-sm font-bold">✓</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className={`font-semibold text-sm mb-1 ${
+                      selectedLanguages.includes(language.code) ? 'text-white' : 'text-slate-700'
                     }`}>
                       {language.name}
                     </div>
-                    <div className={`text-xs opacity-75 ${
-                      selectedLanguage === language.code ? 'text-emerald-100' : 'text-slate-500'
+                    <div className={`text-xs ${
+                      selectedLanguages.includes(language.code) ? 'text-blue-100' : 'text-slate-500'
                     }`}>
                       {language.nativeName}
                     </div>
-                    
-                    {selectedLanguage === language.code && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-emerald-600 text-sm">✓</span>
-                      </div>
-                    )}
-                  </button>
+                  </label>
                 ))}
               </div>
               
-              <div className="mt-4 text-center">
-                <p className="text-xs text-slate-500">
-                  Selected: <span className="font-semibold text-emerald-600">
-                    {languages.find(l => l.code === selectedLanguage)?.flag} {selectedLanguage}
-                  </span>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-slate-600 mb-2">
+                  Selected ({selectedLanguages.length}):
                 </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {selectedLanguages.map(langCode => {
+                    const lang = languages.find(l => l.code === langCode)
+                    return (
+                      <span key={langCode} className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                        {lang?.flag} {lang?.name}
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
