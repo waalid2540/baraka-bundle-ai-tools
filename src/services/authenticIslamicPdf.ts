@@ -415,59 +415,59 @@ class AuthenticIslamicPdf {
   }
   
   private drawMultipleTranslations(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, duaData: EnhancedDuaData, colors: any, y: number): number {
+    // Only show if there are user-selected translations
+    if (!duaData.translations || Object.keys(duaData.translations).length === 0) {
+      return y
+    }
+
     // Section header with ornament
     ctx.fillStyle = colors.primary
     ctx.font = 'bold 20px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText('✦ Translations ✦', canvas.width / 2, y)
+    ctx.fillText('✦ Selected Translations ✦', canvas.width / 2, y)
     y += 35
     
-    // Display all available translations
-    if (duaData.translations) {
-      const languageLabels = {
-        english: '🇬🇧 English',
-        somali: '🇸🇴 Af-Soomaali', 
-        urdu: '🇵🇰 اردو (Urdu)',
-        turkish: '🇹🇷 Türkçe',
-        indonesian: '🇮🇩 Bahasa Indonesia',
-        french: '🇫🇷 Français'
+    // Dynamic language labels - support any language
+    const getLanguageFlag = (lang: string): string => {
+      const flags: Record<string, string> = {
+        english: '🇬🇧',
+        somali: '🇸🇴',
+        arabic: '🇸🇦',
+        urdu: '🇵🇰',
+        turkish: '🇹🇷',
+        indonesian: '🇮🇩',
+        french: '🇫🇷',
+        spanish: '🇪🇸',
+        malay: '🇲🇾',
+        bengali: '🇧🇩',
+        persian: '🇮🇷',
+        german: '🇩🇪'
       }
-      
-      for (const [lang, translation] of Object.entries(duaData.translations)) {
-        if (translation && translation.trim()) {
-          // Language label
-          ctx.fillStyle = colors.secondary
-          ctx.font = 'bold 14px Arial'
-          const label = languageLabels[lang as keyof typeof languageLabels] || lang
-          ctx.fillText(label, canvas.width / 2, y)
-          y += 20
-          
-          // Translation text
-          ctx.fillStyle = colors.text
-          ctx.font = lang === 'urdu' ? 'bold 16px Arial' : 'italic 16px Arial' // Bold for RTL languages
-          const lines = this.wrapText(ctx, `"${translation}"`, canvas.width - 100)
-          lines.forEach(line => {
-            ctx.fillText(line, canvas.width / 2, y)
-            y += 22
-          })
-          y += 20
-        }
+      return flags[lang.toLowerCase()] || '🌍'
+    }
+    
+    // ONLY display user-selected translations
+    for (const [lang, translation] of Object.entries(duaData.translations)) {
+      if (translation && translation.trim()) {
+        // Language label with proper capitalization
+        const langName = lang.charAt(0).toUpperCase() + lang.slice(1)
+        const flag = getLanguageFlag(lang)
+        
+        ctx.fillStyle = colors.secondary
+        ctx.font = 'bold 14px Arial'
+        ctx.fillText(`${flag} ${langName}`, canvas.width / 2, y)
+        y += 20
+        
+        // Translation text
+        ctx.fillStyle = colors.text
+        ctx.font = ['arabic', 'urdu', 'persian'].includes(lang.toLowerCase()) ? 'bold 16px Arial' : 'italic 16px Arial'
+        const lines = this.wrapText(ctx, `"${translation}"`, canvas.width - 100)
+        lines.forEach(line => {
+          ctx.fillText(line, canvas.width / 2, y)
+          y += 22
+        })
+        y += 20
       }
-    } else if (duaData.translation) {
-      // Fallback to single translation
-      ctx.fillStyle = colors.secondary
-      ctx.font = 'bold 14px Arial'
-      ctx.fillText('🇬🇧 English:', canvas.width / 2, y)
-      y += 20
-      
-      ctx.fillStyle = colors.text
-      ctx.font = 'italic 16px Arial'
-      const englishLines = this.wrapText(ctx, `"${duaData.translation}"`, canvas.width - 100)
-      englishLines.forEach(line => {
-        ctx.fillText(line, canvas.width / 2, y)
-        y += 22
-      })
-      y += 20
     }
     
     return y
@@ -606,19 +606,6 @@ class AuthenticIslamicPdf {
     ]
   }
   
-  private getTranslation(text: string, language: string): string {
-    // In production, this would call a real translation API
-    // For now, return a placeholder
-    const translations: Record<string, string> = {
-      'somali': 'Ilaahayow, iga caawi oo ii naxariiso, waxaad tahay Naxariistaha',
-      'urdu': 'اے اللہ، میری مدد فرما اور مجھ پر رحم فرما',
-      'turkish': 'Allah\'ım, bana yardım et ve merhamet et',
-      'indonesian': 'Ya Allah, bantulah aku dan kasihanilah aku',
-      'french': 'Ô Allah, aide-moi et aie pitié de moi'
-    }
-    
-    return translations[language] || text
-  }
   
   private wrapArabicText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
     const words = text.split(' ')
