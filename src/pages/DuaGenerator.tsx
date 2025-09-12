@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import creativeIslamicPdf from '../services/creativeIslamicPdf'
+import simpleIslamicPdf from '../services/simpleIslamicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -91,15 +91,15 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use creative Islamic PDF with multiple distinct designs
-      const pdfBlob = await creativeIslamicPdf.generateCreativePdf({
+      // Use simple, clean PDF
+      const pdfBlob = await simpleIslamicPdf.generateSimplePdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
         situation: generatedDua.situation || formData.customRequest,
         language: generatedDua.language
-      }, formData.pdfTheme as 'golden_mosque' | 'sunset_desert' | 'ocean_waves' | 'forest_green' | 'royal_purple' | 'rainbow_gradient' | 'minimalist_black' | 'vintage_cream')
-      creativeIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_Creative_${formData.pdfTheme}_${Date.now()}.pdf`)
+      })
+      simpleIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -235,44 +235,6 @@ const DuaGenerator = () => {
                   </select>
                 </div>
 
-                {/* Creative Theme Selection for Content Creators */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    🎨 Creative PDF Designs for Social Media
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { id: 'golden_mosque', name: 'Golden Mosque', desc: 'Luxury gold mosque design', icon: '🕌', color: 'from-yellow-600 to-yellow-400' },
-                      { id: 'sunset_desert', name: 'Sunset Desert', desc: 'Warm desert sunset vibes', icon: '🏜️', color: 'from-orange-600 to-orange-400' },
-                      { id: 'ocean_waves', name: 'Ocean Waves', desc: 'Tranquil blue waves', icon: '🌊', color: 'from-blue-600 to-blue-400' },
-                      { id: 'forest_green', name: 'Forest Green', desc: 'Natural botanical theme', icon: '🌿', color: 'from-green-600 to-green-400' },
-                      { id: 'royal_purple', name: 'Royal Purple', desc: 'Majestic purple crowns', icon: '👑', color: 'from-purple-600 to-purple-400' },
-                      { id: 'rainbow_gradient', name: 'Rainbow Joy', desc: 'Vibrant rainbow colors', icon: '🌈', color: 'from-pink-600 to-pink-400' },
-                      { id: 'minimalist_black', name: 'Minimalist Black', desc: 'Clean black & white', icon: '◆', color: 'from-gray-800 to-gray-600' },
-                      { id: 'vintage_cream', name: 'Vintage Cream', desc: 'Classic ornate style', icon: '🌹', color: 'from-amber-600 to-amber-400' }
-                    ].map((theme) => (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, pdfTheme: theme.id })}
-                        className={`p-3 rounded-xl border transition-all duration-200 text-center ${
-                          formData.pdfTheme === theme.id
-                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                            : 'bg-slate-800/50 border-slate-700 text-gray-300 hover:border-yellow-500/50'
-                        }`}
-                      >
-                        <div className={`w-full h-12 bg-gradient-to-r ${theme.color} rounded-lg flex items-center justify-center mb-2`}>
-                          <span className="text-2xl">{theme.icon}</span>
-                        </div>
-                        <div className="text-xs font-bold mb-1">{theme.name}</div>
-                        <div className="text-xs text-gray-400">{theme.desc}</div>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-3 text-xs text-gray-400 text-center">
-                    💡 Each design is unique and perfect for sharing on Instagram, TikTok, Facebook, and YouTube
-                  </div>
-                </div>
 
 
                 {error && (
@@ -299,11 +261,11 @@ const DuaGenerator = () => {
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>8 Unique Creative Designs (Golden Mosque, Sunset Desert, Ocean Waves & More!)</span>
+                      <span>Clean, professional PDF format</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Social media optimized layouts for content creators</span>
+                      <span>Simple, readable layout</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
@@ -384,7 +346,7 @@ const DuaGenerator = () => {
                   disabled={loading}
                   className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-{loading ? 'Generating...' : `📄 Download ${formData.pdfTheme.charAt(0).toUpperCase() + formData.pdfTheme.slice(1)} PDF`}
+{loading ? 'Generating...' : '📄 Download PDF'}
                 </button>
                 <button
                   onClick={downloadImage}
