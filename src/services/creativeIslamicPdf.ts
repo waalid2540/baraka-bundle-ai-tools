@@ -355,16 +355,20 @@ class CreativeIslamicPdf {
     this.drawStyledSection(ctx, canvas, design, 'Arabic Du\'a', duaData.arabicText, yPosition, 'arabic')
     yPosition += 200
     
-    // Transliteration if available
-    if (duaData.transliteration) {
-      this.drawStyledSection(ctx, canvas, design, 'Pronunciation', duaData.transliteration, yPosition, 'transliteration')
-      yPosition += 120
-    }
+    // Always show transliteration (pronunciation guide)
+    const transliteration = duaData.transliteration || this.generateTransliteration(duaData.arabicText)
+    this.drawStyledSection(ctx, canvas, design, 'Pronunciation Guide', transliteration, yPosition, 'transliteration')
+    yPosition += 120
     
     // Translation
     this.drawStyledSection(ctx, canvas, design, `Translation (${duaData.language})`, duaData.translation, yPosition, 'translation')
+    yPosition += 150
     
-    return yPosition + 150
+    // Add Islamic reflections and wisdom
+    this.drawReflections(ctx, canvas, design, duaData, yPosition)
+    yPosition += 180
+    
+    return yPosition
   }
 
   private drawSplitLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
@@ -372,7 +376,7 @@ class CreativeIslamicPdf {
     
     // Left side - Arabic
     ctx.save()
-    this.drawStyledBox(ctx, 60, yPosition, centerX - 100, 300, design)
+    this.drawStyledBox(ctx, 60, yPosition, centerX - 100, 200, design)
     ctx.fillStyle = design.arabicText
     ctx.font = design.typography.arabic
     ctx.textAlign = 'center'
@@ -386,7 +390,7 @@ class CreativeIslamicPdf {
     
     // Right side - Translation
     ctx.save()
-    this.drawStyledBox(ctx, centerX + 40, yPosition, centerX - 100, 300, design)
+    this.drawStyledBox(ctx, centerX + 40, yPosition, centerX - 100, 200, design)
     ctx.fillStyle = design.text
     ctx.font = design.typography.english
     ctx.textAlign = 'center'
@@ -398,91 +402,126 @@ class CreativeIslamicPdf {
     })
     ctx.restore()
     
-    return yPosition + 350
+    yPosition += 250
+    
+    // Transliteration below
+    const transliteration = duaData.transliteration || this.generateTransliteration(duaData.arabicText)
+    this.drawStyledSection(ctx, canvas, design, 'Pronunciation Guide', transliteration, yPosition, 'transliteration')
+    yPosition += 120
+    
+    // Add reflections
+    this.drawReflections(ctx, canvas, design, duaData, yPosition)
+    yPosition += 180
+    
+    return yPosition
   }
 
   private drawLayeredLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
     // Light background layer for better readability
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
-    ctx.fillRect(50, yPosition, canvas.width - 100, 400)
+    ctx.fillRect(50, yPosition, canvas.width - 100, 300)
     
     // Subtle border
     ctx.strokeStyle = design.secondary
     ctx.lineWidth = 2
-    ctx.strokeRect(50, yPosition, canvas.width - 100, 400)
+    ctx.strokeRect(50, yPosition, canvas.width - 100, 300)
     
     // Arabic text with background for visibility
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-    ctx.fillRect(60, yPosition + 40, canvas.width - 120, 80)
+    ctx.fillRect(60, yPosition + 20, canvas.width - 120, 80)
     
     ctx.fillStyle = design.arabicText
     ctx.font = design.typography.arabic
     ctx.textAlign = 'center'
-    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition + 90)
+    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition + 70)
     
     // Overlay decorative elements (lighter)
     ctx.fillStyle = `${design.secondary}60`
     ctx.font = '25px serif'
     design.decorativeElements.slice(0, 3).forEach((elem, i) => {
-      ctx.fillText(elem, 100 + (i * 300), yPosition + 180)
+      ctx.fillText(elem, 100 + (i * 300), yPosition + 140)
     })
     
     // Translation with background for visibility
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-    ctx.fillRect(60, yPosition + 220, canvas.width - 120, 120)
+    ctx.fillRect(60, yPosition + 170, canvas.width - 120, 100)
     
     ctx.fillStyle = design.text
     ctx.font = design.typography.english
     const lines = this.wrapText(ctx, duaData.translation, canvas.width - 140)
-    let lineY = yPosition + 250
+    let lineY = yPosition + 200
     lines.forEach(line => {
       ctx.fillText(line, canvas.width / 2, lineY)
       lineY += 25
     })
     
-    return yPosition + 450
+    yPosition += 350
+    
+    // Add transliteration
+    const transliteration = duaData.transliteration || this.generateTransliteration(duaData.arabicText)
+    this.drawStyledSection(ctx, canvas, design, 'Pronunciation Guide', transliteration, yPosition, 'transliteration')
+    yPosition += 120
+    
+    // Add reflections
+    this.drawReflections(ctx, canvas, design, duaData, yPosition)
+    yPosition += 180
+    
+    return yPosition
   }
 
   private drawArtisticLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
     // Artistic curved background
     ctx.beginPath()
     ctx.moveTo(50, yPosition)
-    ctx.quadraticCurveTo(canvas.width / 2, yPosition - 50, canvas.width - 50, yPosition)
-    ctx.quadraticCurveTo(canvas.width / 2, yPosition + 350, 50, yPosition + 300)
+    ctx.quadraticCurveTo(canvas.width / 2, yPosition - 30, canvas.width - 50, yPosition)
+    ctx.quadraticCurveTo(canvas.width / 2, yPosition + 250, 50, yPosition + 220)
     ctx.fillStyle = `${design.primary}30`
     ctx.fill()
     
-    // Arabic text following curve
+    // Arabic text following curve with background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(60, yPosition + 60, canvas.width - 120, 80)
+    
     ctx.fillStyle = design.arabicText
     ctx.font = design.typography.arabic
     ctx.textAlign = 'center'
-    ctx.save()
-    ctx.translate(canvas.width / 2, yPosition + 100)
-    ctx.rotate(-0.1)
-    ctx.fillText(duaData.arabicText, 0, 0)
-    ctx.restore()
+    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition + 110)
     
-    // Scattered decorative elements
+    // Scattered decorative elements (lighter)
     design.decorativeElements.forEach((elem, i) => {
-      ctx.fillStyle = design.secondary
-      ctx.font = '35px serif'
-      const x = 100 + (i * 150) + Math.sin(i) * 50
-      const y = yPosition + 200 + Math.cos(i) * 30
+      ctx.fillStyle = `${design.secondary}60`
+      ctx.font = '25px serif'
+      const x = 100 + (i * 120) + Math.sin(i) * 30
+      const y = yPosition + 160 + Math.cos(i) * 20
       ctx.fillText(elem, x, y)
     })
     
-    // Translation in artistic font
+    // Translation with background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(60, yPosition + 180, canvas.width - 120, 80)
+    
     ctx.fillStyle = design.text
-    ctx.font = design.typography.decorative
+    ctx.font = design.typography.english
     ctx.textAlign = 'center'
-    const lines = this.wrapText(ctx, duaData.translation, canvas.width - 120)
-    let lineY = yPosition + 280
+    const lines = this.wrapText(ctx, duaData.translation, canvas.width - 140)
+    let lineY = yPosition + 210
     lines.forEach(line => {
       ctx.fillText(line, canvas.width / 2, lineY)
-      lineY += 30
+      lineY += 25
     })
     
-    return yPosition + 400
+    yPosition += 300
+    
+    // Add transliteration
+    const transliteration = duaData.transliteration || this.generateTransliteration(duaData.arabicText)
+    this.drawStyledSection(ctx, canvas, design, 'Pronunciation Guide', transliteration, yPosition, 'transliteration')
+    yPosition += 120
+    
+    // Add reflections
+    this.drawReflections(ctx, canvas, design, duaData, yPosition)
+    yPosition += 180
+    
+    return yPosition
   }
 
   private drawStyledSection(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, title: string, content: string, yPosition: number, type: 'arabic' | 'transliteration' | 'translation') {
@@ -592,6 +631,110 @@ class CreativeIslamicPdf {
     
     if (currentLine) lines.push(currentLine)
     return lines
+  }
+
+  private generateTransliteration(arabicText: string): string {
+    // Simple transliteration mapping - you can enhance this
+    const transliterationMap: { [key: string]: string } = {
+      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ': 'Bismillahi Rahmani Raheem',
+      'اللَّهُمَّ': 'Allahumma',
+      'رَبَّنَا': 'Rabbana',
+      'سُبْحَانَ اللَّهِ': 'Subhan Allah',
+      'الْحَمْدُ لِلَّهِ': 'Alhamdulillah',
+      'اللَّهُ أَكْبَرُ': 'Allahu Akbar'
+    }
+    
+    // Check if we have a direct mapping
+    for (const [arabic, transliteration] of Object.entries(transliterationMap)) {
+      if (arabicText.includes(arabic)) {
+        return transliteration
+      }
+    }
+    
+    // Default transliteration guide
+    return 'Arabic pronunciation guide available'
+  }
+
+  private drawReflections(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number) {
+    // Header for reflections
+    ctx.fillStyle = design.secondary
+    ctx.font = design.typography.english.replace('18px', '16px')
+    ctx.textAlign = 'center'
+    ctx.fillText('✦ Islamic Reflections & Wisdom ✦', canvas.width / 2, yPosition)
+    yPosition += 30
+    
+    // Get reflections based on the du'a content
+    const reflections = this.getReflections(duaData.situation || duaData.translation)
+    
+    // Draw reflection box
+    this.drawStyledBox(ctx, 60, yPosition, canvas.width - 120, 120, design)
+    
+    // Draw reflections
+    ctx.fillStyle = design.text
+    ctx.font = design.typography.english.replace('18px', '14px')
+    ctx.textAlign = 'left'
+    
+    let reflectionY = yPosition + 25
+    reflections.slice(0, 2).forEach((reflection, index) => {
+      // Bullet point
+      ctx.fillStyle = design.secondary
+      ctx.font = 'bold 14px serif'
+      ctx.fillText('•', 80, reflectionY)
+      
+      // Reflection text
+      ctx.fillStyle = design.text
+      ctx.font = design.typography.english.replace('18px', '13px')
+      const lines = this.wrapText(ctx, reflection, canvas.width - 180)
+      lines.forEach((line, lineIndex) => {
+        ctx.fillText(line, 95, reflectionY + (lineIndex * 18))
+      })
+      reflectionY += lines.length * 18 + 10
+    })
+  }
+
+  private getReflections(situation: string): string[] {
+    const lower = situation.toLowerCase()
+    
+    if (lower.includes('forgiveness') || lower.includes('maghfirah')) {
+      return [
+        'Allah\'s mercy encompasses all things, and seeking forgiveness purifies the heart',
+        'Every sincere repentance brings the believer closer to Allah\'s infinite compassion'
+      ]
+    }
+    
+    if (lower.includes('guidance') || lower.includes('hidayah')) {
+      return [
+        'True guidance comes from Allah alone, and sincere supplication opens the doors of wisdom',
+        'The Quran is our eternal guide, and du\'a is the key to understanding its teachings'
+      ]
+    }
+    
+    if (lower.includes('protection') || lower.includes('safety')) {
+      return [
+        'Allah is the ultimate protector, and His refuge is the safest sanctuary',
+        'Seeking Allah\'s protection strengthens faith and brings peace to the heart'
+      ]
+    }
+    
+    if (lower.includes('health') || lower.includes('healing')) {
+      return [
+        'Allah is Ash-Shafi, the ultimate healer of both body and soul',
+        'Patience during illness and gratitude in health are signs of true faith'
+      ]
+    }
+    
+    if (lower.includes('sustenance') || lower.includes('rizq')) {
+      return [
+        'Allah provides sustenance in ways beyond our imagination and understanding',
+        'Seeking halal rizq with trust in Allah brings both worldly and spiritual prosperity'
+      ]
+    }
+    
+    // Default reflections
+    return [
+      'Du\'a is the essence of worship and our direct connection to the Divine',
+      'Through sincere supplication, hearts find peace and souls find their true direction'
+    ]
   }
 
   downloadPdf(blob: Blob, filename: string): void {
