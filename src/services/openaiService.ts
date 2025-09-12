@@ -156,17 +156,19 @@ Never include commentary - only the duʿā and translations.`
   }
 
   // Generate AI-powered reflections for the dua
-  async generateReflections(situation: string, arabicText: string): Promise<string[]> {
+  async generateReflections(situation: string, arabicText: string, language: string = 'English'): Promise<string[]> {
     try {
       const prompt = `Generate 2 unique, meaningful Islamic reflections for this du'a situation: "${situation}". 
-                     Make them specific and profound, not generic. Each should be 1 inspiring sentence.`
+                     Make them specific and profound, not generic. Each should be 1 inspiring sentence.
+                     
+                     IMPORTANT: Write the reflections in ${language} language.`
 
       const response = await this.makeRequest('/chat/completions', {
         model: this.model,
         messages: [
           {
             role: 'system',
-            content: 'You are an Islamic scholar providing deep spiritual reflections.'
+            content: `You are an Islamic scholar providing deep spiritual reflections. Always respond in ${language} language.`
           },
           {
             role: 'user',

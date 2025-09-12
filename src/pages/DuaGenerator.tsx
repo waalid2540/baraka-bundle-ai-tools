@@ -65,7 +65,7 @@ const DuaGenerator = () => {
         const translationMatch = content.match(new RegExp(`\\*\\*Translation in ${formData.language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
         
         // Generate AI reflections for this specific dua
-        const reflectionsResponse = await openaiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '')
+        const reflectionsResponse = await openaiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '', formData.language)
         
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : '',
