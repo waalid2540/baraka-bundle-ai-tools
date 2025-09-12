@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import simpleIslamicPdf from '../services/simpleIslamicPdf'
+import professionalIslamicPdf from '../services/professionalIslamicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -91,15 +91,15 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use simple, clean PDF
-      const pdfBlob = await simpleIslamicPdf.generateSimplePdf({
+      // Use working professional PDF with Arabic text support
+      const pdfBlob = await professionalIslamicPdf.generateProfessionalPdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
         situation: generatedDua.situation || formData.customRequest,
         language: generatedDua.language
       })
-      simpleIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${Date.now()}.pdf`)
+      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
