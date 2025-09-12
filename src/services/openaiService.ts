@@ -206,6 +206,75 @@ Never include commentary - only the duʿā and translations.`
   getCurrentModel(): string {
     return this.model
   }
+
+  // 📚 Islamic Kids Story Generator
+  async generateKidsStory(ageGroup: string, characterName: string, theme: string, language: string = 'english'): Promise<OpenAIResponse> {
+    const languageMapping: { [key: string]: string } = {
+      'english': 'English',
+      'arabic': 'Arabic',
+      'somali': 'Somali',
+      'urdu': 'Urdu'
+    }
+
+    const selectedLanguage = languageMapping[language] || 'English'
+    
+    const systemMessage = `You are an expert Islamic children's story writer specializing in age-appropriate, educational stories that teach Islamic values and morals. Create stories that are engaging, culturally appropriate, and pedagogically sound.
+
+CRITICAL REQUIREMENTS:
+- Write story in ${selectedLanguage} language
+- Age-appropriate content for ${ageGroup} year olds
+- Include authentic Islamic teachings and values
+- Reference relevant Qur'anic verses with proper citations
+- Provide practical guidance for parents
+- Make stories engaging and relatable for children
+- Ensure cultural sensitivity and accuracy
+
+STORY STRUCTURE:
+- Engaging beginning that hooks young readers
+- Clear moral dilemma or challenge
+- Islamic solution/guidance through character actions
+- Positive resolution that reinforces the lesson
+- Natural integration of Islamic concepts
+
+OUTPUT FORMAT: Return ONLY a valid JSON object with this exact structure:
+{
+  "title": "[Engaging story title]",
+  "story": "[Complete story text - age appropriate for ${ageGroup}]",
+  "moralLesson": "[Clear moral lesson learned]",
+  "quranReference": "[Relevant Qur'an citation and context]",
+  "arabicVerse": "[Arabic verse if applicable]",
+  "verseTranslation": "[English translation of verse]",
+  "parentNotes": "[Guidance for parents on discussing this story]",
+  "ageGroup": "${ageGroup}",
+  "theme": "${theme}"
+}`
+
+    const prompt = `Create an Islamic children's story with these specifications:
+- Main character name: ${characterName}
+- Age group: ${ageGroup} years old
+- Theme/Moral: ${theme}
+- Language: ${selectedLanguage}
+
+Make the story engaging, educational, and appropriate for the age group. Include specific Islamic teachings and make ${characterName} a relatable, positive role model for children.`
+
+    const payload = {
+      model: this.model,
+      messages: [
+        {
+          role: 'system',
+          content: systemMessage
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 1200
+    }
+
+    return await this.makeRequest('/chat/completions', payload)
+  }
 }
 
 export const openaiService = new OpenAIService()

@@ -195,6 +195,120 @@ class DalleService {
     }
   }
 
+  // 📚 Generate Islamic Kids Story Illustration
+  async generateStoryImage(storyTitle: string, characterName: string, theme: string, ageGroup: string): Promise<string> {
+    if (!this.apiKey) {
+      console.error('OpenAI API key not configured')
+      // Return fallback image
+      return this.generateFallbackStoryImage(storyTitle, characterName, theme)
+    }
+
+    // Create kid-friendly, Islamic-appropriate prompt
+    const prompt = `Create a beautiful, child-friendly Islamic illustration for a children's story titled "${storyTitle}". 
+
+    VISUAL STYLE:
+    - Warm, colorful, and inviting illustration perfect for ages ${ageGroup}
+    - Islamic geometric patterns and designs in the background
+    - Beautiful mosque or Islamic architecture elements
+    - Soft, bright colors that appeal to children
+    - Professional children's book illustration style
+    
+    SCENE ELEMENTS:
+    - Focus on Islamic values: ${theme}
+    - Include subtle Islamic decorative elements (crescents, stars, geometric patterns)
+    - Beautiful landscape or indoor Islamic setting
+    - Child-appropriate and educational visual elements
+    
+    IMPORTANT RESTRICTIONS:
+    - NO human faces or figures (Islamic guidelines)
+    - NO animals with human characteristics
+    - Focus on environments, objects, and Islamic architectural elements
+    - Keep it colorful and engaging for children
+    - Professional quality suitable for printing in children's books
+
+    Create a warm, educational illustration that supports the story's Islamic moral lesson.`
+
+    try {
+      const response = await fetch(DALLE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'dall-e-2',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024'
+        })
+      })
+
+      if (!response.ok) {
+        console.error(`DALL-E API error: ${response.status}`)
+        return this.generateFallbackStoryImage(storyTitle, characterName, theme)
+      }
+
+      const data = await response.json()
+      return data.data[0].url
+    } catch (error) {
+      console.error('DALL-E story illustration error:', error)
+      return this.generateFallbackStoryImage(storyTitle, characterName, theme)
+    }
+  }
+
+  // Fallback text-based story image
+  async generateFallbackStoryImage(storyTitle: string, characterName: string, theme: string): Promise<string> {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 1024
+    const ctx = canvas.getContext('2d')!
+
+    // Create colorful background
+    const gradient = ctx.createLinearGradient(0, 0, 0, 1024)
+    gradient.addColorStop(0, '#E8F5E8')
+    gradient.addColorStop(1, '#F0F8FF')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 1024, 1024)
+
+    // Add Islamic pattern border
+    ctx.strokeStyle = '#8B5CF6'
+    ctx.lineWidth = 4
+    ctx.strokeRect(50, 50, 924, 924)
+
+    // Title
+    ctx.fillStyle = '#2D5A27'
+    ctx.font = 'bold 48px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('📚 Islamic Story', 512, 150)
+
+    // Story title
+    ctx.fillStyle = '#1F2937'
+    ctx.font = '36px Arial'
+    const titleLines = this.wrapText(storyTitle, 800)
+    let y = 300
+    titleLines.forEach(line => {
+      ctx.fillText(line, 512, y)
+      y += 50
+    })
+
+    // Theme decoration
+    ctx.fillStyle = '#8B5CF6'
+    ctx.font = '24px Arial'
+    ctx.fillText(`Theme: ${theme}`, 512, y + 100)
+
+    // Character name
+    ctx.fillStyle = '#059669'
+    ctx.font = 'italic 28px Arial'
+    ctx.fillText(`Featuring: ${characterName}`, 512, y + 150)
+
+    // Islamic decoration
+    ctx.fillStyle = '#D4AF37'
+    ctx.font = '48px Arial'
+    ctx.fillText('☪️', 512, y + 250)
+
+    return canvas.toDataURL('image/png')
+  }
+
   // Generate a simple text-based image as fallback
   async generateTextImage(duaData: DuaData, theme: string = 'light'): Promise<string> {
     // This creates a canvas-based image as a fallback

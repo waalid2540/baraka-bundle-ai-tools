@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
+import { dalleService } from '../services/dalleService'
 
 interface StoryResult {
   title: string
@@ -12,6 +13,7 @@ interface StoryResult {
   parentNotes: string
   ageGroup: string
   theme: string
+  illustration?: string
 }
 
 const KidsStoryGenerator = () => {
@@ -20,6 +22,7 @@ const KidsStoryGenerator = () => {
   const [theme, setTheme] = useState('honesty')
   const [language, setLanguage] = useState('english')
   const [isLoading, setIsLoading] = useState(false)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [result, setResult] = useState<StoryResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,6 +63,7 @@ const KidsStoryGenerator = () => {
     setResult(null)
 
     try {
+      // First, generate the story with AI
       const response = await openaiService.generateKidsStory(age, name.trim(), theme, language)
       
       if (response.success && response.data?.choices?.[0]?.message?.content) {
@@ -70,21 +74,44 @@ const KidsStoryGenerator = () => {
           const jsonMatch = content.match(/\{[\s\S]*\}/)
           if (jsonMatch) {
             const storyData = JSON.parse(jsonMatch[0])
+            
+            // Set the story first so user can see it
             setResult(storyData)
+            setIsLoading(false)
+            
+            // Then generate illustration in background
+            setIsGeneratingImage(true)
+            try {
+              const illustration = await dalleService.generateStoryImage(
+                storyData.title,
+                name.trim(),
+                theme,
+                age
+              )
+              
+              // Update result with illustration
+              setResult(prev => prev ? { ...prev, illustration } : null)
+            } catch (imageError) {
+              console.error('Image generation error:', imageError)
+              // Story still works without image
+            } finally {
+              setIsGeneratingImage(false)
+            }
           } else {
             throw new Error('Invalid response format')
           }
         } catch (parseError) {
           console.error('JSON parsing error:', parseError)
           setError('Failed to parse AI response. Please try again.')
+          setIsLoading(false)
         }
       } else {
         setError(response.error || 'Failed to generate story. Please try again.')
+        setIsLoading(false)
       }
     } catch (error) {
       console.error('Story generation error:', error)
       setError('An error occurred while generating the story. Please try again.')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -234,6 +261,32 @@ const KidsStoryGenerator = () => {
                     For ages {result.ageGroup} • Theme: {result.theme}
                   </p>
                 </div>
+
+                {/* Story Illustration */}
+                {(result.illustration || isGeneratingImage) && (
+                  <div className="text-center">
+                    {isGeneratingImage && !result.illustration ? (
+                      <div className="bg-gray-100 rounded-lg p-8">
+                        <div className="animate-pulse flex flex-col items-center">
+                          <svg className="animate-spin h-8 w-8 text-islamic-green-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <p className="text-sm text-gray-600">🎨 Generating illustration...</p>
+                        </div>
+                      </div>
+                    ) : result.illustration && (
+                      <div className="bg-white rounded-lg p-4 shadow-sm">
+                        <img
+                          src={result.illustration}
+                          alt={`Illustration for ${result.title}`}
+                          className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Story Illustration</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Story Content */}
                 <div className="bg-islamic-green-50 rounded-lg p-6">
