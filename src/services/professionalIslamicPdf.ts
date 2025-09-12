@@ -7,6 +7,7 @@ interface DuaData {
   translation: string
   situation: string
   language: string
+  reflections?: string[]
 }
 
 type ColorTheme = 'gold' | 'blue' | 'green' | 'purple'
@@ -221,7 +222,7 @@ class ProfessionalIslamicPdf {
     
     this.drawElegantSection(ctx, 40, yPosition, canvas.width - 80, 200, colors, 'REFLECTIONS')
     
-    const reflections = this.getReflections(duaData.situation)
+    const reflections = this.getReflections(duaData)
     ctx.fillStyle = colors.text
     ctx.font = '14px Georgia, serif'
     ctx.textAlign = 'left'
@@ -449,33 +450,16 @@ class ProfessionalIslamicPdf {
     return lines
   }
   
-  private getReflections(situation: string): string[] {
-    const lower = situation.toLowerCase()
-    
-    if (lower.includes('patience') || lower.includes('strength')) {
-      return [
-        'Patience is a virtue that brings us closer to Allah\'s mercy',
-        'Through trials, Allah strengthens the hearts of believers',
-        'Every hardship is followed by ease, as promised in the Quran',
-        'Patience in adversity is half of faith and a sign of true belief'
-      ]
+  private getReflections(duaData: DuaData): string[] {
+    // Use AI-generated reflections if available
+    if (duaData.reflections && duaData.reflections.length > 0) {
+      return duaData.reflections
     }
     
-    if (lower.includes('guidance') || lower.includes('wisdom')) {
-      return [
-        'Allah guides whom He wills to the straight path',
-        'Seeking guidance shows humility and wisdom',
-        'The Quran is the ultimate source of divine guidance',
-        'Through sincere du\'a, hearts find their true direction'
-      ]
-    }
-    
-    // Default reflections
+    // Fallback to default reflections
     return [
       'Du\'a is the essence of worship and our connection to Allah',
-      'Sincere supplication can change divine decree',
-      'Allah responds to every call made with a present heart',
-      'Through du\'a, we acknowledge our need for divine mercy'
+      'Through sincere supplication, hearts find peace and souls find their true direction'
     ]
   }
   

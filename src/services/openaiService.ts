@@ -155,6 +155,46 @@ Never include commentary - only the duʿā and translations.`
     ]
   }
 
+  // Generate AI-powered reflections for the dua
+  async generateReflections(situation: string, arabicText: string): Promise<string[]> {
+    try {
+      const prompt = `Generate 2 unique, meaningful Islamic reflections for this du'a situation: "${situation}". 
+                     Make them specific and profound, not generic. Each should be 1 inspiring sentence.`
+
+      const response = await this.makeRequest('/chat/completions', {
+        model: this.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an Islamic scholar providing deep spiritual reflections.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 200
+      })
+
+      if (response.success && response.data) {
+        const content = response.data.choices[0].message.content
+        const lines = content.split('\n').filter((line: string) => line.trim())
+        return lines.slice(0, 2).map((line: string) => 
+          line.replace(/^[-•*\d.]\s*/, '').trim()
+        )
+      }
+    } catch (error) {
+      console.error('Error generating reflections:', error)
+    }
+
+    // Fallback reflections
+    return [
+      'Du\'a is the essence of worship and our direct connection to Allah',
+      'Through sincere supplication, hearts find peace and souls find guidance'
+    ]
+  }
+
   // 🚀 Set Model (for future upgrades)
   setModel(model: string): void {
     this.model = model

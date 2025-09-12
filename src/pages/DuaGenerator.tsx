@@ -64,6 +64,9 @@ const DuaGenerator = () => {
         const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
         const translationMatch = content.match(new RegExp(`\\*\\*Translation in ${formData.language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
         
+        // Generate AI reflections for this specific dua
+        const reflectionsResponse = await openaiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '')
+        
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : '',
           transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
@@ -71,6 +74,7 @@ const DuaGenerator = () => {
           situation: request,
           language: formData.language,
           topic: formData.topic,
+          reflections: reflectionsResponse,
           generatedAt: new Date().toISOString()
         }
 
@@ -97,7 +101,8 @@ const DuaGenerator = () => {
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
         situation: generatedDua.situation || formData.customRequest,
-        language: generatedDua.language
+        language: generatedDua.language,
+        reflections: generatedDua.reflections
       }, formData.pdfTheme as 'gold' | 'blue' | 'green' | 'purple')
       professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${formData.pdfTheme}_${Date.now()}.pdf`)
     } catch (error) {
