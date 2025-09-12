@@ -11,10 +11,10 @@ interface DuaData {
 
 class WorkingArabicPdf {
   async generateReadableArabicPdf(duaData: DuaData, theme: string = 'light'): Promise<Blob> {
-    // Create a PERFECT-SIZE canvas for professional quality
+    // Create a PERFECT-SIZE canvas for professional quality with Islamic content
     const canvas = document.createElement('canvas')
     canvas.width = 800   // Standard A4 width
-    canvas.height = 1100 // Standard A4 height
+    canvas.height = 1400 // Taller to accommodate reflections and lessons
     const ctx = canvas.getContext('2d')!
     
     // Get theme colors
@@ -140,8 +140,10 @@ class WorkingArabicPdf {
     
     yPosition += 140
     
-    // Footer
-    this.drawFooter(ctx, canvas, colors)
+    // ISLAMIC REFLECTIONS & LESSONS SECTION
+    this.addIslamicReflections(ctx, canvas, colors, yPosition, duaData)
+    
+    // Footer will be drawn in addIslamicReflections
     
     // Convert canvas to PDF
     const imgData = canvas.toDataURL('image/png', 1.0)
@@ -335,6 +337,201 @@ class WorkingArabicPdf {
     ctx.beginPath()
     ctx.arc(x + width - 10, y + height - 10, 3, 0, Math.PI * 2)
     ctx.fill()
+  }
+  
+  private addIslamicReflections(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, colors: any, startY: number, duaData: DuaData) {
+    let yPosition = startY
+    
+    // BEAUTIFUL Section Header
+    this.drawIslamicLine(ctx, canvas.width / 2 - 100, yPosition, 200, colors)
+    yPosition += 25
+    
+    ctx.fillStyle = colors.primary
+    ctx.font = 'bold 20px Arial, "Traditional Arabic", "Arial Unicode MS"'
+    ctx.textAlign = 'center'
+    ctx.fillText('التأملات الإسلامية والحكم', canvas.width / 2, yPosition)
+    yPosition += 10
+    
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 16px Arial'
+    ctx.fillText('ISLAMIC REFLECTIONS & WISDOM', canvas.width / 2, yPosition)
+    yPosition += 30
+    
+    // Get topic-specific reflections
+    const reflections = this.getIslamicReflections(duaData.situation)
+    
+    // BEAUTIFUL Reflections Container
+    const containerHeight = 180
+    this.drawBeautifulContainer(ctx, 30, yPosition, canvas.width - 60, containerHeight, colors, 'Reflections')
+    
+    // Add Quranic verse decoration
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 16px Arial, "Traditional Arabic", "Arial Unicode MS"'
+    ctx.textAlign = 'center'
+    ctx.fillText('۞', canvas.width / 2, yPosition + 20)
+    
+    yPosition += 35
+    
+    // Reflections content
+    ctx.fillStyle = colors.text
+    ctx.font = 'bold 14px Arial'
+    ctx.textAlign = 'left'
+    
+    reflections.forEach(reflection => {
+      // Bullet point
+      ctx.fillStyle = colors.accent
+      ctx.font = 'bold 16px Arial'
+      ctx.fillText('●', 45, yPosition)
+      
+      // Reflection text
+      ctx.fillStyle = colors.text
+      ctx.font = 'bold 13px Arial'
+      const reflectionLines = this.wrapText(ctx, reflection, canvas.width - 120)
+      reflectionLines.forEach((line, index) => {
+        ctx.fillText(line, 65, yPosition + (index * 18))
+      })
+      yPosition += reflectionLines.length * 18 + 8
+    })
+    
+    yPosition += 40
+    
+    // SPIRITUAL GUIDANCE SECTION
+    this.drawIslamicLine(ctx, canvas.width / 2 - 80, yPosition, 160, colors)
+    yPosition += 25
+    
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 18px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('SPIRITUAL GUIDANCE', canvas.width / 2, yPosition)
+    yPosition += 25
+    
+    // Guidance container
+    this.drawBeautifulContainer(ctx, 30, yPosition, canvas.width - 60, 120, colors, 'Guidance')
+    
+    yPosition += 25
+    
+    const guidance = [
+      '🕌 Recite with sincerity and complete presence of heart',
+      '📿 Best times: Before Fajr, after Maghrib, while fasting',
+      '🤲 Face Qibla if possible and be in a state of purity',
+      '💎 Repeat 3, 7, or 33 times for increased blessing'
+    ]
+    
+    ctx.fillStyle = colors.text
+    ctx.font = 'bold 12px Arial'
+    ctx.textAlign = 'left'
+    
+    guidance.forEach(guide => {
+      const guideLines = this.wrapText(ctx, guide, canvas.width - 80)
+      guideLines.forEach((line, index) => {
+        ctx.fillText(line, 45, yPosition + (index * 16))
+      })
+      yPosition += guideLines.length * 16 + 6
+    })
+    
+    yPosition += 30
+    
+    // Footer with enhanced Islamic design
+    this.drawEnhancedFooter(ctx, canvas, colors)
+  }
+  
+  private getIslamicReflections(situation: string): string[] {
+    // Topic-specific reflections based on the du'a request
+    const topicReflections: { [key: string]: string[] } = {
+      'patience': [
+        'Allah tests those He loves to strengthen their faith and purify their hearts',
+        'Patience (Sabr) is half of faith, as it teaches us to trust in Allah\'s perfect timing',
+        'Every difficulty contains ease, as Allah promises in the Quran (94:5-6)',
+        'Through patience, we develop taqwa and draw closer to Allah\'s mercy'
+      ],
+      'guidance': [
+        'Allah is the ultimate guide, and seeking His guidance is the mark of a true believer',
+        'The Quran is our eternal guidance, revealed as light for all humanity',
+        'Making du\'a for guidance shows humility and recognition of our need for Allah',
+        'True guidance comes from Allah alone, not from our own understanding'
+      ],
+      'forgiveness': [
+        'Allah\'s mercy exceeds His wrath, and He loves those who seek forgiveness',
+        'Tawbah (repentance) purifies the heart and brings peace to the soul',
+        'Every sin, no matter how great, can be forgiven by Allah\'s infinite mercy',
+        'Seeking forgiveness regularly keeps the heart soft and connected to Allah'
+      ],
+      'protection': [
+        'Allah is our ultimate protector, and in Him we find complete security',
+        'Seeking Allah\'s protection strengthens our reliance on Him alone',
+        'The angels surround those who remember Allah with protection and mercy',
+        'Trust in Allah\'s protection brings peace that surpasses all understanding'
+      ],
+      'sustenance': [
+        'Allah is Ar-Razzaq, the ultimate provider of all sustenance',
+        'Seeking halal rizq through du\'a shows our commitment to ethical living',
+        'Gratitude for Allah\'s provision increases our blessings and barakah',
+        'True wealth comes from contentment and trust in Allah\'s provision'
+      ],
+      'health': [
+        'Allah is Ash-Shafi, the ultimate healer of all ailments',
+        'Good health is a blessing that requires gratitude and care',
+        'Seeking healing through du\'a strengthens our connection to Allah',
+        'Physical and spiritual health are interconnected in Islamic understanding'
+      ],
+      'default': [
+        'Du\'a is the essence of worship and our direct connection to Allah',
+        'Making du\'a with sincerity purifies the heart and strengthens faith',
+        'Allah loves when His servants call upon Him in all circumstances',
+        'Through du\'a, we acknowledge our complete dependence on Allah\'s mercy'
+      ]
+    }
+    
+    // Determine which reflections to use based on situation
+    const situation_lower = situation.toLowerCase()
+    
+    if (situation_lower.includes('patience') || situation_lower.includes('strength')) return topicReflections.patience
+    if (situation_lower.includes('guidance') || situation_lower.includes('wisdom')) return topicReflections.guidance
+    if (situation_lower.includes('forgiv') || situation_lower.includes('repent')) return topicReflections.forgiveness
+    if (situation_lower.includes('protect') || situation_lower.includes('safety')) return topicReflections.protection
+    if (situation_lower.includes('sustenance') || situation_lower.includes('rizq') || situation_lower.includes('money')) return topicReflections.sustenance
+    if (situation_lower.includes('health') || situation_lower.includes('heal')) return topicReflections.health
+    
+    return topicReflections.default
+  }
+  
+  private drawEnhancedFooter(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, colors: any) {
+    const footerY = canvas.height - 120
+    
+    // Beautiful footer background with gradient
+    const gradient = ctx.createLinearGradient(0, footerY, 0, canvas.height)
+    gradient.addColorStop(0, colors.background)
+    gradient.addColorStop(1, colors.cardBg)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, footerY, canvas.width, 120)
+    
+    // Islamic decorative top line
+    this.drawIslamicLine(ctx, canvas.width / 2 - 150, footerY + 10, 300, colors)
+    
+    // Islamic blessing in Arabic
+    ctx.fillStyle = colors.primary
+    ctx.font = 'bold 16px Arial, "Traditional Arabic", "Arial Unicode MS"'
+    ctx.textAlign = 'center'
+    ctx.fillText('بارك الله فيكم', canvas.width / 2, footerY + 40)
+    
+    // App branding
+    ctx.fillStyle = colors.accent
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText('BarakahTool Premium', canvas.width / 2, footerY + 65)
+    
+    // Platform description
+    ctx.fillStyle = colors.text
+    ctx.font = 'bold 12px Arial'
+    ctx.fillText('Authentic Islamic Digital Platform', canvas.width / 2, footerY + 85)
+    
+    // Generation details
+    ctx.fillStyle = colors.secondary
+    ctx.font = '10px Arial'
+    ctx.fillText(`Generated on ${new Date().toLocaleDateString()} • Authentic Islamic Content`, canvas.width / 2, footerY + 105)
+    
+    // Corner Islamic decorations
+    this.drawIslamicCorner(ctx, 30, footerY + 20, colors)
+    this.drawIslamicCorner(ctx, canvas.width - 30, footerY + 20, colors)
   }
   
   private drawIslamicStar(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) {
