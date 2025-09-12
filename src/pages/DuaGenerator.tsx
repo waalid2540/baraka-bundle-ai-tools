@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
-import workingArabicPdf from '../services/workingArabicPdf'
+import professionalIslamicPdf from '../services/professionalIslamicPdf'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -14,7 +14,6 @@ const DuaGenerator = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState('royalGold')
 
   const languages = openaiService.getSupportedLanguages()
 
@@ -33,16 +32,6 @@ const DuaGenerator = () => {
     { id: 'gratitude', name: 'Gratitude & Thanks', icon: '🙏' }
   ]
 
-  const templates = [
-    { id: 'royalGold', name: '✨ Royal Gold', icon: '👑' },
-    { id: 'masjidGreen', name: '🕌 Masjid Green', icon: '🟢' },
-    { id: 'nightPrayer', name: '🌙 Night Prayer', icon: '🌃' },
-    { id: 'oceanDepth', name: '🌊 Ocean Depth', icon: '💎' },
-    { id: 'roseGarden', name: '🌹 Rose Garden', icon: '🌸' },
-    { id: 'sunsetOrange', name: '🔥 Sunset Orange', icon: '🧡' },
-    { id: 'fajrDawn', name: '🌅 Fajr Dawn', icon: '💜' },
-    { id: 'midnightBlack', name: '⚫ Midnight Black', icon: '🖤' }
-  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,16 +90,15 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use workingArabicPdf which ACTUALLY displays Arabic text with Canvas rendering
-      const pdfBlob = await workingArabicPdf.generateReadableArabicPdf({
+      // Use professional Islamic PDF with museum-quality design
+      const pdfBlob = await professionalIslamicPdf.generateProfessionalPdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
         situation: generatedDua.situation || formData.customRequest,
         language: generatedDua.language
-      }, selectedTemplate)
-      workingArabicPdf.downloadPdf(pdfBlob, `Islamic_Dua_Arabic_${selectedTemplate}_${Date.now()}.pdf`)
-      alert('📄 PDF with REAL Arabic text generated successfully!')
+      })
+      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_Professional_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -126,10 +114,10 @@ const DuaGenerator = () => {
       setLoading(true)
       
       // Generate Islamic-themed image with DALL-E
-      const imageUrl = await dalleService.generateDuaImage(generatedDua, selectedTemplate)
+      const imageUrl = await dalleService.generateDuaImage(generatedDua, 'gold')
       
       // Download the image using dalleService's download method
-      await dalleService.downloadImage(imageUrl, `Islamic_Dua_Art_${selectedTemplate}_${Date.now()}.png`)
+      await dalleService.downloadImage(imageUrl, `Islamic_Dua_Art_${Date.now()}.png`)
       
       alert('🎨 Beautiful Islamic art generated and downloaded!')
     } catch (error) {
@@ -246,28 +234,6 @@ const DuaGenerator = () => {
                   </select>
                 </div>
 
-                {/* Premium Template Selection */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    🎨 Premium PDF Theme
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {templates.map(template => (
-                      <button
-                        key={template.id}
-                        onClick={() => setSelectedTemplate(template.id)}
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                          selectedTemplate === template.id
-                            ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
-                            : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                        }`}
-                      >
-                        <div className="text-2xl mb-1">{template.icon}</div>
-                        <div className="text-xs font-medium">{template.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
@@ -297,7 +263,7 @@ const DuaGenerator = () => {
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Multiple theme options</span>
+                      <span>Professional Islamic design</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
