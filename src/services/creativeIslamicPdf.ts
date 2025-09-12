@@ -41,13 +41,13 @@ class CreativeIslamicPdf {
       description: 'Luxurious gold with mosque silhouettes',
       background: {
         type: 'gradient',
-        colors: ['#FFD700', '#FFA500', '#FF8C00', '#B8860B']
+        colors: ['#FFFEF7', '#FFF8E7', '#F5F5DC', '#FAEBD7']
       },
       primary: '#8B4513',
       secondary: '#DAA520',
       accent: '#FFD700',
-      text: '#2F1B14',
-      arabicText: '#1A0E0A',
+      text: '#1A0E0A',
+      arabicText: '#000000',
       decorativeElements: ['🕌', '☪️', '✨', '🌙', '⭐'],
       typography: {
         arabic: 'bold 42px "Traditional Arabic", Georgia, serif',
@@ -63,13 +63,13 @@ class CreativeIslamicPdf {
       description: 'Warm desert sunset with flowing dunes',
       background: {
         type: 'gradient',
-        colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FFEAA7']
+        colors: ['#FFF8F0', '#FFEEE6', '#FFE4D6', '#FFDAB9']
       },
-      primary: '#A0522D',
+      primary: '#8B4513',
       secondary: '#CD853F',
       accent: '#FF6347',
       text: '#2F1B14',
-      arabicText: '#8B0000',
+      arabicText: '#000000',
       decorativeElements: ['🏜️', '🐪', '☀️', '🌅', '🔥'],
       typography: {
         arabic: 'bold 40px "Traditional Arabic", serif',
@@ -85,13 +85,13 @@ class CreativeIslamicPdf {
       description: 'Tranquil blue waves with pearl accents',
       background: {
         type: 'gradient',
-        colors: ['#1E3A8A', '#3B82F6', '#60A5FA', '#DBEAFE']
+        colors: ['#F0F8FF', '#E6F3FF', '#DBEAFE', '#BFDBFE']
       },
       primary: '#1E40AF',
       secondary: '#3B82F6',
       accent: '#F0F9FF',
       text: '#1E293B',
-      arabicText: '#0F172A',
+      arabicText: '#000000',
       decorativeElements: ['🌊', '🐚', '💎', '🌙', '⭐'],
       typography: {
         arabic: 'bold 38px "Traditional Arabic", serif',
@@ -107,13 +107,13 @@ class CreativeIslamicPdf {
       description: 'Natural green with botanical elements',
       background: {
         type: 'gradient',
-        colors: ['#064E3B', '#059669', '#10B981', '#A7F3D0']
+        colors: ['#F0FDF4', '#ECFDF5', '#D1FAE5', '#A7F3D0']
       },
       primary: '#065F46',
       secondary: '#047857',
       accent: '#ECFDF5',
       text: '#1F2937',
-      arabicText: '#14532D',
+      arabicText: '#000000',
       decorativeElements: ['🌿', '🍃', '🌳', '🌱', '🦋'],
       typography: {
         arabic: 'bold 41px "Traditional Arabic", serif',
@@ -129,13 +129,13 @@ class CreativeIslamicPdf {
       description: 'Majestic purple with crown elements',
       background: {
         type: 'gradient',
-        colors: ['#581C87', '#7C3AED', '#A855F7', '#E9D5FF']
+        colors: ['#FAF5FF', '#F3E8FF', '#E9D5FF', '#D8B4FE']
       },
       primary: '#6B21A8',
       secondary: '#7C2D92',
       accent: '#F3E8FF',
       text: '#1F2937',
-      arabicText: '#581C87',
+      arabicText: '#000000',
       decorativeElements: ['👑', '💜', '✨', '🌟', '💎'],
       typography: {
         arabic: 'bold 39px "Traditional Arabic", serif',
@@ -151,13 +151,13 @@ class CreativeIslamicPdf {
       description: 'Vibrant rainbow colors for joy',
       background: {
         type: 'gradient',
-        colors: ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3']
+        colors: ['#FFFFFF', '#FEFEFE', '#FDFDFD', '#F8F8FF']
       },
       primary: '#4A5568',
       secondary: '#2D3748',
-      accent: '#FFFFFF',
+      accent: '#FF6B6B',
       text: '#1A202C',
-      arabicText: '#2D3748',
+      arabicText: '#000000',
       decorativeElements: ['🌈', '🎨', '✨', '🎭', '🎪'],
       typography: {
         arabic: 'bold 44px "Traditional Arabic", serif',
@@ -173,7 +173,7 @@ class CreativeIslamicPdf {
       description: 'Clean black and white modern design',
       background: {
         type: 'gradient',
-        colors: ['#000000', '#1F2937', '#374151', '#F9FAFB']
+        colors: ['#FFFFFF', '#F9FAFB', '#F3F4F6', '#E5E7EB']
       },
       primary: '#000000',
       secondary: '#374151',
@@ -195,13 +195,13 @@ class CreativeIslamicPdf {
       description: 'Classic vintage with ornate borders',
       background: {
         type: 'gradient',
-        colors: ['#FEF7CD', '#FDE68A', '#F59E0B', '#D97706']
+        colors: ['#FFFBEB', '#FEF3C7', '#FDE68A', '#F9E2AF']
       },
       primary: '#92400E',
       secondary: '#B45309',
       accent: '#FFFBEB',
       text: '#451A03',
-      arabicText: '#7C2D12',
+      arabicText: '#000000',
       decorativeElements: ['🌹', '📜', '🎭', '🏛️', '🖋️'],
       typography: {
         arabic: 'bold 37px "Traditional Arabic", serif',
@@ -402,27 +402,38 @@ class CreativeIslamicPdf {
   }
 
   private drawLayeredLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
-    // Background layer
-    ctx.fillStyle = `${design.accent}40`
+    // Light background layer for better readability
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
     ctx.fillRect(50, yPosition, canvas.width - 100, 400)
     
-    // Arabic text layer
+    // Subtle border
+    ctx.strokeStyle = design.secondary
+    ctx.lineWidth = 2
+    ctx.strokeRect(50, yPosition, canvas.width - 100, 400)
+    
+    // Arabic text with background for visibility
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(60, yPosition + 40, canvas.width - 120, 80)
+    
     ctx.fillStyle = design.arabicText
     ctx.font = design.typography.arabic
     ctx.textAlign = 'center'
-    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition + 80)
+    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition + 90)
     
-    // Overlay decorative elements
-    ctx.fillStyle = design.secondary
-    ctx.font = '40px serif'
+    // Overlay decorative elements (lighter)
+    ctx.fillStyle = `${design.secondary}60`
+    ctx.font = '25px serif'
     design.decorativeElements.slice(0, 3).forEach((elem, i) => {
-      ctx.fillText(elem, 100 + (i * 300), yPosition + 200)
+      ctx.fillText(elem, 100 + (i * 300), yPosition + 180)
     })
     
-    // Translation in foreground
+    // Translation with background for visibility
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(60, yPosition + 220, canvas.width - 120, 120)
+    
     ctx.fillStyle = design.text
     ctx.font = design.typography.english
-    const lines = this.wrapText(ctx, duaData.translation, canvas.width - 120)
+    const lines = this.wrapText(ctx, duaData.translation, canvas.width - 140)
     let lineY = yPosition + 250
     lines.forEach(line => {
       ctx.fillText(line, canvas.width / 2, lineY)
@@ -501,20 +512,20 @@ class CreativeIslamicPdf {
   }
 
   private drawStyledBox(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, design: CreativeDesign) {
-    // Box with gradient and shadow
-    const gradient = ctx.createLinearGradient(x, y, x, y + height)
-    gradient.addColorStop(0, `${design.accent}60`)
-    gradient.addColorStop(1, `${design.accent}20`)
-    
-    ctx.fillStyle = gradient
+    // Light background for better text readability
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
     ctx.fillRect(x, y, width, height)
     
-    // Border
+    // Subtle inner shadow for depth
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'
+    ctx.fillRect(x + 2, y + 2, width - 4, height - 4)
+    
+    // Border with design colors
     ctx.strokeStyle = design.secondary
     ctx.lineWidth = 2
     ctx.strokeRect(x, y, width, height)
     
-    // Corner accents
+    // Corner accents with better visibility
     ctx.fillStyle = design.primary
     const cornerSize = 10
     // Top corners
