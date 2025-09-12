@@ -10,7 +10,7 @@ const DuaGenerator = () => {
     topic: '',
     customRequest: '',
     language: 'English',
-    pdfTheme: 'golden_mosque'
+    pdfTheme: 'gold'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -91,15 +91,15 @@ const DuaGenerator = () => {
 
     try {
       setLoading(true)
-      // Use working professional PDF with Arabic text support
+      // Use working professional PDF with Arabic text support and color theme
       const pdfBlob = await professionalIslamicPdf.generateProfessionalPdf({
         arabicText: generatedDua.arabicText,
         transliteration: generatedDua.transliteration,
         translation: generatedDua.translation,
         situation: generatedDua.situation || formData.customRequest,
         language: generatedDua.language
-      })
-      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${Date.now()}.pdf`)
+      }, formData.pdfTheme as 'gold' | 'blue' | 'green' | 'purple')
+      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${formData.pdfTheme}_${Date.now()}.pdf`)
     } catch (error) {
       console.error('PDF generation error:', error)
       alert('Failed to generate PDF. Please try again.')
@@ -131,7 +131,7 @@ const DuaGenerator = () => {
 
   const resetGenerator = () => {
     setGeneratedDua(null)
-    setFormData({ topic: '', customRequest: '', language: 'English', pdfTheme: 'golden_mosque' })
+    setFormData({ topic: '', customRequest: '', language: 'English', pdfTheme: 'gold' })
     setError('')
   }
 
@@ -235,7 +235,34 @@ const DuaGenerator = () => {
                   </select>
                 </div>
 
-
+                {/* Color Theme Selection */}
+                <div>
+                  <label className="block text-yellow-400 font-semibold mb-2">
+                    Select PDF Color Theme
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { id: 'gold', name: 'Gold Classic', color: 'from-yellow-600 to-yellow-400' },
+                      { id: 'blue', name: 'Ocean Blue', color: 'from-blue-600 to-blue-400' },
+                      { id: 'green', name: 'Nature Green', color: 'from-green-600 to-green-400' },
+                      { id: 'purple', name: 'Royal Purple', color: 'from-purple-600 to-purple-400' }
+                    ].map((theme) => (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, pdfTheme: theme.id })}
+                        className={`p-4 rounded-xl border transition-all duration-200 ${
+                          formData.pdfTheme === theme.id
+                            ? 'bg-yellow-500/20 border-yellow-500'
+                            : 'bg-slate-800/50 border-slate-700 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        <div className={`w-full h-16 bg-gradient-to-r ${theme.color} rounded-lg mb-2`}></div>
+                        <div className="text-sm font-medium text-gray-300">{theme.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">

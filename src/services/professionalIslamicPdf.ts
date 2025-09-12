@@ -9,16 +9,22 @@ interface DuaData {
   language: string
 }
 
+type ColorTheme = 'gold' | 'blue' | 'green' | 'purple'
+
+interface ThemeColors {
+  primary: string
+  secondary: string
+  accent: string
+  text: string
+  arabicText: string
+  background: string
+  gradient1: string
+  gradient2: string
+}
+
 class ProfessionalIslamicPdf {
-  async generateProfessionalPdf(duaData: DuaData): Promise<Blob> {
-    // Create high-resolution canvas for professional quality
-    const canvas = document.createElement('canvas')
-    canvas.width = 850   // Professional width
-    canvas.height = 1450  // Professional height for all content
-    const ctx = canvas.getContext('2d')!
-    
-    // Professional Islamic color scheme - Gold and Deep Green
-    const colors = {
+  private themes: Record<ColorTheme, ThemeColors> = {
+    gold: {
       primary: '#0A4A3C',      // Deep Islamic green
       secondary: '#D4AF37',    // Royal gold
       accent: '#FFD700',       // Bright gold
@@ -27,7 +33,48 @@ class ProfessionalIslamicPdf {
       background: '#FEFEF8',   // Cream white
       gradient1: '#F8F4E6',    // Light cream
       gradient2: '#FFF8DC'     // Cornsilk
+    },
+    blue: {
+      primary: '#003366',      // Deep navy blue
+      secondary: '#4A90E2',    // Royal blue
+      accent: '#87CEEB',       // Sky blue
+      text: '#1F2937',         // Dark gray
+      arabicText: '#003366',   // Navy for Arabic
+      background: '#F0F8FF',   // Alice blue
+      gradient1: '#E6F3FF',    // Light blue
+      gradient2: '#D1E7FF'     // Pale blue
+    },
+    green: {
+      primary: '#2E7D32',      // Forest green
+      secondary: '#66BB6A',    // Light green
+      accent: '#A5D6A7',       // Pale green
+      text: '#1B5E20',         // Dark green
+      arabicText: '#2E7D32',   // Forest green for Arabic
+      background: '#F1F8E9',   // Light green tint
+      gradient1: '#E8F5E9',    // Very light green
+      gradient2: '#C8E6C9'     // Pale green
+    },
+    purple: {
+      primary: '#4A148C',      // Deep purple
+      secondary: '#9C27B0',    // Medium purple
+      accent: '#E1BEE7',       // Light purple
+      text: '#311B92',         // Dark purple
+      arabicText: '#4A148C',   // Deep purple for Arabic
+      background: '#F3E5F5',   // Light lavender
+      gradient1: '#E1BEE7',    // Pale purple
+      gradient2: '#CE93D8'     // Light purple
     }
+  }
+
+  async generateProfessionalPdf(duaData: DuaData, theme: ColorTheme = 'gold'): Promise<Blob> {
+    // Create high-resolution canvas for professional quality
+    const canvas = document.createElement('canvas')
+    canvas.width = 850   // Professional width
+    canvas.height = 1450  // Professional height for all content
+    const ctx = canvas.getContext('2d')!
+    
+    // Get colors for selected theme
+    const colors = this.themes[theme]
     
     // PROFESSIONAL BACKGROUND
     const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
