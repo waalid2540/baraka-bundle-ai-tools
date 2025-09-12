@@ -216,41 +216,31 @@ class CreativeIslamicPdf {
   async generateCreativePdf(duaData: DuaData, theme: CreativeTheme = 'golden_mosque'): Promise<Blob> {
     const design = this.designs[theme]
     
-    // Create high-resolution canvas optimized for social sharing
+    // Create compact canvas for professional PDFs
     const canvas = document.createElement('canvas')
-    canvas.width = 1080   // Instagram/social media friendly
-    canvas.height = 1350  // Perfect for stories and posts
+    canvas.width = 800    // Professional width
+    canvas.height = 600   // Short, compact height
     const ctx = canvas.getContext('2d')!
     
     // Apply background based on design
     this.drawCreativeBackground(ctx, canvas, design)
     
-    // Draw decorative border
-    this.drawDecorativeBorder(ctx, canvas, design)
+    // Simple border
+    ctx.strokeStyle = design.secondary
+    ctx.lineWidth = 2
+    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20)
     
-    let yPosition = 80
+    let yPosition = 50
     
-    // Creative header with theme-specific styling
-    yPosition = this.drawCreativeHeader(ctx, canvas, design, yPosition)
+    // Simple title
+    ctx.fillStyle = design.primary
+    ctx.font = 'bold 24px Georgia'
+    ctx.textAlign = 'center'
+    ctx.fillText('Islamic Du\'a', canvas.width / 2, yPosition)
+    yPosition += 60
     
-    // Main content sections with unique layouts
-    switch (design.layout) {
-      case 'centered':
-        yPosition = this.drawCenteredLayout(ctx, canvas, design, duaData, yPosition)
-        break
-      case 'split':
-        yPosition = this.drawSplitLayout(ctx, canvas, design, duaData, yPosition)
-        break
-      case 'layered':
-        yPosition = this.drawLayeredLayout(ctx, canvas, design, duaData, yPosition)
-        break
-      case 'artistic':
-        yPosition = this.drawArtisticLayout(ctx, canvas, design, duaData, yPosition)
-        break
-    }
-    
-    // Creative footer
-    this.drawCreativeFooter(ctx, canvas, design)
+    // Only essential content - clean and compact
+    yPosition = this.drawCompactLayout(ctx, canvas, design, duaData, yPosition)
     
     // Convert to PDF with perfect quality
     const imgData = canvas.toDataURL('image/png', 1.0)
@@ -348,6 +338,26 @@ class CreativeIslamicPdf {
     ctx.fillText(separator, canvas.width / 2, yPosition)
     
     return yPosition + 50
+  }
+
+  private drawCompactLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
+    // Arabic text only - clean and simple
+    ctx.fillStyle = design.arabicText
+    ctx.font = 'bold 28px Georgia'
+    ctx.textAlign = 'center'
+    ctx.fillText(duaData.arabicText, canvas.width / 2, yPosition)
+    yPosition += 60
+    
+    // Translation only - no extra content
+    ctx.fillStyle = design.text
+    ctx.font = '16px Georgia'
+    const lines = this.wrapText(ctx, duaData.translation, canvas.width - 60)
+    lines.forEach(line => {
+      ctx.fillText(line, canvas.width / 2, yPosition)
+      yPosition += 25
+    })
+    
+    return yPosition
   }
 
   private drawCenteredLayout(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, design: CreativeDesign, duaData: DuaData, yPosition: number): number {
