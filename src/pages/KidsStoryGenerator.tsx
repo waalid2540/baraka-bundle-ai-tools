@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
 import { dalleService } from '../services/dalleService'
-import IslamicStoryBook from '../components/IslamicStoryBook'
+import ProfessionalStoryBook from '../components/ProfessionalStoryBook'
 
 interface StoryResult {
   title: string
@@ -388,7 +388,7 @@ const KidsStoryGenerator = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm">📸 Page Illustrations</span>
                         <span className={isGeneratingImages ? "text-yellow-600" : "text-green-600"}>
-                          {isGeneratingImages ? "Generating..." : "✓ Complete"}
+                          {isGeneratingImages ? "Creating unique images for each page..." : "✓ Complete"}
                         </span>
                       </div>
                       
@@ -418,9 +418,9 @@ const KidsStoryGenerator = () => {
         </div>
       </main>
 
-      {/* Interactive Storybook Modal */}
+      {/* Professional Storybook Modal */}
       {showStoryBook && result && (
-        <IslamicStoryBook
+        <ProfessionalStoryBook
           title={result.title}
           story={result.story}
           moralLesson={result.moralLesson}

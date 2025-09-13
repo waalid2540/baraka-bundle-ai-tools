@@ -294,21 +294,27 @@ class DalleService {
     const pages = this.splitStoryIntoPages(storyContent)
     const illustrations: string[] = []
 
+    console.log(`🎨 Generating ${pages.length} page illustrations for "${storyTitle}"`)
+    
     // Generate an illustration for each page
     for (let i = 0; i < pages.length; i++) {
       try {
+        console.log(`Creating illustration ${i + 1}/${pages.length}...`)
         const scenePrompt = this.createPageIllustration(pages[i], i + 1, pages.length, storyTitle, theme, ageGroup)
         const illustration = await this.generateSingleScene(scenePrompt)
         illustrations.push(illustration)
+        console.log(`✅ Page ${i + 1} illustration generated successfully`)
         
         // Small delay between requests to avoid rate limits
         if (i < pages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 800))
+          await new Promise(resolve => setTimeout(resolve, 1000))
         }
       } catch (error) {
-        console.error(`Error generating illustration for page ${i + 1}:`, error)
+        console.error(`❌ Error generating illustration for page ${i + 1}:`, error)
         // Add fallback for this page
-        illustrations.push(await this.generateFallbackStoryImage(storyTitle, characterName, theme))
+        const fallback = await this.generateFallbackStoryImage(storyTitle, characterName, theme)
+        illustrations.push(fallback)
+        console.log(`🔧 Using fallback illustration for page ${i + 1}`)
       }
     }
 
