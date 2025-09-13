@@ -43,7 +43,10 @@ class DatabaseService {
   private apiUrl: string
 
   constructor() {
-    this.apiUrl = '/api'
+    // Use full URL in production, proxy in development
+    this.apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+      : '/api'
   }
 
   // User Management

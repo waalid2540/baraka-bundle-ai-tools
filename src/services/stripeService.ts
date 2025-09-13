@@ -27,7 +27,10 @@ class StripeService {
   private publicKey: string
 
   constructor() {
-    this.apiUrl = '/api'
+    // Use full URL in production, proxy in development
+    this.apiUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+      : '/api'
     this.publicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || ''
   }
 
