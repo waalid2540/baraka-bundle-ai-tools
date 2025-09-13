@@ -45,14 +45,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkExistingLogin = async () => {
     try {
+      // Temporarily disable API calls to diagnose white screen
       const savedUser = localStorage.getItem('barakah_user')
       if (savedUser) {
         const userData = JSON.parse(savedUser)
-        await refreshUserAccess(userData)
-      } else {
-        // No saved user, just set loading to false
-        setIsLoading(false)
+        // Set user without API calls for now
+        setUser(userData)
       }
+      setIsLoading(false)
     } catch (error) {
       console.error('Failed to check existing login:', error)
       localStorage.removeItem('barakah_user')

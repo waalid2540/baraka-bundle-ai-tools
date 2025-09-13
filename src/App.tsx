@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { SimpleAuthProvider as AuthProvider } from './contexts/SimpleAuthContext'
 import HomePage from './pages/HomePage'
 import DuaGenerator from './pages/DuaGenerator'
 import KidsStoryGenerator from './pages/KidsStoryGenerator'
