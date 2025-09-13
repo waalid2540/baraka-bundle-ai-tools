@@ -14,6 +14,8 @@ interface StoryResult {
   ageGroup: string
   theme: string
   illustration?: string
+  sceneIllustrations?: string[]
+  audioUrl?: string
 }
 
 const KidsStoryGenerator = () => {
@@ -21,8 +23,11 @@ const KidsStoryGenerator = () => {
   const [name, setName] = useState('')
   const [theme, setTheme] = useState('honesty')
   const [language, setLanguage] = useState('english')
+  const [customPrompt, setCustomPrompt] = useState('')
+  const [storyMode, setStoryMode] = useState<'preset' | 'custom'>('preset')
   const [isLoading, setIsLoading] = useState(false)
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false)
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
   const [result, setResult] = useState<StoryResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,16 +50,19 @@ const KidsStoryGenerator = () => {
     { value: 'courage', label: 'Courage & Bravery' }
   ]
 
-  const languages = [
-    { value: 'english', label: 'English' },
-    { value: 'arabic', label: 'العربية' },
-    { value: 'somali', label: 'Soomaali' },
-    { value: 'urdu', label: 'اردو' }
-  ]
+  const languages = openaiService.getSupportedLanguages().map(lang => ({
+    value: lang.toLowerCase(),
+    label: lang
+  }))
 
   const generateStory = async () => {
-    if (!name.trim()) {
+    // Validation based on story mode
+    if (storyMode === 'preset' && !name.trim()) {
       setError('Please enter a name for the main character')
+      return
+    }
+    if (storyMode === 'custom' && !customPrompt.trim()) {
+      setError('Please enter your custom story idea')
       return
     }
 
@@ -63,8 +71,10 @@ const KidsStoryGenerator = () => {
     setResult(null)
 
     try {
-      // First, generate the story with AI
-      const response = await openaiService.generateKidsStory(age, name.trim(), theme, language)
+      // Generate story based on mode
+      const response = storyMode === 'preset' 
+        ? await openaiService.generateKidsStory(age, name.trim(), theme, language)
+        : await openaiService.generateCustomStory(customPrompt.trim(), age, language)
       
       if (response.success && response.data?.choices?.[0]?.message?.content) {
         const content = response.data.choices[0].message.content.trim()
@@ -79,23 +89,38 @@ const KidsStoryGenerator = () => {
             setResult(storyData)
             setIsLoading(false)
             
-            // Then generate illustration in background
-            setIsGeneratingImage(true)
+            // Generate scene illustrations in background
+            setIsGeneratingImages(true)
             try {
-              const illustration = await dalleService.generateStoryImage(
+              const sceneIllustrations = await dalleService.generateStoryScenes(
                 storyData.title,
-                name.trim(),
-                theme,
+                storyData.story,
+                storyMode === 'preset' ? name.trim() : 'protagonist',
+                storyData.theme || theme,
                 age
               )
               
-              // Update result with illustration
-              setResult(prev => prev ? { ...prev, illustration } : null)
+              // Update result with scene illustrations
+              setResult(prev => prev ? { ...prev, sceneIllustrations } : null)
             } catch (imageError) {
-              console.error('Image generation error:', imageError)
-              // Story still works without image
+              console.error('Scene illustrations error:', imageError)
+              // Story still works without images
             } finally {
-              setIsGeneratingImage(false)
+              setIsGeneratingImages(false)
+            }
+
+            // Generate audio reading in background
+            setIsGeneratingAudio(true)
+            try {
+              const audioUrl = await openaiService.generateStoryAudio(storyData.story, language)
+              
+              // Update result with audio
+              setResult(prev => prev ? { ...prev, audioUrl } : null)
+            } catch (audioError) {
+              console.error('Audio generation error:', audioError)
+              // Story still works without audio
+            } finally {
+              setIsGeneratingAudio(false)
             }
           } else {
             throw new Error('Invalid response format')
@@ -149,19 +174,78 @@ const KidsStoryGenerator = () => {
             </h3>
             
             <div className="space-y-6">
-              {/* Child's Name */}
+              {/* Story Mode Selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Main Character's Name
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Story Type
                 </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter child's name (e.g., Amina, Omar, Fatima)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStoryMode('preset')}
+                    className={`p-3 rounded-lg border-2 transition-colors ${
+                      storyMode === 'preset'
+                        ? 'border-islamic-green-500 bg-islamic-green-50 text-islamic-green-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-lg mb-1">🎭</div>
+                      <div className="font-medium">Preset Themes</div>
+                      <div className="text-xs">Choose from Islamic values</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStoryMode('custom')}
+                    className={`p-3 rounded-lg border-2 transition-colors ${
+                      storyMode === 'custom'
+                        ? 'border-islamic-green-500 bg-islamic-green-50 text-islamic-green-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-lg mb-1">✨</div>
+                      <div className="font-medium">Custom Story</div>
+                      <div className="text-xs">Your own idea</div>
+                    </div>
+                  </button>
+                </div>
               </div>
+
+              {storyMode === 'preset' ? (
+                <>
+                  {/* Child's Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Main Character's Name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter child's name (e.g., Amina, Omar, Fatima)"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Custom Story Prompt */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Your Story Idea
+                    </label>
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      placeholder="Describe your story idea... (e.g., 'A story about a young Muslim learning to be patient during Ramadan', 'A tale about kindness to animals in Islam')"
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Age Group */}
               <div>
@@ -181,23 +265,25 @@ const KidsStoryGenerator = () => {
                 </select>
               </div>
 
-              {/* Theme */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Theme/Moral Lesson
-                </label>
-                <select
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
-                >
-                  {themes.map(t => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Theme - only for preset mode */}
+              {storyMode === 'preset' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Theme/Moral Lesson
+                  </label>
+                  <select
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
+                  >
+                    {themes.map(t => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Language */}
               <div>
@@ -220,7 +306,7 @@ const KidsStoryGenerator = () => {
               {/* Generate Button */}
               <button
                 onClick={generateStory}
-                disabled={isLoading || !name.trim()}
+                disabled={isLoading || (storyMode === 'preset' && !name.trim()) || (storyMode === 'custom' && !customPrompt.trim())}
                 className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -262,27 +348,72 @@ const KidsStoryGenerator = () => {
                   </p>
                 </div>
 
-                {/* Story Illustration */}
-                {(result.illustration || isGeneratingImage) && (
-                  <div className="text-center">
-                    {isGeneratingImage && !result.illustration ? (
+                {/* Audio Player */}
+                {(result.audioUrl || isGeneratingAudio) && (
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-center">
+                      {isGeneratingAudio && !result.audioUrl ? (
+                        <div className="flex items-center text-islamic-green-600">
+                          <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span className="text-sm">🔊 Generating audio reading...</span>
+                        </div>
+                      ) : result.audioUrl && (
+                        <div className="w-full">
+                          <div className="flex items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700">🔊 Listen to Story</span>
+                          </div>
+                          <audio controls className="w-full">
+                            <source src={result.audioUrl} type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Scene Illustrations */}
+                {(result.sceneIllustrations || isGeneratingImages) && (
+                  <div>
+                    <h5 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                      📖 Story Scenes
+                    </h5>
+                    {isGeneratingImages && (!result.sceneIllustrations || result.sceneIllustrations.length === 0) ? (
                       <div className="bg-gray-100 rounded-lg p-8">
                         <div className="animate-pulse flex flex-col items-center">
                           <svg className="animate-spin h-8 w-8 text-islamic-green-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          <p className="text-sm text-gray-600">🎨 Generating illustration...</p>
+                          <p className="text-sm text-gray-600">🎨 Creating scene illustrations...</p>
                         </div>
                       </div>
-                    ) : result.illustration && (
-                      <div className="bg-white rounded-lg p-4 shadow-sm">
-                        <img
-                          src={result.illustration}
-                          alt={`Illustration for ${result.title}`}
-                          className="w-full max-w-md mx-auto rounded-lg shadow-md"
-                        />
-                        <p className="text-xs text-gray-500 mt-2">Story Illustration</p>
+                    ) : result.sceneIllustrations && result.sceneIllustrations.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {result.sceneIllustrations.map((illustration, index) => (
+                          <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                            <img
+                              src={illustration}
+                              alt={`Scene ${index + 1} from ${result.title}`}
+                              className="w-full rounded-lg shadow-md"
+                            />
+                            <p className="text-xs text-gray-500 mt-2 text-center">Scene {index + 1}</p>
+                          </div>
+                        ))}
+                        {isGeneratingImages && (
+                          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
+                            <div className="text-center">
+                              <svg className="animate-spin h-6 w-6 text-islamic-green-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <p className="text-xs text-gray-600">More scenes...</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

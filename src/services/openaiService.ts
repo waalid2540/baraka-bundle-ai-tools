@@ -275,6 +275,133 @@ Make the story engaging, educational, and appropriate for the age group. Include
 
     return await this.makeRequest('/chat/completions', payload)
   }
+
+  // 🔊 Generate Audio Reading for Kids Stories
+  async generateStoryAudio(storyText: string, language: string = 'english'): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('OpenAI API key not configured for audio generation')
+    }
+
+    // Language voice mapping
+    const voiceMapping: { [key: string]: string } = {
+      'english': 'nova',    // Clear female voice
+      'arabic': 'alloy',    // Best for Arabic pronunciation
+      'somali': 'echo',     // Clear multilingual voice
+      'urdu': 'fable',      // Good for South Asian languages
+      'default': 'nova'
+    }
+
+    const voice = voiceMapping[language] || voiceMapping.default
+
+    try {
+      const response = await fetch(`${OPENAI_BASE_URL}/audio/speech`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: storyText,
+          voice: voice,
+          speed: 0.9 // Slightly slower for kids
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Audio generation error: ${response.status}`)
+      }
+
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      return audioUrl
+    } catch (error) {
+      console.error('Audio generation error:', error)
+      throw new Error('Failed to generate audio')
+    }
+  }
+
+  // 📚 Generate Custom Islamic Kids Story
+  async generateCustomStory(customPrompt: string, ageGroup: string, language: string = 'english'): Promise<OpenAIResponse> {
+    const languageMapping: { [key: string]: string } = {
+      'english': 'English',
+      'arabic': 'Arabic',
+      'somali': 'Somali',
+      'urdu': 'Urdu',
+      'turkish': 'Turkish',
+      'indonesian': 'Indonesian',
+      'french': 'French',
+      'spanish': 'Spanish',
+      'malay': 'Malay',
+      'bengali': 'Bengali',
+      'swahili': 'Swahili',
+      'german': 'German',
+      'russian': 'Russian',
+      'persian': 'Persian',
+      'chinese': 'Chinese',
+      'japanese': 'Japanese'
+    }
+
+    const selectedLanguage = languageMapping[language] || 'English'
+    
+    const systemMessage = `You are an expert Islamic children's story writer. Create educational, engaging stories that teach Islamic values and morals appropriate for ${ageGroup} year olds.
+
+CRITICAL REQUIREMENTS:
+- Write story in ${selectedLanguage} language
+- Age-appropriate content for ${ageGroup} year olds
+- Include authentic Islamic teachings and values
+- Reference relevant Qur'anic verses when appropriate
+- Provide practical guidance for parents
+- Make stories engaging and culturally appropriate
+- Ensure content is educational and inspiring
+
+STORY STRUCTURE:
+- Engaging beginning
+- Clear moral challenge or lesson
+- Islamic solution through character actions
+- Positive resolution
+- Natural integration of Islamic values
+
+OUTPUT FORMAT: Return ONLY a valid JSON object:
+{
+  "title": "[Creative story title]",
+  "story": "[Complete age-appropriate story]",
+  "moralLesson": "[Key Islamic lesson learned]",
+  "quranReference": "[Relevant Qur'an reference if applicable]",
+  "arabicVerse": "[Arabic verse if included]",
+  "verseTranslation": "[Translation if Arabic verse included]",
+  "parentNotes": "[Discussion guidance for parents]",
+  "ageGroup": "${ageGroup}",
+  "theme": "[Main theme/moral of the story]"
+}`
+
+    const prompt = `Create a custom Islamic children's story based on this request: "${customPrompt}"
+
+Requirements:
+- Age group: ${ageGroup} years old
+- Language: ${selectedLanguage}
+- Make it educational and engaging for children
+- Include Islamic teachings and moral lessons
+- Ensure cultural sensitivity and authenticity`
+
+    const payload = {
+      model: this.model,
+      messages: [
+        {
+          role: 'system',
+          content: systemMessage
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 1200
+    }
+
+    return await this.makeRequest('/chat/completions', payload)
+  }
 }
 
 export const openaiService = new OpenAIService()

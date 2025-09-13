@@ -195,7 +195,118 @@ class DalleService {
     }
   }
 
-  // 📚 Generate Islamic Kids Story Illustration
+  // 📚 Generate Multiple Scene Illustrations for Story
+  async generateStoryScenes(storyTitle: string, storyContent: string, characterName: string, theme: string, ageGroup: string): Promise<string[]> {
+    if (!this.apiKey) {
+      console.error('OpenAI API key not configured')
+      return [await this.generateFallbackStoryImage(storyTitle, characterName, theme)]
+    }
+
+    // Split story into scenes (by paragraphs or sentences)
+    const scenes = this.extractScenes(storyContent)
+    const illustrations: string[] = []
+
+    for (let i = 0; i < Math.min(scenes.length, 3); i++) { // Generate up to 3 scenes
+      try {
+        const scenePrompt = this.createScenePrompt(scenes[i], i + 1, storyTitle, theme, ageGroup)
+        const illustration = await this.generateSingleScene(scenePrompt)
+        illustrations.push(illustration)
+        
+        // Small delay between requests to avoid rate limits
+        if (i < scenes.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      } catch (error) {
+        console.error(`Error generating scene ${i + 1}:`, error)
+        // Continue with other scenes even if one fails
+      }
+    }
+
+    // If no scenes generated, provide fallback
+    if (illustrations.length === 0) {
+      illustrations.push(await this.generateFallbackStoryImage(storyTitle, characterName, theme))
+    }
+
+    return illustrations
+  }
+
+  private extractScenes(storyContent: string): string[] {
+    // Split story into meaningful scenes
+    const paragraphs = storyContent.split('\n\n').filter(p => p.trim().length > 50)
+    
+    if (paragraphs.length >= 3) {
+      return paragraphs.slice(0, 3) // First 3 paragraphs
+    }
+    
+    // If not enough paragraphs, split by sentences
+    const sentences = storyContent.split(/[.!?]+/).filter(s => s.trim().length > 30)
+    const scenes: string[] = []
+    
+    // Group sentences into scenes
+    for (let i = 0; i < sentences.length; i += 2) {
+      const scene = sentences.slice(i, i + 2).join('. ').trim()
+      if (scene.length > 30) {
+        scenes.push(scene)
+      }
+      if (scenes.length >= 3) break
+    }
+    
+    return scenes.length > 0 ? scenes : [storyContent.substring(0, 200)]
+  }
+
+  private createScenePrompt(sceneContent: string, sceneNumber: number, storyTitle: string, theme: string, ageGroup: string): string {
+    return `Create a beautiful, child-friendly Islamic illustration for scene ${sceneNumber} of the story "${storyTitle}".
+
+    SCENE CONTEXT: ${sceneContent.substring(0, 150)}...
+    
+    VISUAL STYLE:
+    - Vibrant, colorful children's book illustration
+    - Islamic geometric patterns in background
+    - Age-appropriate for ${ageGroup} years old
+    - Professional storybook quality
+    - Warm, inviting colors that engage children
+    
+    SCENE ELEMENTS:
+    - Beautiful Islamic architecture (mosque, garden, Islamic home)
+    - Focus on Islamic values: ${theme}
+    - Environmental storytelling elements
+    - Objects and settings that support the scene
+    - Islamic decorative elements (crescents, stars, geometric patterns)
+    
+    STRICT REQUIREMENTS:
+    - NO human faces or figures (Islamic guidelines)
+    - NO anthropomorphic animals
+    - Focus on beautiful environments and objects
+    - Child-safe and educational content
+    - Suitable for printing in children's books
+    
+    Create scene ${sceneNumber} that visually represents this part of the Islamic story.`
+  }
+
+  private async generateSingleScene(prompt: string): Promise<string> {
+    const response = await fetch(DALLE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'dall-e-2',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024'
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`DALL-E API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.data[0].url
+  }
+
+  // 📚 Generate Islamic Kids Story Illustration (single image - kept for backward compatibility)
   async generateStoryImage(storyTitle: string, characterName: string, theme: string, ageGroup: string): Promise<string> {
     if (!this.apiKey) {
       console.error('OpenAI API key not configured')
