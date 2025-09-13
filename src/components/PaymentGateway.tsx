@@ -40,8 +40,8 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 
   const checkAccess = async () => {
     try {
-      const access = await stripeService.checkProductAccess(productType)
-      setHasAccess(access)
+      // Don't check access initially - let user enter email first
+      setHasAccess(false)
     } catch (error) {
       console.error('Failed to check access:', error)
     }
