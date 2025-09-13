@@ -197,9 +197,12 @@ class DalleService {
 
   // 📖 Generate Book Cover
   async generateBookCover(storyTitle: string, theme: string, ageGroup: string): Promise<string> {
-    if (!this.apiKey) {
+    if (!this.apiKey || this.apiKey === 'your_openai_api_key_here') {
+      console.log('📖 API key not configured, using fallback cover')
       return this.generateFallbackBookCover(storyTitle, theme)
     }
+    
+    console.log('🎨 Generating book cover with DALL-E for:', storyTitle)
 
     const prompt = `Create a beautiful children's book cover for an Islamic story titled "${storyTitle}".
     
@@ -279,9 +282,8 @@ class DalleService {
 
   // 📚 Generate Multiple Scene Illustrations for Story (one per page)
   async generateStoryScenes(storyTitle: string, storyContent: string, characterName: string, theme: string, ageGroup: string): Promise<string[]> {
-    if (!this.apiKey) {
-      console.error('OpenAI API key not configured')
-      // Generate fallback images for each page
+    if (!this.apiKey || this.apiKey === 'your_openai_api_key_here') {
+      console.log('🎨 API key not configured, using fallback illustrations')
       const pages = this.splitStoryIntoPages(storyContent)
       const fallbacks: string[] = []
       for (let i = 0; i < pages.length; i++) {
@@ -289,25 +291,53 @@ class DalleService {
       }
       return fallbacks
     }
+    
+    console.log('🎨 Starting DALL-E scene generation for:', storyTitle)
 
     // Split story into pages for book format
     const pages = this.splitStoryIntoPages(storyContent)
     const illustrations: string[] = []
 
     console.log(`🎨 Generating ${pages.length} page illustrations for "${storyTitle}"`)
+    console.log(`📄 Story pages:`, pages.map((p, i) => `Page ${i+1}: ${p.substring(0, 30)}...`))
     
     // Generate an illustration for each page
     for (let i = 0; i < pages.length; i++) {
       try {
-        console.log(`Creating illustration ${i + 1}/${pages.length}...`)
-        const scenePrompt = this.createPageIllustration(pages[i], i + 1, pages.length, storyTitle, theme, ageGroup)
-        const illustration = await this.generateSingleScene(scenePrompt)
-        illustrations.push(illustration)
-        console.log(`✅ Page ${i + 1} illustration generated successfully`)
+        console.log(`🖼️ Creating illustration ${i + 1}/${pages.length}...`)
+        console.log(`📝 Page content: "${pages[i].substring(0, 100)}..."`)
         
-        // Small delay between requests to avoid rate limits
+        const scenePrompt = this.createPageIllustration(pages[i], i + 1, pages.length, storyTitle, theme, ageGroup)
+        console.log(`🎯 DALL-E prompt for page ${i + 1}:`, scenePrompt.substring(0, 200) + '...')
+        
+        const illustration = await this.generateSingleScene(scenePrompt)
+        
+        // Validate and test the image URL
+        if (illustration && illustration.length > 10) {
+          // Test if the URL is accessible
+          try {
+            const testResponse = await fetch(illustration, { method: 'HEAD' })
+            if (testResponse.ok) {
+              illustrations.push(illustration)
+              console.log(`✅ Page ${i + 1} illustration validated and added: ${illustration.substring(0, 50)}...`)
+            } else {
+              throw new Error(`Image URL not accessible: ${testResponse.status}`)
+            }
+          } catch (urlError) {
+            console.warn(`⚠️ Image URL validation failed for page ${i + 1}:`, urlError)
+            const fallback = await this.generateFallbackStoryImage(storyTitle, characterName, theme)
+            illustrations.push(fallback)
+          }
+        } else {
+          console.warn(`⚠️ Invalid illustration URL for page ${i + 1}, using fallback`)
+          const fallback = await this.generateFallbackStoryImage(storyTitle, characterName, theme)
+          illustrations.push(fallback)
+        }
+        
+        // Delay between requests to avoid rate limits and allow processing
         if (i < pages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          console.log(`⏳ Waiting before generating next illustration...`)
+          await new Promise(resolve => setTimeout(resolve, 2000)) // Increased delay
         }
       } catch (error) {
         console.error(`❌ Error generating illustration for page ${i + 1}:`, error)
@@ -320,13 +350,24 @@ class DalleService {
 
     // If no scenes generated, provide fallback
     if (illustrations.length === 0) {
+      console.warn('⚠️ No illustrations generated, adding default fallback')
       illustrations.push(await this.generateFallbackStoryImage(storyTitle, characterName, theme))
+    }
+
+    console.log(`🎨 Final result: ${illustrations.length} illustrations generated for ${pages.length} pages`)
+    console.log(`📋 Illustration URLs:`, illustrations.map((url, i) => `Page ${i+1}: ${url ? url.substring(0, 40) + '...' : 'MISSING'}`))
+    
+    // Ensure we have exactly the right number of illustrations
+    while (illustrations.length < pages.length) {
+      console.warn(`⚠️ Missing illustration for page ${illustrations.length + 1}, adding fallback`)
+      const fallback = await this.generateFallbackStoryImage(storyTitle, characterName, theme)
+      illustrations.push(fallback)
     }
 
     return illustrations
   }
 
-  // Split story into book pages
+  // Split story into book pages - MUST match ProfessionalStoryBook exactly
   private splitStoryIntoPages(storyContent: string, wordsPerPage: number = 80): string[] {
     const words = storyContent.split(' ')
     const pages: string[] = []
@@ -334,11 +375,13 @@ class DalleService {
     for (let i = 0; i < words.length; i += wordsPerPage) {
       const pageContent = words.slice(i, Math.min(i + wordsPerPage, words.length)).join(' ')
       if (pageContent.trim()) {
-        pages.push(pageContent)
+        pages.push(pageContent.trim())
       }
     }
     
-    return pages.length > 0 ? pages : [storyContent]
+    const result = pages.length > 0 ? pages : [storyContent]
+    console.log(`📄 Split story into ${result.length} pages with ${wordsPerPage} words each`)
+    return result
   }
 
   // Create illustration prompt for specific page
@@ -431,26 +474,42 @@ class DalleService {
   }
 
   private async generateSingleScene(prompt: string): Promise<string> {
-    const response = await fetch(DALLE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'dall-e-2',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024'
+    try {
+      console.log('🎨 Making DALL-E API request...')
+      const response = await fetch(DALLE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'dall-e-2',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024'
+        })
       })
-    })
 
-    if (!response.ok) {
-      throw new Error(`DALL-E API error: ${response.status}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ DALL-E API error ${response.status}:`, errorText)
+        throw new Error(`DALL-E API error: ${response.status} - ${errorText}`)
+      }
+
+      const data = await response.json()
+      const imageUrl = data.data[0].url
+      
+      // Validate the URL
+      if (!imageUrl || imageUrl.length < 10) {
+        throw new Error('Invalid image URL received from DALL-E')
+      }
+      
+      console.log('✅ DALL-E image generated successfully:', imageUrl.substring(0, 50) + '...')
+      return imageUrl
+    } catch (error) {
+      console.error('💥 Error in generateSingleScene:', error)
+      throw error
     }
-
-    const data = await response.json()
-    return data.data[0].url
   }
 
   // 📚 Generate Islamic Kids Story Illustration (single image - kept for backward compatibility)
@@ -648,6 +707,31 @@ class DalleService {
     
     if (currentLine) lines.push(currentLine)
     return lines
+  }
+
+  // Simple placeholder for when all else fails
+  private generateSimplePlaceholder(pageNumber: number): string {
+    const canvas = document.createElement('canvas')
+    canvas.width = 400
+    canvas.height = 300
+    const ctx = canvas.getContext('2d')!
+    
+    // Simple gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 400, 300)
+    gradient.addColorStop(0, '#4ade80')
+    gradient.addColorStop(1, '#16a34a')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 400, 300)
+    
+    // Add text
+    ctx.fillStyle = 'white'
+    ctx.font = 'bold 24px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText(`Page ${pageNumber}`, 200, 140)
+    ctx.font = '16px Arial'
+    ctx.fillText('Illustration loading...', 200, 170)
+    
+    return canvas.toDataURL()
   }
 }
 

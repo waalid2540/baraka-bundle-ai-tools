@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
 import { dalleService } from '../services/dalleService'
-import ProfessionalStoryBook from '../components/ProfessionalStoryBook'
+import EnhancedStoryBook from '../components/EnhancedStoryBook'
 
 interface StoryResult {
   title: string
@@ -114,6 +114,7 @@ const KidsStoryGenerator = () => {
             // Generate scene illustrations in background
             setIsGeneratingImages(true)
             try {
+              console.log('🎬 Starting scene illustration generation...')
               const sceneIllustrations = await dalleService.generateStoryScenes(
                 storyData.title,
                 storyData.story,
@@ -122,13 +123,21 @@ const KidsStoryGenerator = () => {
                 age
               )
               
+              console.log('🖼️ Received illustrations from DALL-E service:', sceneIllustrations?.length || 0)
+              console.log('🔍 Illustration preview:', sceneIllustrations?.map((url, i) => `${i+1}: ${url?.substring(0, 40)}...`))
+              
               // Update result with scene illustrations
-              setResult(prev => prev ? { ...prev, sceneIllustrations } : null)
+              setResult(prev => {
+                const updated = prev ? { ...prev, sceneIllustrations } : null
+                console.log('📊 Updated story result with illustrations:', updated?.sceneIllustrations?.length || 0)
+                return updated
+              })
             } catch (imageError) {
-              console.error('Scene illustrations error:', imageError)
+              console.error('❌ Scene illustrations error:', imageError)
               // Story still works without images
             } finally {
               setIsGeneratingImages(false)
+              console.log('🎨 Image generation phase completed')
             }
 
             // Generate audio reading in background
@@ -418,9 +427,9 @@ const KidsStoryGenerator = () => {
         </div>
       </main>
 
-      {/* Professional Storybook Modal */}
+      {/* Enhanced Storybook Modal */}
       {showStoryBook && result && (
-        <ProfessionalStoryBook
+        <EnhancedStoryBook
           title={result.title}
           story={result.story}
           moralLesson={result.moralLesson}

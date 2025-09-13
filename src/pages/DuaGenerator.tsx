@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import openaiService from '../services/openaiService'
 import dalleService from '../services/dalleService'
 import professionalIslamicPdf from '../services/professionalIslamicPdf'
+import { stripeService } from '../services/stripeService'
+import { databaseService } from '../services/databaseService'
+import PaymentGateway from '../components/PaymentGateway'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
@@ -15,8 +18,47 @@ const DuaGenerator = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [checkingAccess, setCheckingAccess] = useState(true)
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   const languages = openaiService.getSupportedLanguages()
+
+  // Check user access on component mount
+  useEffect(() => {
+    checkUserAccess()
+  }, [])
+
+  const checkUserAccess = async () => {
+    try {
+      setCheckingAccess(true)
+      
+      // Check if user is logged in
+      const user = await databaseService.getCurrentSession()
+      setCurrentUser(user)
+      
+      if (user) {
+        // Check if user has access to dua generator
+        const access = await stripeService.checkProductAccess('dua_generator')
+        setHasAccess(access)
+        
+        if (access) {
+          // Log that user accessed the product
+          await databaseService.logUsage(
+            user.id,
+            'dua_generator',
+            'page_accessed',
+            { page: 'dua_generator' }
+          )
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check user access:', error)
+    } finally {
+      setCheckingAccess(false)
+    }
+  }
 
   const duaTopics = [
     { id: 'forgiveness', name: 'Seeking Forgiveness', icon: '🤲' },
@@ -37,6 +79,12 @@ const DuaGenerator = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Check if user has access before generating
+    if (!hasAccess) {
+      setShowPayment(true)
+      return
+    }
+    
     if (!formData.topic && !formData.customRequest.trim()) {
       setError('Please select a topic or describe your specific need')
       return
@@ -45,9 +93,29 @@ const DuaGenerator = () => {
     await generateDua()
   }
 
+  const handlePaymentSuccess = () => {
+    setShowPayment(false)
+    setHasAccess(true)
+    checkUserAccess() // Refresh access status
+  }
+
   const generateDua = async () => {
     try {
       setLoading(true)
+      
+      // Log dua generation
+      if (currentUser) {
+        await databaseService.logUsage(
+          currentUser.id,
+          'dua_generator',
+          'generate_dua',
+          {
+            topic: formData.topic,
+            language: formData.language,
+            custom_request: formData.customRequest
+          }
+        )
+      }
       setError('')
 
       const request = formData.topic 
@@ -306,20 +374,62 @@ const DuaGenerator = () => {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading || (!formData.topic && !formData.customRequest.trim())}
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-2xl hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
+                {/* Access Control for Submit Button */}
+                {checkingAccess ? (
+                  /* Loading state while checking access */
+                  <button
+                    disabled
+                    className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed"
+                  >
                     <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Generating Your Du'a...</span>
+                      <span>Checking access...</span>
                     </div>
-                  ) : (
-                    'Generate My Du\'a'
-                  )}
-                </button>
+                  </button>
+                ) : hasAccess ? (
+                  /* User has access - show regular submit button */
+                  <button
+                    type="submit"
+                    disabled={loading || (!formData.topic && !formData.customRequest.trim())}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-2xl hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Generating Your Du'a...</span>
+                      </div>
+                    ) : (
+                      'Generate My Du\'a'
+                    )}
+                  </button>
+                ) : (
+                  /* User needs to purchase - show payment button */
+                  <div className="space-y-4">
+                    {/* Pricing Info */}
+                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 text-center">
+                      <h4 className="text-green-400 font-semibold mb-2">🤲 Du'a Generator - Premium</h4>
+                      <p className="text-2xl font-bold text-green-400 mb-2">$2.99</p>
+                      <p className="text-green-300 text-sm">One-time payment • Lifetime access • Unlimited generations</p>
+                    </div>
+                    
+                    {/* Purchase Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayment(true)}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-2xl hover:shadow-green-500/25"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span>💳</span>
+                        <span>Get Lifetime Access - $2.99</span>
+                      </div>
+                    </button>
+
+                    {/* Features List */}
+                    <div className="text-center text-sm text-gray-400">
+                      <p>✨ Unlock unlimited du'a generation with Arabic text, transliteration, and translations</p>
+                    </div>
+                  </div>
+                )}
               </form>
             </>
           ) : (
@@ -402,6 +512,14 @@ const DuaGenerator = () => {
           )}
         </div>
       </main>
+
+      {/* Payment Gateway Modal */}
+      <PaymentGateway
+        productType="dua_generator"
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   )
 }

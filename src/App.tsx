@@ -4,6 +4,8 @@ import HomePage from './pages/HomePage'
 import DuaGenerator from './pages/DuaGenerator'
 import KidsStoryGenerator from './pages/KidsStoryGenerator'
 import NamePosterGenerator from './pages/NamePosterGenerator'
+import PaymentSuccess from './pages/PaymentSuccess'
+import PaymentCancel from './pages/PaymentCancel'
 
 function App() {
   return (
@@ -12,7 +14,11 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/dua-generator" element={<DuaGenerator />} />
         <Route path="/kids-stories" element={<KidsStoryGenerator />} />
+        <Route path="/kids-story-generator" element={<KidsStoryGenerator />} />
         <Route path="/name-poster" element={<NamePosterGenerator />} />
+        <Route path="/name-poster-generator" element={<NamePosterGenerator />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-cancel" element={<PaymentCancel />} />
         
         {/* 404 */}
         <Route path="*" element={
