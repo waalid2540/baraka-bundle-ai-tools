@@ -80,7 +80,7 @@ const DuaGenerator = () => {
   const handlePaymentSuccess = () => {
     setShowPayment(false)
     setHasAccess(true)
-    checkUserAccess() // Refresh access status
+    // Don't call checkUserAccess() - we already know they have access
   }
 
   const generateDua = async () => {
