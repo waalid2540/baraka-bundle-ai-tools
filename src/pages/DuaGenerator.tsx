@@ -555,13 +555,6 @@ const DuaGenerator = () => {
         </div>
       </main>
 
-      {/* Login Modal */}
-      <Login
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-        onSuccess={handleLoginSuccess}
-      />
-
       {/* Payment Gateway Modal */}
       <PaymentGateway
         productType="dua_generator"
