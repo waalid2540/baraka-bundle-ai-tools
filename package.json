@@ -2,21 +2,26 @@
   "name": "barakahtool",
   "version": "2.0.0",
   "description": "✨ BarakahTool - Premium Islamic Digital SaaS Platform | High-Class AI Tools",
-  "type": "module",
   "scripts": {
     "dev": "vite --port 3001",
-    "build": "vite build",
+    "build": "vite build && npm run install-server",
     "preview": "vite preview --port 3001",
-    "start": "vite preview --host 0.0.0.0 --port $PORT"
+    "start": "node server.js",
+    "install-server": "npm install express cors pg stripe dotenv --no-save"
   },
   "dependencies": {
     "@stripe/stripe-js": "^2.0.0",
     "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
+    "pg": "^8.16.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.1"
+    "react-router-dom": "^6.8.1",
+    "stripe": "^12.18.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

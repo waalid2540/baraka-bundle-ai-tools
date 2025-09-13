@@ -27,7 +27,7 @@ class StripeService {
   private publicKey: string
 
   constructor() {
-    this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+    this.apiUrl = '/api'
     this.publicKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY || ''
   }
 

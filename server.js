@@ -1,13 +1,11 @@
-// BarakahTool Backend API
-// Node.js + Express + PostgreSQL + Stripe
+// BarakahBundle Payment API Server
+// Handles Stripe payments and PostgreSQL user management
 
 const express = require('express')
 const cors = require('cors')
-const helmet = require('helmet')
-const morgan = require('morgan')
-const rateLimit = require('express-rate-limit')
 const { Pool } = require('pg')
 const stripe = require('stripe')
+const path = require('path')
 require('dotenv').config()
 
 const app = express()
@@ -16,7 +14,7 @@ const PORT = process.env.PORT || 3001
 // Initialize Stripe
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY)
 
-// Initialize PostgreSQL connection to your Render database
+// Initialize PostgreSQL connection
 const connectionString = process.env.DATABASE_URL || 'postgresql://waalid_legacy_db_user:dD5PV96lz21Zuh9Kd03lUuds15iZZbKt@dpg-d2rtj5m3jp1c738k0t20-a.oregon-postgres.render.com/waalid_legacy_db?sslmode=require'
 
 const pool = new Pool({
@@ -27,36 +25,25 @@ const pool = new Pool({
 })
 
 // Middleware
-app.use(helmet())
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] 
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+    ? [process.env.FRONTEND_URL, 'https://baraka-bundle-ai-tools.onrender.com'] 
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
   credentials: true
 }))
-app.use(morgan('combined'))
 app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true }))
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-})
-app.use('/api/', limiter)
+app.use(express.static(path.join(__dirname, 'dist')))
 
 // Database connection test
 pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database:', process.env.DB_NAME)
+  console.log('✅ Connected to PostgreSQL database')
 })
 
 pool.on('error', (err) => {
   console.error('❌ PostgreSQL connection error:', err)
-  process.exit(-1)
 })
 
-// Routes
+// API Routes
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -67,9 +54,7 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// USER MANAGEMENT ROUTES
-
-// Create user
+// Create or get user
 app.post('/api/users', async (req, res) => {
   try {
     const { email, name } = req.body
@@ -104,26 +89,6 @@ app.get('/api/users/email/:email', async (req, res) => {
   }
 })
 
-// Update user Stripe customer ID
-app.put('/api/users/:id/stripe-customer', async (req, res) => {
-  try {
-    const { id } = req.params
-    const { stripe_customer_id } = req.body
-    
-    const result = await pool.query(
-      'UPDATE users SET stripe_customer_id = $1 WHERE id = $2 RETURNING *',
-      [stripe_customer_id, id]
-    )
-    
-    res.json(result.rows[0])
-  } catch (error) {
-    console.error('Error updating Stripe customer ID:', error)
-    res.status(500).json({ error: 'Failed to update Stripe customer ID' })
-  }
-})
-
-// PRODUCT MANAGEMENT ROUTES
-
 // Get all products
 app.get('/api/products', async (req, res) => {
   try {
@@ -153,14 +118,21 @@ app.get('/api/products/type/:type', async (req, res) => {
   }
 })
 
-// STRIPE PAYMENT ROUTES
-
 // Create Stripe checkout session
 app.post('/api/stripe/create-checkout-session', async (req, res) => {
   try {
-    const { product_type, user_id, user_email, user_name, success_url, cancel_url } = req.body
+    const { product_type, user_email, user_name } = req.body
     
-    // Get product details
+    console.log('🔄 Creating checkout session for:', product_type, user_email)
+    
+    // Get or create user
+    const userResult = await pool.query(
+      'INSERT INTO users (email, name) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET name = $2 RETURNING *',
+      [user_email, user_name || '']
+    )
+    const user = userResult.rows[0]
+    
+    // Get product details from database
     const productResult = await pool.query('SELECT * FROM products WHERE product_type = $1', [product_type])
     if (productResult.rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' })
@@ -168,37 +140,54 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
     
     const product = productResult.rows[0]
     
-    // Create Stripe checkout session
+    // Get Stripe Price ID from environment variables
+    let stripePriceId
+    switch (product_type) {
+      case 'dua_generator':
+        stripePriceId = process.env.STRIPE_DUA_PRICE_ID
+        break
+      case 'story_generator':
+        stripePriceId = process.env.STRIPE_STORY_PRICE_ID
+        break
+      case 'poster_generator':
+        stripePriceId = process.env.STRIPE_POSTER_PRICE_ID
+        break
+      default:
+        return res.status(400).json({ error: 'Invalid product type' })
+    }
+    
+    if (!stripePriceId) {
+      console.error(`❌ Missing Stripe Price ID for ${product_type}`)
+      return res.status(500).json({ error: 'Product pricing not configured' })
+    }
+    
+    console.log('💳 Using Stripe Price ID:', stripePriceId)
+    
+    // Create Stripe checkout session using Price ID
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       customer_email: user_email,
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: product.name,
-              description: product.description,
-            },
-            unit_amount: product.price_cents,
-          },
+          price: stripePriceId,
           quantity: 1,
         },
       ],
       metadata: {
         product_type,
-        user_id: user_id.toString(),
+        user_id: user.id.toString(),
         user_email,
         user_name: user_name || ''
       },
-      success_url,
-      cancel_url,
+      success_url: `${process.env.FRONTEND_URL || 'https://baraka-bundle-ai-tools.onrender.com'}/payment-success?session_id={CHECKOUT_SESSION_ID}&product=${product_type}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'https://baraka-bundle-ai-tools.onrender.com'}/payment-cancel?product=${product_type}`,
     })
     
+    console.log('✅ Checkout session created:', session.id)
     res.json({ session_id: session.id, url: session.url })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    console.error('❌ Error creating checkout session:', error)
     res.status(500).json({ error: 'Failed to create checkout session' })
   }
 })
@@ -221,13 +210,21 @@ app.post('/api/stripe/verify-payment', async (req, res) => {
     const productResult = await pool.query('SELECT * FROM products WHERE product_type = $1', [product_type])
     const product = productResult.rows[0]
     
-    // Create or update purchase record
+    // Create purchase record
     await pool.query(`
       INSERT INTO user_purchases (user_id, product_id, stripe_payment_intent_id, stripe_session_id, amount_paid_cents, payment_status)
       VALUES ($1, $2, $3, $4, $5, 'completed')
       ON CONFLICT (stripe_payment_intent_id) 
       DO UPDATE SET payment_status = 'completed'
     `, [user_id, product.id, session.payment_intent, session_id, session.amount_total])
+    
+    // Grant access in user_access table
+    await pool.query(`
+      INSERT INTO user_access (user_id, email, product_type, has_access, payment_status, purchased_at)
+      VALUES ($1, $2, $3, true, 'completed', NOW())
+      ON CONFLICT (user_id, product_type) 
+      DO UPDATE SET has_access = true, payment_status = 'completed', purchased_at = NOW()
+    `, [user_id, user_email, product_type])
     
     res.json({ 
       success: true, 
@@ -239,8 +236,6 @@ app.post('/api/stripe/verify-payment', async (req, res) => {
     res.status(500).json({ error: 'Failed to verify payment' })
   }
 })
-
-// ACCESS CONTROL ROUTES
 
 // Check user access to product
 app.get('/api/access/:user_id/:product_type', async (req, res) => {
@@ -263,23 +258,31 @@ app.get('/api/access/:user_id/:product_type', async (req, res) => {
   }
 })
 
-// Get user access for all products
-app.get('/api/access/:user_id', async (req, res) => {
+// Check access by email
+app.post('/api/access/check', async (req, res) => {
   try {
-    const { user_id } = req.params
+    const { email, product_type } = req.body
     
     const result = await pool.query(`
-      SELECT * FROM user_access WHERE user_id = $1
-    `, [user_id])
+      SELECT ua.has_access, u.id as user_id 
+      FROM user_access ua
+      JOIN users u ON ua.user_id = u.id
+      WHERE u.email = $1 AND ua.product_type = $2
+    `, [email, product_type])
     
-    res.json(result.rows)
+    if (result.rows.length === 0) {
+      return res.json({ has_access: false, user_id: null })
+    }
+    
+    res.json({ 
+      has_access: result.rows[0].has_access,
+      user_id: result.rows[0].user_id 
+    })
   } catch (error) {
-    console.error('Error fetching user access:', error)
-    res.status(500).json({ error: 'Failed to fetch user access' })
+    console.error('Error checking access:', error)
+    res.status(500).json({ error: 'Failed to check access' })
   }
 })
-
-// USAGE TRACKING
 
 // Log usage
 app.post('/api/usage', async (req, res) => {
@@ -298,62 +301,9 @@ app.post('/api/usage', async (req, res) => {
   }
 })
 
-// SESSION MANAGEMENT
-
-// Create session
-app.post('/api/sessions', async (req, res) => {
-  try {
-    const { user_id } = req.body
-    const { v4: uuidv4 } = require('uuid')
-    const session_token = uuidv4()
-    const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    
-    await pool.query(`
-      INSERT INTO user_sessions (user_id, session_token, expires_at)
-      VALUES ($1, $2, $3)
-    `, [user_id, session_token, expires_at])
-    
-    res.json({ session_token })
-  } catch (error) {
-    console.error('Error creating session:', error)
-    res.status(500).json({ error: 'Failed to create session' })
-  }
-})
-
-// Validate session
-app.post('/api/sessions/validate', async (req, res) => {
-  try {
-    const { session_token } = req.body
-    
-    const result = await pool.query(`
-      SELECT u.* FROM users u
-      JOIN user_sessions s ON u.id = s.user_id
-      WHERE s.session_token = $1 AND s.expires_at > NOW()
-    `, [session_token])
-    
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid or expired session' })
-    }
-    
-    res.json(result.rows[0])
-  } catch (error) {
-    console.error('Error validating session:', error)
-    res.status(500).json({ error: 'Failed to validate session' })
-  }
-})
-
-// Delete session (logout)
-app.delete('/api/sessions/:token', async (req, res) => {
-  try {
-    const { token } = req.params
-    
-    await pool.query('DELETE FROM user_sessions WHERE session_token = $1', [token])
-    
-    res.json({ success: true })
-  } catch (error) {
-    console.error('Error deleting session:', error)
-    res.status(500).json({ error: 'Failed to delete session' })
-  }
+// Serve React app for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
 // Error handling middleware
@@ -362,14 +312,10 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' })
 })
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' })
-})
-
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 BarakahTool Backend running on port ${PORT}`)
-  console.log(`📱 Frontend should connect to: http://localhost:${PORT}/api`)
-  console.log(`🗄️ Database: ${process.env.DB_NAME}`)
+  console.log(`🚀 BarakahBundle running on port ${PORT}`)
+  console.log(`📱 Frontend: http://localhost:${PORT}`)
+  console.log(`🔗 API: http://localhost:${PORT}/api`)
+  console.log(`🗄️ Database: Connected to PostgreSQL`)
 })

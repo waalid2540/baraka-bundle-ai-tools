@@ -43,7 +43,7 @@ class DatabaseService {
   private apiUrl: string
 
   constructor() {
-    this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+    this.apiUrl = '/api'
   }
 
   // User Management
