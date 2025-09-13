@@ -52,10 +52,18 @@ const IslamicStoryBook: React.FC<StoryBookProps> = ({
   // Calculate total pages including special pages
   const totalPages = storyPages.length + 4 // Cover + story pages + moral + quran + end
 
-  // Open book animation
+  // Open book animation and auto-start reading
   useEffect(() => {
-    setTimeout(() => setIsBookOpen(true), 500)
-  }, [])
+    setTimeout(() => {
+      setIsBookOpen(true)
+      // Auto-start reading if audio is available
+      if (audioUrl && audioRef.current) {
+        setTimeout(() => {
+          startReading()
+        }, 1500) // Wait for book opening animation
+      }
+    }, 500)
+  }, [audioUrl])
 
   // Handle audio playback
   useEffect(() => {
@@ -135,10 +143,13 @@ const IslamicStoryBook: React.FC<StoryBookProps> = ({
   const getCurrentIllustration = () => {
     if (currentPage === 0) return coverImage // Cover page
     const storyPageIndex = currentPage - 1
-    if (storyPageIndex < storyPages.length && sceneIllustrations.length > 0) {
-      // Distribute illustrations across story pages
-      const illustrationIndex = Math.floor((storyPageIndex / storyPages.length) * sceneIllustrations.length)
-      return sceneIllustrations[Math.min(illustrationIndex, sceneIllustrations.length - 1)]
+    if (storyPageIndex < storyPages.length && sceneIllustrations && sceneIllustrations.length > 0) {
+      // Each page gets its own illustration if available
+      if (storyPageIndex < sceneIllustrations.length) {
+        return sceneIllustrations[storyPageIndex]
+      }
+      // If not enough illustrations, use the last one for remaining pages
+      return sceneIllustrations[sceneIllustrations.length - 1]
     }
     return null
   }
@@ -178,23 +189,28 @@ const IslamicStoryBook: React.FC<StoryBookProps> = ({
       const illustration = getCurrentIllustration()
       
       return (
-        <div className="h-full flex flex-col p-6">
+        <div className="h-full flex flex-col p-8 bg-gradient-to-b from-white to-islamic-green-50">
           {illustration && (
-            <div className="mb-4">
+            <div className="mb-6 rounded-xl overflow-hidden shadow-xl">
               <img 
                 src={illustration} 
                 alt={`Story scene ${currentPage}`}
-                className="w-full h-64 object-cover rounded-lg shadow-md"
+                className="w-full h-72 object-cover"
               />
             </div>
           )}
-          <div className="flex-1 overflow-y-auto">
-            <p className="text-lg leading-relaxed text-gray-800 font-serif">
+          <div className="flex-1 overflow-y-auto px-2">
+            <p className="text-xl leading-relaxed text-gray-800 font-serif" style={{ lineHeight: '1.8' }}>
               {pageContent}
             </p>
           </div>
-          <div className="text-center text-sm text-gray-500 mt-4">
-            Page {currentPage} of {totalPages}
+          <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
+            <div className="text-islamic-green-600 font-medium">
+              Chapter {Math.ceil(currentPage / 2)}
+            </div>
+            <div className="font-medium">
+              Page {currentPage} of {totalPages}
+            </div>
           </div>
         </div>
       )

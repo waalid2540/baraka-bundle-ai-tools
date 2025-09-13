@@ -277,30 +277,38 @@ class DalleService {
     return canvas.toDataURL('image/png')
   }
 
-  // 📚 Generate Multiple Scene Illustrations for Story
+  // 📚 Generate Multiple Scene Illustrations for Story (one per page)
   async generateStoryScenes(storyTitle: string, storyContent: string, characterName: string, theme: string, ageGroup: string): Promise<string[]> {
     if (!this.apiKey) {
       console.error('OpenAI API key not configured')
-      return [await this.generateFallbackStoryImage(storyTitle, characterName, theme)]
+      // Generate fallback images for each page
+      const pages = this.splitStoryIntoPages(storyContent)
+      const fallbacks: string[] = []
+      for (let i = 0; i < pages.length; i++) {
+        fallbacks.push(await this.generateFallbackStoryImage(storyTitle, characterName, theme))
+      }
+      return fallbacks
     }
 
-    // Split story into scenes (by paragraphs or sentences)
-    const scenes = this.extractScenes(storyContent)
+    // Split story into pages for book format
+    const pages = this.splitStoryIntoPages(storyContent)
     const illustrations: string[] = []
 
-    for (let i = 0; i < Math.min(scenes.length, 3); i++) { // Generate up to 3 scenes
+    // Generate an illustration for each page
+    for (let i = 0; i < pages.length; i++) {
       try {
-        const scenePrompt = this.createScenePrompt(scenes[i], i + 1, storyTitle, theme, ageGroup)
+        const scenePrompt = this.createPageIllustration(pages[i], i + 1, pages.length, storyTitle, theme, ageGroup)
         const illustration = await this.generateSingleScene(scenePrompt)
         illustrations.push(illustration)
         
         // Small delay between requests to avoid rate limits
-        if (i < scenes.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+        if (i < pages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 800))
         }
       } catch (error) {
-        console.error(`Error generating scene ${i + 1}:`, error)
-        // Continue with other scenes even if one fails
+        console.error(`Error generating illustration for page ${i + 1}:`, error)
+        // Add fallback for this page
+        illustrations.push(await this.generateFallbackStoryImage(storyTitle, characterName, theme))
       }
     }
 
@@ -310,6 +318,57 @@ class DalleService {
     }
 
     return illustrations
+  }
+
+  // Split story into book pages
+  private splitStoryIntoPages(storyContent: string, wordsPerPage: number = 80): string[] {
+    const words = storyContent.split(' ')
+    const pages: string[] = []
+    
+    for (let i = 0; i < words.length; i += wordsPerPage) {
+      const pageContent = words.slice(i, Math.min(i + wordsPerPage, words.length)).join(' ')
+      if (pageContent.trim()) {
+        pages.push(pageContent)
+      }
+    }
+    
+    return pages.length > 0 ? pages : [storyContent]
+  }
+
+  // Create illustration prompt for specific page
+  private createPageIllustration(pageContent: string, pageNumber: number, totalPages: number, title: string, theme: string, ageGroup: string): string {
+    // Determine scene type based on page position
+    let sceneType = 'middle'
+    if (pageNumber === 1) sceneType = 'beginning'
+    else if (pageNumber === totalPages) sceneType = 'ending'
+    
+    return `Create a beautiful, unique children's book illustration for page ${pageNumber} of "${title}".
+
+    PAGE CONTENT CONTEXT: ${pageContent.substring(0, 200)}...
+    SCENE POSITION: ${sceneType} of the story
+    
+    VISUAL REQUIREMENTS:
+    - Professional children's book illustration quality
+    - Unique scene different from other pages
+    - Age-appropriate for ${ageGroup} years old
+    - Warm, engaging colors and atmosphere
+    - Islamic architectural elements or nature scenes
+    
+    SPECIFIC ELEMENTS FOR THIS PAGE:
+    ${sceneType === 'beginning' ? '- Establishing scene with Islamic setting (mosque, garden, home)' : ''}
+    ${sceneType === 'middle' ? '- Action or key moment from the story' : ''}
+    ${sceneType === 'ending' ? '- Resolution scene with peaceful, happy atmosphere' : ''}
+    - Theme focus: ${theme}
+    - Include Islamic geometric patterns or decorative elements
+    
+    STRICT RULES:
+    - NO human faces or figures
+    - NO anthropomorphic animals
+    - Focus on environments, objects, and Islamic architecture
+    - Each page must look visually distinct
+    - Professional quality for children's book publishing
+    
+    Create a unique, engaging illustration for page ${pageNumber} of ${totalPages}.`
   }
 
   private extractScenes(storyContent: string): string[] {
