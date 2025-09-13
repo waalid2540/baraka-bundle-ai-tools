@@ -396,38 +396,17 @@ const DuaGenerator = () => {
                 </div>
 
                 {/* Access Control for Submit Button */}
-                {authLoading ? (
-                  /* Loading state while checking auth */
+                {checkingAccess ? (
+                  /* Loading state while checking access */
                   <button
                     disabled
                     className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Loading...</span>
+                      <span>Checking access...</span>
                     </div>
                   </button>
-                ) : !user ? (
-                  /* User not logged in - show login button */
-                  <div className="space-y-4">
-                    {/* Login Required Info */}
-                    <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-4 text-center">
-                      <h4 className="text-blue-400 font-semibold mb-2">🔑 Login Required</h4>
-                      <p className="text-blue-300 text-sm">Please login to access the Du'a Generator</p>
-                    </div>
-                    
-                    {/* Login Button */}
-                    <button
-                      type="button"
-                      onClick={() => setShowLogin(true)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span>🔑</span>
-                        <span>Login to Continue</span>
-                      </div>
-                    </button>
-                  </div>
                 ) : hasAccess ? (
                   /* User has access - show regular submit button */
                   <button
