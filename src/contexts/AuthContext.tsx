@@ -49,11 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (savedUser) {
         const userData = JSON.parse(savedUser)
         await refreshUserAccess(userData)
+      } else {
+        // No saved user, just set loading to false
+        setIsLoading(false)
       }
     } catch (error) {
       console.error('Failed to check existing login:', error)
       localStorage.removeItem('barakah_user')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -78,9 +80,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(userWithAccess)
       localStorage.setItem('barakah_user', JSON.stringify(userWithAccess))
+      setIsLoading(false)
     } catch (error) {
       console.error('Failed to refresh user access:', error)
       logout()
+      setIsLoading(false)
     }
   }
 
