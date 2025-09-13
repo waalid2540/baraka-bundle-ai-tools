@@ -83,6 +83,43 @@ const DuaGenerator = () => {
     // Don't call checkUserAccess() - we already know they have access
   }
 
+  const handleEmailAccess = async (email: string) => {
+    try {
+      setLoading(true)
+      setError('')
+
+      // Check access by email directly
+      const response = await fetch('/api/access/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email, 
+          product_type: 'dua_generator' 
+        })
+      })
+
+      if (!response.ok) {
+        setError('Failed to check access. Please try again.')
+        return
+      }
+
+      const { has_access } = await response.json()
+      
+      if (has_access) {
+        setHasAccess(true)
+        setError('')
+        alert('✅ Access verified! You can now generate unlimited Du\'as.')
+      } else {
+        setError('❌ No purchase found for this email. Please check your email or purchase access.')
+      }
+    } catch (error) {
+      console.error('Email access check error:', error)
+      setError('Failed to verify access. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const generateDua = async () => {
     try {
       setLoading(true)
@@ -407,6 +444,27 @@ const DuaGenerator = () => {
                         <span>Get Lifetime Access - $2.99</span>
                       </div>
                     </button>
+
+                    {/* Returning Customer Button */}
+                    <div className="text-center">
+                      <p className="text-gray-400 text-sm mb-3">Already purchased?</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Create a simple email prompt and check access
+                          const email = prompt('Enter your email address to access your purchase:')
+                          if (email) {
+                            handleEmailAccess(email.trim())
+                          }
+                        }}
+                        className="w-full bg-slate-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-slate-600 transition-all duration-300 border border-slate-600"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <span>🔑</span>
+                          <span>Access Your Purchase</span>
+                        </div>
+                      </button>
+                    </div>
 
                     {/* Features List */}
                     <div className="text-center text-sm text-gray-400">
