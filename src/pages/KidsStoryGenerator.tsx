@@ -1,8 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
 import { dalleService } from '../services/dalleService'
+import { databaseService } from '../services/databaseService'
 import EnhancedStoryBook from '../components/EnhancedStoryBook'
+import PaymentGateway from '../components/PaymentGateway'
 
 interface StoryResult {
   title: string
@@ -34,6 +36,11 @@ const KidsStoryGenerator = () => {
   const [result, setResult] = useState<StoryResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showStoryBook, setShowStoryBook] = useState(false)
+  
+  // Access control state
+  const [hasAccess, setHasAccess] = useState<boolean>(false)
+  const [checkingAccess, setCheckingAccess] = useState<boolean>(true)
+  const [showPayment, setShowPayment] = useState<boolean>(false)
 
   const ageGroups = [
     { value: '3-5', label: 'Ages 3-5 (Preschool)' },
@@ -58,6 +65,41 @@ const KidsStoryGenerator = () => {
     value: lang.toLowerCase(),
     label: lang
   }))
+
+  // Check access on component mount
+  useEffect(() => {
+    checkAccess()
+  }, [])
+
+  const checkAccess = async () => {
+    try {
+      setCheckingAccess(true)
+      
+      // Get user email from localStorage or prompt
+      const storedEmail = localStorage.getItem('user_email')
+      
+      if (!storedEmail) {
+        // No user email, show payment
+        setHasAccess(false)
+        setCheckingAccess(false)
+        return
+      }
+
+      // Check if user exists and has access
+      const user = await databaseService.getUserByEmail(storedEmail)
+      if (user) {
+        const access = await databaseService.checkUserAccess(user.id, 'story_generator')
+        setHasAccess(access)
+      } else {
+        setHasAccess(false)
+      }
+    } catch (error) {
+      console.error('Access check error:', error)
+      setHasAccess(false)
+    } finally {
+      setCheckingAccess(false)
+    }
+  }
 
   const generateStory = async () => {
     // Validation based on story mode
@@ -335,23 +377,42 @@ const KidsStoryGenerator = () => {
               </div>
 
               {/* Generate Button */}
-              <button
-                onClick={generateStory}
-                disabled={isLoading || (storyMode === 'preset' && !name.trim()) || (storyMode === 'custom' && !customPrompt.trim())}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating Story...
-                  </span>
-                ) : (
-                  '📚 Generate Story'
-                )}
-              </button>
+              {checkingAccess ? (
+                /* Loading state while checking access */
+                <button disabled className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Checking access...</span>
+                  </div>
+                </button>
+              ) : hasAccess ? (
+                /* User has access - show generate button */
+                <button
+                  onClick={generateStory}
+                  disabled={isLoading || (storyMode === 'preset' && !name.trim()) || (storyMode === 'custom' && !customPrompt.trim())}
+                  className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating Story...
+                    </span>
+                  ) : (
+                    '📚 Generate Story'
+                  )}
+                </button>
+              ) : (
+                /* User needs to pay */
+                <button
+                  onClick={() => setShowPayment(true)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  🚀 Get Unlimited Access - $2.99
+                </button>
+              )}
             </div>
           </div>
 
@@ -441,6 +502,18 @@ const KidsStoryGenerator = () => {
           audioUrl={result.audioUrl}
           coverImage={result.coverImage}
           onClose={() => setShowStoryBook(false)}
+        />
+      )}
+
+      {/* Payment Gateway Modal */}
+      {showPayment && (
+        <PaymentGateway
+          productType="story_generator"
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => {
+            setShowPayment(false)
+            checkAccess() // Recheck access after payment
+          }}
         />
       )}
     </div>
