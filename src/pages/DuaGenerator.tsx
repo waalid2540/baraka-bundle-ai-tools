@@ -396,17 +396,38 @@ const DuaGenerator = () => {
                 </div>
 
                 {/* Access Control for Submit Button */}
-                {checkingAccess ? (
-                  /* Loading state while checking access */
+                {authLoading ? (
+                  /* Loading state while checking auth */
                   <button
                     disabled
                     className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Checking access...</span>
+                      <span>Loading...</span>
                     </div>
                   </button>
+                ) : !user ? (
+                  /* User not logged in - show login button */
+                  <div className="space-y-4">
+                    {/* Login Required Info */}
+                    <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-4 text-center">
+                      <h4 className="text-blue-400 font-semibold mb-2">🔑 Login Required</h4>
+                      <p className="text-blue-300 text-sm">Please login to access the Du'a Generator</p>
+                    </div>
+                    
+                    {/* Login Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowLogin(true)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span>🔑</span>
+                        <span>Login to Continue</span>
+                      </div>
+                    </button>
+                  </div>
                 ) : hasAccess ? (
                   /* User has access - show regular submit button */
                   <button
@@ -444,27 +465,6 @@ const DuaGenerator = () => {
                         <span>Get Lifetime Access - $2.99</span>
                       </div>
                     </button>
-
-                    {/* Returning Customer Button */}
-                    <div className="text-center">
-                      <p className="text-gray-400 text-sm mb-3">Already purchased?</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Create a simple email prompt and check access
-                          const email = prompt('Enter your email address to access your purchase:')
-                          if (email) {
-                            handleEmailAccess(email.trim())
-                          }
-                        }}
-                        className="w-full bg-slate-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-slate-600 transition-all duration-300 border border-slate-600"
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span>🔑</span>
-                          <span>Access Your Purchase</span>
-                        </div>
-                      </button>
-                    </div>
 
                     {/* Features List */}
                     <div className="text-center text-sm text-gray-400">
@@ -554,6 +554,13 @@ const DuaGenerator = () => {
           )}
         </div>
       </main>
+
+      {/* Login Modal */}
+      <Login
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSuccess={handleLoginSuccess}
+      />
 
       {/* Payment Gateway Modal */}
       <PaymentGateway
