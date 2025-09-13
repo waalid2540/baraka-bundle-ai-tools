@@ -195,6 +195,88 @@ class DalleService {
     }
   }
 
+  // 📖 Generate Book Cover
+  async generateBookCover(storyTitle: string, theme: string, ageGroup: string): Promise<string> {
+    if (!this.apiKey) {
+      return this.generateFallbackBookCover(storyTitle, theme)
+    }
+
+    const prompt = `Create a beautiful children's book cover for an Islamic story titled "${storyTitle}".
+    
+    Style: Professional children's book cover, vibrant colors for ages ${ageGroup}, Islamic geometric patterns, 
+    beautiful mosque or Islamic architecture, warm inviting atmosphere.
+    Theme: ${theme}
+    
+    Requirements: NO human faces, NO animals, focus on Islamic architecture and nature, child-friendly design.
+    Include space for title text overlay.`
+
+    try {
+      const response = await fetch(DALLE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'dall-e-2',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024'
+        })
+      })
+
+      if (!response.ok) {
+        return this.generateFallbackBookCover(storyTitle, theme)
+      }
+
+      const data = await response.json()
+      return data.data[0].url
+    } catch (error) {
+      console.error('Book cover generation error:', error)
+      return this.generateFallbackBookCover(storyTitle, theme)
+    }
+  }
+
+  private generateFallbackBookCover(title: string, theme: string): string {
+    const canvas = document.createElement('canvas')
+    canvas.width = 800
+    canvas.height = 1000
+    const ctx = canvas.getContext('2d')!
+
+    // Gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, 1000)
+    gradient.addColorStop(0, '#2D5A27')
+    gradient.addColorStop(1, '#8B5CF6')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 800, 1000)
+
+    // Border
+    ctx.strokeStyle = '#D4AF37'
+    ctx.lineWidth = 10
+    ctx.strokeRect(40, 40, 720, 920)
+
+    // Title
+    ctx.fillStyle = '#FFFFFF'
+    ctx.font = 'bold 56px Arial'
+    ctx.textAlign = 'center'
+    const lines = this.wrapText(title, 600)
+    let y = 200
+    lines.forEach(line => {
+      ctx.fillText(line, 400, y)
+      y += 70
+    })
+
+    // Islamic decoration
+    ctx.font = '100px Arial'
+    ctx.fillText('☪️', 400, 500)
+
+    // Theme
+    ctx.font = '32px Arial'
+    ctx.fillText(theme, 400, 700)
+
+    return canvas.toDataURL('image/png')
+  }
+
   // 📚 Generate Multiple Scene Illustrations for Story
   async generateStoryScenes(storyTitle: string, storyContent: string, characterName: string, theme: string, ageGroup: string): Promise<string[]> {
     if (!this.apiKey) {

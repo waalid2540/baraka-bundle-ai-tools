@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
 import { dalleService } from '../services/dalleService'
+import IslamicStoryBook from '../components/IslamicStoryBook'
 
 interface StoryResult {
   title: string
@@ -16,6 +17,7 @@ interface StoryResult {
   illustration?: string
   sceneIllustrations?: string[]
   audioUrl?: string
+  coverImage?: string
 }
 
 const KidsStoryGenerator = () => {
@@ -28,8 +30,10 @@ const KidsStoryGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false)
   const [result, setResult] = useState<StoryResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showStoryBook, setShowStoryBook] = useState(false)
 
   const ageGroups = [
     { value: '3-5', label: 'Ages 3-5 (Preschool)' },
@@ -89,6 +93,21 @@ const KidsStoryGenerator = () => {
             setResult(storyData)
             setIsLoading(false)
             
+            // Generate book cover first
+            setIsGeneratingCover(true)
+            try {
+              const coverImage = await dalleService.generateBookCover(
+                storyData.title,
+                storyData.theme || theme,
+                age
+              )
+              setResult(prev => prev ? { ...prev, coverImage } : null)
+            } catch (coverError) {
+              console.error('Cover generation error:', coverError)
+            } finally {
+              setIsGeneratingCover(false)
+            }
+            
             // Generate scene illustrations in background
             setIsGeneratingImages(true)
             try {
@@ -116,6 +135,11 @@ const KidsStoryGenerator = () => {
               
               // Update result with audio
               setResult(prev => prev ? { ...prev, audioUrl } : null)
+              
+              // Auto-open storybook when everything is ready
+              if (storyData && audioUrl) {
+                setTimeout(() => setShowStoryBook(true), 500)
+              }
             } catch (audioError) {
               console.error('Audio generation error:', audioError)
               // Story still works without audio
@@ -348,6 +372,26 @@ const KidsStoryGenerator = () => {
                   </p>
                 </div>
 
+                {/* Open Book Button */}
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowStoryBook(true)}
+                    className="btn-primary px-8 py-3 text-lg flex items-center gap-3 mx-auto"
+                    disabled={isGeneratingAudio || isGeneratingImages || isGeneratingCover}
+                  >
+                    <span className="text-2xl">📖</span>
+                    <span>Open Interactive Storybook</span>
+                    {result.audioUrl && <span className="text-2xl">🔊</span>}
+                  </button>
+                  {(isGeneratingAudio || isGeneratingImages || isGeneratingCover) && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {isGeneratingCover && '🎨 Creating book cover... '}
+                      {isGeneratingImages && '📸 Generating illustrations... '}
+                      {isGeneratingAudio && '🔊 Preparing audio narration... '}
+                    </p>
+                  )}
+                </div>
+
                 {/* Audio Player */}
                 {(result.audioUrl || isGeneratingAudio) && (
                   <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -488,6 +532,23 @@ const KidsStoryGenerator = () => {
           </div>
         </div>
       </main>
+
+      {/* Interactive Storybook Modal */}
+      {showStoryBook && result && (
+        <IslamicStoryBook
+          title={result.title}
+          story={result.story}
+          moralLesson={result.moralLesson}
+          quranReference={result.quranReference}
+          arabicVerse={result.arabicVerse}
+          verseTranslation={result.verseTranslation}
+          parentNotes={result.parentNotes}
+          sceneIllustrations={result.sceneIllustrations}
+          audioUrl={result.audioUrl}
+          coverImage={result.coverImage}
+          onClose={() => setShowStoryBook(false)}
+        />
+      )}
     </div>
   )
 }
