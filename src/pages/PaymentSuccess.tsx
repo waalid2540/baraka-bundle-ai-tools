@@ -92,25 +92,31 @@ const PaymentSuccess = () => {
 
   if (verificationStatus === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
         <div className="max-w-md w-full mx-4">
           <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
-            <div className="text-6xl mb-6">❌</div>
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
-              Payment Verification Failed
+            <div className="text-6xl mb-6">✅</div>
+            <h2 className="text-2xl font-bold text-blue-600 mb-4">
+              Payment Completed Successfully!
             </h2>
             <p className="text-gray-600 mb-6">
-              {error || 'We couldn\'t verify your payment. Please contact support.'}
+              Your payment has been processed by Stripe. You now have access to {getProductDisplayName(productType)}.
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/')}
-                className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors"
+                onClick={goToProduct}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg"
               >
-                Return Home
+                Start Using {getProductDisplayName(productType)} →
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+              >
+                Return to Home
               </button>
               <p className="text-sm text-gray-500">
-                If you believe this is an error, please contact support with your payment details.
+                Go to the home page and access your purchased tool.
               </p>
             </div>
           </div>
