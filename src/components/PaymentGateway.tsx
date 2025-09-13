@@ -102,18 +102,32 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     setError(null)
 
     try {
-      await databaseService.loginUser(userEmail.trim(), userName.trim() || undefined)
-      const access = await stripeService.checkProductAccess(productType)
+      // Check access by email directly
+      const response = await fetch('/api/access/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: userEmail.trim(), 
+          product_type: productType 
+        })
+      })
+
+      if (!response.ok) {
+        setError('Failed to check access')
+        return
+      }
+
+      const { has_access } = await response.json()
       
-      if (access) {
+      if (has_access) {
         setHasAccess(true)
         onPaymentSuccess()
         onClose()
       } else {
-        setError('No active subscription found for this email')
+        setError('No active purchase found for this email')
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Access check error:', error)
       setError('Failed to verify access. Please try again.')
     } finally {
       setIsLoading(false)

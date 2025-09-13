@@ -34,25 +34,9 @@ const DuaGenerator = () => {
     try {
       setCheckingAccess(true)
       
-      // Check if user is logged in
-      const user = await databaseService.getCurrentSession()
-      setCurrentUser(user)
+      // Start with no access - payment modal will handle email checking
+      setHasAccess(false)
       
-      if (user) {
-        // Check if user has access to dua generator
-        const access = await stripeService.checkProductAccess('dua_generator')
-        setHasAccess(access)
-        
-        if (access) {
-          // Log that user accessed the product
-          await databaseService.logUsage(
-            user.id,
-            'dua_generator',
-            'page_accessed',
-            { page: 'dua_generator' }
-          )
-        }
-      }
     } catch (error) {
       console.error('Failed to check user access:', error)
     } finally {
