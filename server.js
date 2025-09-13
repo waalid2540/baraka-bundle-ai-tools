@@ -284,6 +284,49 @@ app.post('/api/access/check', async (req, res) => {
   }
 })
 
+// Stripe Webhook (handles payments automatically)
+app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature']
+  
+  try {
+    const event = stripeClient.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET)
+    
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object
+      console.log('🎉 Payment completed via webhook:', session.id)
+      
+      const { product_type, user_id, user_email } = session.metadata
+      
+      // Get product details
+      const productResult = await pool.query('SELECT * FROM products WHERE product_type = $1', [product_type])
+      const product = productResult.rows[0]
+      
+      // Create purchase record
+      await pool.query(`
+        INSERT INTO user_purchases (user_id, product_id, stripe_payment_intent_id, stripe_session_id, amount_paid_cents, payment_status)
+        VALUES ($1, $2, $3, $4, $5, 'completed')
+        ON CONFLICT (stripe_payment_intent_id) 
+        DO UPDATE SET payment_status = 'completed'
+      `, [user_id, product.id, session.payment_intent, session.id, session.amount_total])
+      
+      // Grant access
+      await pool.query(`
+        INSERT INTO user_access (user_id, email, product_type, has_access, payment_status, purchased_at)
+        VALUES ($1, $2, $3, true, 'completed', NOW())
+        ON CONFLICT (user_id, product_type) 
+        DO UPDATE SET has_access = true, payment_status = 'completed', purchased_at = NOW()
+      `, [user_id, user_email, product_type])
+      
+      console.log('✅ Access granted via webhook for:', user_email, product_type)
+    }
+    
+    res.json({received: true})
+  } catch (err) {
+    console.error('Webhook error:', err.message)
+    res.status(400).send(`Webhook Error: ${err.message}`)
+  }
+})
+
 // Log usage
 app.post('/api/usage', async (req, res) => {
   try {
