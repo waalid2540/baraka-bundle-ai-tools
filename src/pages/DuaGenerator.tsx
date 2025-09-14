@@ -491,6 +491,18 @@ const DuaGenerator = () => {
                         <span>Get Lifetime Access - $2.99</span>
                       </div>
                     </button>
+                    
+                    {/* Already Purchased Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayment(true)}
+                      className="w-full bg-slate-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors border border-slate-600"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span>✅</span>
+                        <span>Already Purchased? Access Now</span>
+                      </div>
+                    </button>
 
                     {/* Features List */}
                     <div className="text-center text-sm text-gray-400">

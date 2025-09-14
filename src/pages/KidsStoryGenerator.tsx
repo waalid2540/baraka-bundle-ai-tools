@@ -406,12 +406,26 @@ const KidsStoryGenerator = () => {
                 </button>
               ) : (
                 /* User needs to pay */
-                <button
-                  onClick={() => setShowPayment(true)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  🚀 Get Unlimited Access - $2.99
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowPayment(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    🚀 Get Unlimited Access - $2.99
+                  </button>
+                  
+                  {/* Already Purchased Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPayment(true)}
+                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>✅</span>
+                      <span>Already Purchased? Access Now</span>
+                    </div>
+                  </button>
+                </div>
               )}
             </div>
           </div>
