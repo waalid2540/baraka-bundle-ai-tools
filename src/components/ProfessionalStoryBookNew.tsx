@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 interface StoryBookProps {
   title: string
@@ -69,63 +71,69 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
     return pages.length > 0 ? pages : [text]
   }, [])
 
-  // Create pages with proper audio timing (slower pacing)
+  // Create pages with SIMPLE, PREDICTABLE audio timing
   const createPages = useCallback((): PageData[] => {
     const storyPages = splitStoryIntoPages(story)
     const pages: PageData[] = []
     
-    // Much slower pacing - each page gets 15 seconds minimum
-    const baseTimePerPage = Math.max(15, audioDuration / (storyPages.length + 4))
+    // SIMPLE APPROACH: Equal time for all pages except cover gets extra time
+    const totalPages = storyPages.length + 4 // story + cover + moral + quran + parents
+    const timePerPage = audioDuration / totalPages
+    const coverTime = timePerPage * 1.5 // Cover gets 50% more time
+    
+    console.log(`🎵 Audio timing: ${audioDuration}s total, ${totalPages} pages, ${timePerPage.toFixed(1)}s per page`)
 
-    // Cover page (first 20 seconds or 15% of audio)
+    // Cover page
     pages.push({
       type: 'cover',
       content: { title, coverImage },
       audioStartTime: 0,
-      audioEndTime: Math.max(20, audioDuration * 0.15)
+      audioEndTime: coverTime
     })
 
-    // Story pages (60% of audio, much slower)
-    let currentStartTime = Math.max(20, audioDuration * 0.15)
+    // Story pages - equal time distribution
+    let currentTime = coverTime
     storyPages.forEach((pageText, index) => {
-      const endTime = currentStartTime + baseTimePerPage
+      const startTime = currentTime
+      const endTime = currentTime + timePerPage
       
       pages.push({
         type: 'story',
         content: { text: pageText },
         illustration: sceneIllustrations[index % sceneIllustrations.length],
-        audioStartTime: currentStartTime,
-        audioEndTime: Math.min(endTime, audioDuration * 0.75)
+        audioStartTime: startTime,
+        audioEndTime: endTime
       })
       
-      currentStartTime = endTime
+      currentTime = endTime
+      console.log(`📖 Story page ${index + 1}: ${startTime.toFixed(1)}s - ${endTime.toFixed(1)}s`)
     })
 
-    // Special pages (last 25% of audio)
-    const specialStartTime = audioDuration * 0.75
-    const specialTimePerPage = (audioDuration * 0.25) / 3
-
+    // Special pages
     pages.push({
       type: 'moral',
       content: { moralLesson },
-      audioStartTime: specialStartTime,
-      audioEndTime: specialStartTime + specialTimePerPage
+      audioStartTime: currentTime,
+      audioEndTime: currentTime + timePerPage
     })
+    currentTime += timePerPage
 
     pages.push({
       type: 'quran',
       content: { quranReference, arabicVerse, verseTranslation },
-      audioStartTime: specialStartTime + specialTimePerPage,
-      audioEndTime: specialStartTime + (specialTimePerPage * 2)
+      audioStartTime: currentTime,
+      audioEndTime: currentTime + timePerPage
     })
+    currentTime += timePerPage
 
     pages.push({
       type: 'parents',
       content: { parentNotes },
-      audioStartTime: specialStartTime + (specialTimePerPage * 2),
+      audioStartTime: currentTime,
       audioEndTime: audioDuration
     })
 
+    console.log(`🎵 Created ${pages.length} pages with simple timing`)
     return pages
   }, [story, title, coverImage, moralLesson, quranReference, arabicVerse, verseTranslation, parentNotes, sceneIllustrations, audioDuration, splitStoryIntoPages])
 
@@ -224,6 +232,121 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const exportToPDF = async () => {
+    const pdf = new jsPDF()
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    
+    // Cover page
+    pdf.setFontSize(24)
+    pdf.setTextColor(0, 120, 0)
+    
+    // Split long titles into multiple lines
+    const titleLines = pdf.splitTextToSize(title, pageWidth - 40)
+    let yPosition = 40
+    
+    titleLines.forEach((line: string) => {
+      pdf.text(line, pageWidth / 2, yPosition, { align: 'center' })
+      yPosition += 10
+    })
+    
+    pdf.setFontSize(16)
+    pdf.setTextColor(0, 0, 0)
+    pdf.text('An Islamic Story for Children', pageWidth / 2, yPosition + 20, { align: 'center' })
+    
+    // Story pages
+    const storyPages = splitStoryIntoPages(story)
+    storyPages.forEach((pageText, index) => {
+      pdf.addPage()
+      pdf.setFontSize(16)
+      pdf.setTextColor(0, 0, 0)
+      
+      // Page header
+      pdf.setFontSize(12)
+      pdf.text(`Page ${index + 1}`, pageWidth / 2, 20, { align: 'center' })
+      
+      // Story text
+      pdf.setFontSize(14)
+      const textLines = pdf.splitTextToSize(pageText, pageWidth - 40)
+      let textY = 40
+      
+      textLines.forEach((line: string) => {
+        if (textY > pageHeight - 40) {
+          pdf.addPage()
+          textY = 40
+        }
+        pdf.text(line, 20, textY)
+        textY += 8
+      })
+    })
+    
+    // Moral lesson page
+    pdf.addPage()
+    pdf.setFontSize(20)
+    pdf.setTextColor(180, 100, 0)
+    pdf.text('Moral Lesson', pageWidth / 2, 40, { align: 'center' })
+    
+    pdf.setFontSize(14)
+    pdf.setTextColor(0, 0, 0)
+    const moralLines = pdf.splitTextToSize(moralLesson, pageWidth - 40)
+    let moralY = 60
+    moralLines.forEach((line: string) => {
+      pdf.text(line, 20, moralY)
+      moralY += 8
+    })
+    
+    // Quran page
+    pdf.addPage()
+    pdf.setFontSize(20)
+    pdf.setTextColor(0, 120, 0)
+    pdf.text('From the Holy Quran', pageWidth / 2, 40, { align: 'center' })
+    
+    pdf.setFontSize(12)
+    pdf.setTextColor(80, 80, 80)
+    pdf.text(quranReference, pageWidth / 2, 60, { align: 'center' })
+    
+    if (arabicVerse) {
+      pdf.setFontSize(16)
+      pdf.setTextColor(0, 0, 0)
+      const arabicLines = pdf.splitTextToSize(arabicVerse, pageWidth - 40)
+      let arabicY = 80
+      arabicLines.forEach((line: string) => {
+        pdf.text(line, pageWidth / 2, arabicY, { align: 'center' })
+        arabicY += 10
+      })
+    }
+    
+    pdf.setFontSize(14)
+    pdf.setTextColor(0, 0, 0)
+    const translationLines = pdf.splitTextToSize(`"${verseTranslation}"`, pageWidth - 40)
+    let translationY = arabicVerse ? 120 : 80
+    translationLines.forEach((line: string) => {
+      pdf.text(line, 20, translationY)
+      translationY += 8
+    })
+    
+    // Parents page
+    pdf.addPage()
+    pdf.setFontSize(20)
+    pdf.setTextColor(120, 0, 120)
+    pdf.text('For Parents', pageWidth / 2, 40, { align: 'center' })
+    
+    pdf.setFontSize(14)
+    pdf.setTextColor(0, 0, 0)
+    const parentLines = pdf.splitTextToSize(parentNotes, pageWidth - 40)
+    let parentY = 60
+    parentLines.forEach((line: string) => {
+      pdf.text(line, 20, parentY)
+      parentY += 8
+    })
+    
+    // Save the PDF
+    const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_story.pdf`
+    pdf.save(fileName)
+    
+    console.log(`📄 PDF exported: ${fileName}`)
   }
 
   const renderPage = (page: PageData) => {
@@ -375,11 +498,11 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
       </div>
 
       {/* Controls */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-3">
         <button
           onClick={prevPage}
           disabled={currentPage === 0}
-          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-6 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium"
+          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-4 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium text-sm"
         >
           ← Previous
         </button>
@@ -387,16 +510,23 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
         {audioUrl && (
           <button
             onClick={togglePlayPause}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center gap-2 shadow-xl font-medium"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-4 rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center gap-2 shadow-xl font-medium"
           >
-            {isPlaying ? '⏸️ Pause Story' : '▶️ Read Aloud'}
+            {isPlaying ? '⏸️ Pause' : '▶️ Read Aloud'}
           </button>
         )}
 
         <button
+          onClick={exportToPDF}
+          className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-full hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-lg font-medium text-sm"
+        >
+          📄 PDF
+        </button>
+
+        <button
           onClick={nextPage}
           disabled={currentPage === allPages.length - 1}
-          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-6 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium"
+          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-4 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium text-sm"
         >
           Next →
         </button>
