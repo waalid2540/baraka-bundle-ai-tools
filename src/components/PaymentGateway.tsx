@@ -67,7 +67,37 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
       console.log('💰 Loaded product pricing:', { productType, product })
     } catch (error) {
       console.error('Failed to load product:', error)
-      setProduct(null)
+      
+      // Fallback to hard-coded pricing if API fails
+      const fallbackProducts = {
+        'dua_generator': {
+          id: 1,
+          name: "Du'a Generator",
+          description: "Generate beautiful Islamic du'as with Arabic text and translations",
+          price_cents: 299,
+          stripe_price_id: "price_1S6pOZF5UL32ywGmg9RM5AqQ",
+          product_type: "dua_generator"
+        },
+        'story_generator': {
+          id: 2,
+          name: "Kids Story Generator", 
+          description: "Create Islamic stories for children with illustrations and audio",
+          price_cents: 299,
+          stripe_price_id: "price_1S6yrmF5UL32ywGmrEea8Xfq",
+          product_type: "story_generator"
+        },
+        'poster_generator': {
+          id: 3,
+          name: "Name Poster Generator",
+          description: "Generate beautiful Islamic calligraphy posters with names", 
+          price_cents: 399,
+          stripe_price_id: null,
+          product_type: "poster_generator"
+        }
+      }
+      
+      setProduct(fallbackProducts[productType] || null)
+      console.log('🔄 Using fallback pricing for:', productType)
     }
   }
 
