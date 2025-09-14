@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
-// @ts-ignore
-import bidi from 'bidi-js'
 
 interface StoryBookProps {
   title: string
@@ -236,185 +234,124 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Helper function to create a canvas with Arabic text rendered properly
-  const createArabicTextCanvas = async (text: string, fontSize: number, maxWidth: number, color: string = '#000000'): Promise<string> => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')!
-    
-    // Set canvas size
-    canvas.width = maxWidth * 2 // High DPI
-    canvas.height = 200 * 2 // High DPI
-    
-    // Configure context for high DPI
-    ctx.scale(2, 2)
-    ctx.font = `${fontSize}px 'Amiri', Arial, sans-serif`
-    ctx.fillStyle = color
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    
-    // Process Arabic text with proper shaping
-    let processedText = text
-    try {
-      if (/[\u0600-\u06FF]/.test(text)) {
-        processedText = bidi(text, { dir: 'rtl' })
-      }
-    } catch (e) {
-      console.log('Bidi processing failed, using original text')
-    }
-    
-    // Draw text
-    const lines = processedText.split('\n')
-    const lineHeight = fontSize * 1.2
-    const startY = (canvas.height / 2) - ((lines.length - 1) * lineHeight) / 2
-    
-    lines.forEach((line, index) => {
-      ctx.fillText(line, maxWidth / 2, startY + (index * lineHeight))
-    })
-    
-    return canvas.toDataURL('image/png')
-  }
 
-  const exportToPDF = async () => {
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pageWidth = pdf.internal.pageSize.getWidth()
-    const pageHeight = pdf.internal.pageSize.getHeight()
-    
-    // Helper function to check if text contains Arabic characters
-    const hasArabicText = (text: string): boolean => {
-      return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text)
-    }
-    
-    // Helper function to add text or image for Arabic
-    const addTextToPDF = async (text: string, x: number, y: number, options: any = {}) => {
-      if (hasArabicText(text)) {
-        // For Arabic text, create an image and add it to PDF
-        const imageData = await createArabicTextCanvas(
-          text, 
-          options.fontSize || 14, 
-          (options.maxWidth || pageWidth - 40) * 3.78, // Convert mm to pixels
-          options.color || '#000000'
-        )
+  const exportToPDF = () => {
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      
+      // Cover page
+      pdf.setFontSize(24)
+      pdf.setTextColor(0, 120, 0)
+      
+      // Split long titles into multiple lines
+      const titleLines = pdf.splitTextToSize(title, pageWidth - 40)
+      let yPosition = 40
+      
+      titleLines.forEach((line: string) => {
+        pdf.text(line, pageWidth / 2, yPosition, { align: 'center' })
+        yPosition += 10
+      })
+      
+      pdf.setFontSize(16)
+      pdf.setTextColor(0, 0, 0)
+      pdf.text('An Islamic Story for Children', pageWidth / 2, yPosition + 20, { align: 'center' })
+      
+      // Story pages
+      const storyPages = splitStoryIntoPages(story)
+      storyPages.forEach((pageText, index) => {
+        pdf.addPage()
+        pdf.setFontSize(16)
+        pdf.setTextColor(0, 0, 0)
         
-        const imgWidth = options.maxWidth || (pageWidth - 40)
-        const imgHeight = (options.fontSize || 14) * 1.5
+        // Page header
+        pdf.setFontSize(12)
+        pdf.text(`Page ${index + 1}`, pageWidth / 2, 20, { align: 'center' })
         
-        if (options.align === 'center') {
-          pdf.addImage(imageData, 'PNG', (pageWidth - imgWidth) / 2, y - imgHeight / 2, imgWidth, imgHeight)
-        } else {
-          pdf.addImage(imageData, 'PNG', x, y - imgHeight / 2, imgWidth, imgHeight)
-        }
+        // Story text
+        pdf.setFontSize(14)
+        const textLines = pdf.splitTextToSize(pageText, pageWidth - 40)
+        let textY = 40
         
-        return y + imgHeight + 5
-      } else {
-        // For English text, use normal PDF text
-        pdf.setFontSize(options.fontSize || 14)
-        pdf.setTextColor(options.color || '#000000')
-        
-        const lines = pdf.splitTextToSize(text, options.maxWidth || (pageWidth - 40))
-        let currentY = y
-        
-        lines.forEach((line: string) => {
-          if (options.align === 'center') {
-            pdf.text(line, pageWidth / 2, currentY, { align: 'center' })
-          } else {
-            pdf.text(line, x, currentY)
+        textLines.forEach((line: string) => {
+          if (textY > pageHeight - 40) {
+            pdf.addPage()
+            textY = 40
           }
-          currentY += (options.fontSize || 14) * 0.3 + 5
+          pdf.text(line, 20, textY)
+          textY += 8
         })
-        
-        return currentY
-      }
-    }
-    
-    // Cover page
-    pdf.setFontSize(24)
-    pdf.setTextColor(0, 120, 0)
-    let currentY = await addTextToPDF(title, 20, 50, { 
-      fontSize: 24, 
-      align: 'center', 
-      maxWidth: pageWidth - 40,
-      color: '#006600'
-    })
-    
-    pdf.setFontSize(16)
-    pdf.setTextColor(0, 0, 0)
-    pdf.text('An Islamic Story for Children', pageWidth / 2, currentY + 20, { align: 'center' })
-    
-    // Story pages
-    const storyPages = splitStoryIntoPages(story)
-    for (let index = 0; index < storyPages.length; index++) {
+      })
+      
+      // Moral lesson page
       pdf.addPage()
+      pdf.setFontSize(20)
+      pdf.setTextColor(180, 100, 0)
+      pdf.text('Moral Lesson', pageWidth / 2, 40, { align: 'center' })
       
-      // Page header
+      pdf.setFontSize(14)
+      pdf.setTextColor(0, 0, 0)
+      const moralLines = pdf.splitTextToSize(moralLesson, pageWidth - 40)
+      let moralY = 60
+      moralLines.forEach((line: string) => {
+        pdf.text(line, 20, moralY)
+        moralY += 8
+      })
+      
+      // Quran page
+      pdf.addPage()
+      pdf.setFontSize(20)
+      pdf.setTextColor(0, 120, 0)
+      pdf.text('From the Holy Quran', pageWidth / 2, 40, { align: 'center' })
+      
       pdf.setFontSize(12)
-      pdf.setTextColor(100, 100, 100)
-      pdf.text(`Page ${index + 1}`, pageWidth / 2, 20, { align: 'center' })
+      pdf.setTextColor(80, 80, 80)
+      pdf.text(quranReference, pageWidth / 2, 60, { align: 'center' })
       
-      // Story text
-      await addTextToPDF(storyPages[index], 20, 40, { 
-        fontSize: 14, 
-        maxWidth: pageWidth - 40 
-      })
-    }
-    
-    // Moral lesson page
-    pdf.addPage()
-    pdf.setFontSize(20)
-    pdf.setTextColor(180, 100, 0)
-    pdf.text('Moral Lesson', pageWidth / 2, 40, { align: 'center' })
-    
-    await addTextToPDF(moralLesson, 20, 60, { 
-      fontSize: 14, 
-      maxWidth: pageWidth - 40 
-    })
-    
-    // Quran page
-    pdf.addPage()
-    pdf.setFontSize(20)
-    pdf.setTextColor(0, 120, 0)
-    pdf.text('From the Holy Quran', pageWidth / 2, 40, { align: 'center' })
-    
-    pdf.setFontSize(12)
-    pdf.setTextColor(80, 80, 80)
-    pdf.text(quranReference, pageWidth / 2, 60, { align: 'center' })
-    
-    if (arabicVerse && arabicVerse.trim()) {
-      // Arabic Quranic verse
-      const finalY = await addTextToPDF(arabicVerse, 20, 90, { 
-        fontSize: 18, 
-        align: 'center', 
-        maxWidth: pageWidth - 60,
-        color: '#006600'
+      // For Arabic verse, we'll display a note
+      if (arabicVerse && arabicVerse.trim()) {
+        pdf.setFontSize(14)
+        pdf.setTextColor(0, 100, 0)
+        pdf.text('[Arabic Verse]', pageWidth / 2, 80, { align: 'center' })
+        pdf.setFontSize(12)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text('(Arabic text preserved in digital format)', pageWidth / 2, 90, { align: 'center' })
+      }
+      
+      pdf.setFontSize(14)
+      pdf.setTextColor(0, 0, 0)
+      const translationLines = pdf.splitTextToSize(`"${verseTranslation}"`, pageWidth - 40)
+      let translationY = arabicVerse ? 110 : 80
+      translationLines.forEach((line: string) => {
+        pdf.text(line, 20, translationY)
+        translationY += 8
       })
       
-      // Translation below Arabic
-      await addTextToPDF(`"${verseTranslation}"`, 20, finalY + 20, { 
-        fontSize: 14, 
-        maxWidth: pageWidth - 40 
+      // Parents page
+      pdf.addPage()
+      pdf.setFontSize(20)
+      pdf.setTextColor(120, 0, 120)
+      pdf.text('For Parents', pageWidth / 2, 40, { align: 'center' })
+      
+      pdf.setFontSize(14)
+      pdf.setTextColor(0, 0, 0)
+      const parentLines = pdf.splitTextToSize(parentNotes, pageWidth - 40)
+      let parentY = 60
+      parentLines.forEach((line: string) => {
+        pdf.text(line, 20, parentY)
+        parentY += 8
       })
-    } else {
-      await addTextToPDF(`"${verseTranslation}"`, 20, 85, { 
-        fontSize: 14, 
-        maxWidth: pageWidth - 40 
-      })
+      
+      // Save the PDF
+      const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_story.pdf`
+      pdf.save(fileName)
+      
+      console.log(`📄 PDF exported: ${fileName}`)
+    } catch (error) {
+      console.error('PDF export error:', error)
+      alert('Failed to export PDF. Please try again.')
     }
-    
-    // Parents page
-    pdf.addPage()
-    pdf.setFontSize(20)
-    pdf.setTextColor(120, 0, 120)
-    pdf.text('For Parents', pageWidth / 2, 40, { align: 'center' })
-    
-    await addTextToPDF(parentNotes, 20, 60, { 
-      fontSize: 14, 
-      maxWidth: pageWidth - 40 
-    })
-    
-    // Save the PDF
-    const fileName = `${title.replace(/[^a-z0-9\u0600-\u06FF]/gi, '_').toLowerCase()}_story.pdf`
-    pdf.save(fileName)
-    
-    console.log(`📄 PDF exported with proper Arabic rendering: ${fileName}`)
   }
 
   const renderPage = (page: PageData) => {
