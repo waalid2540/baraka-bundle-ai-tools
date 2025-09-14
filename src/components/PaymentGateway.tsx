@@ -33,6 +33,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   // Check if user already has access
   useEffect(() => {
     if (isOpen) {
+      console.log('🔍 PaymentGateway opened for:', productType)
       checkAccess()
       loadProduct()
     }
@@ -96,8 +97,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
         }
       }
       
-      setProduct(fallbackProducts[productType] || null)
-      console.log('🔄 Using fallback pricing for:', productType)
+      const fallbackProduct = fallbackProducts[productType] || null
+      setProduct(fallbackProduct)
+      console.log('🔄 Using fallback pricing for:', productType, fallbackProduct)
+      console.log('🔄 Setting product to:', fallbackProduct)
     }
   }
 
