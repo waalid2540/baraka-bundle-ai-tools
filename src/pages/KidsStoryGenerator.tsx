@@ -75,7 +75,7 @@ const KidsStoryGenerator = () => {
     try {
       setCheckingAccess(true)
       
-      // Get user email from localStorage or prompt
+      // Get user email from localStorage
       const storedEmail = localStorage.getItem('user_email')
       
       if (!storedEmail) {
@@ -85,14 +85,31 @@ const KidsStoryGenerator = () => {
         return
       }
 
-      // Check if user exists and has access
-      const user = await databaseService.getUserByEmail(storedEmail)
-      if (user) {
-        const access = await databaseService.checkUserAccess(user.id, 'story_generator')
-        setHasAccess(access)
-      } else {
+      // Check access via API endpoint (same as DuaGenerator)
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+        : '/api'
+        
+      const response = await fetch(`${apiUrl}/access/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: storedEmail, 
+          product_type: 'story_generator' 
+        })
+      })
+
+      if (!response.ok) {
+        console.error('Access check failed:', response.status)
         setHasAccess(false)
+        setCheckingAccess(false)
+        return
       }
+
+      const { has_access } = await response.json()
+      setHasAccess(has_access)
+      
+      console.log('📖 Kids Story access check:', { email: storedEmail, has_access })
     } catch (error) {
       console.error('Access check error:', error)
       setHasAccess(false)
@@ -523,8 +540,9 @@ const KidsStoryGenerator = () => {
       {showPayment && (
         <PaymentGateway
           productType="story_generator"
+          isOpen={true}
           onClose={() => setShowPayment(false)}
-          onSuccess={() => {
+          onPaymentSuccess={() => {
             setShowPayment(false)
             checkAccess() // Recheck access after payment
           }}
