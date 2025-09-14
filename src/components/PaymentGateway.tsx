@@ -49,10 +49,25 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 
   const loadProduct = async () => {
     try {
-      const products = await stripeService.getProductPricing()
-      setProduct(products[productType] || null)
+      // Directly fetch from API instead of using stripeService
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+        : '/api'
+        
+      const response = await fetch(`${apiUrl}/products`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch products')
+      }
+      
+      const products = await response.json()
+      const product = products.find(p => p.product_type === productType)
+      setProduct(product || null)
+      
+      console.log('💰 Loaded product pricing:', { productType, product })
     } catch (error) {
       console.error('Failed to load product:', error)
+      setProduct(null)
     }
   }
 
@@ -146,6 +161,14 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     }
   }
 
+  // Helper function to format price
+  const formatPrice = (priceInCents: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(priceInCents / 100)
+  }
+
   if (!isOpen) return null
 
   return (
@@ -167,7 +190,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
             </button>
           </div>
           {product && (
-            <p className="text-lg mt-2">{stripeService.formatPrice(product.price_cents)}</p>
+            <p className="text-lg mt-2">{formatPrice(product.price_cents)}</p>
           )}
         </div>
 
@@ -268,7 +291,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                   ) : (
                     <div className="flex items-center">
                       <span className="mr-2">💳</span>
-                      Pay {product ? stripeService.formatPrice(product.price_cents) : '...'} - Get Lifetime Access
+                      Pay {product ? formatPrice(product.price_cents) : '...'} - Get Lifetime Access
                     </div>
                   )}
                 </button>
