@@ -34,11 +34,46 @@ const DuaGenerator = () => {
     try {
       setCheckingAccess(true)
       
-      // Start with no access - payment modal will handle email checking
-      setHasAccess(false)
+      // Check if user email is stored in localStorage
+      const storedEmail = localStorage.getItem('user_email')
+      
+      if (!storedEmail) {
+        // No stored email, user needs to enter email or pay
+        setHasAccess(false)
+        setCheckingAccess(false)
+        return
+      }
+
+      // Check access by email using the API
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+        : '/api'
+        
+      const response = await fetch(`${apiUrl}/access/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: storedEmail, 
+          product_type: 'dua_generator' 
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setHasAccess(data.has_access)
+        if (data.has_access) {
+          console.log('✅ User has access:', storedEmail)
+        } else {
+          console.log('❌ User needs to purchase access:', storedEmail)
+        }
+      } else {
+        console.error('Access check failed:', response.status)
+        setHasAccess(false)
+      }
       
     } catch (error) {
       console.error('Failed to check user access:', error)
+      setHasAccess(false)
     } finally {
       setCheckingAccess(false)
     }
@@ -77,9 +112,15 @@ const DuaGenerator = () => {
     await generateDua()
   }
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (userEmail?: string) => {
     setShowPayment(false)
     setHasAccess(true)
+    
+    // Store email if provided for future access checks
+    if (userEmail) {
+      localStorage.setItem('user_email', userEmail)
+    }
+    
     // Don't call checkUserAccess() - we already know they have access
   }
 
@@ -89,7 +130,11 @@ const DuaGenerator = () => {
       setError('')
 
       // Check access by email directly
-      const response = await fetch('/api/access/check', {
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+        : '/api'
+        
+      const response = await fetch(`${apiUrl}/access/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -108,6 +153,8 @@ const DuaGenerator = () => {
       if (has_access) {
         setHasAccess(true)
         setError('')
+        // Store email for future access checks
+        localStorage.setItem('user_email', email)
         alert('✅ Access verified! You can now generate unlimited Du\'as.')
       } else {
         setError('❌ No purchase found for this email. Please check your email or purchase access.')
