@@ -229,7 +229,8 @@ app.post('/api/stripe/verify-payment', async (req, res) => {
     res.json({ 
       success: true, 
       product_type,
-      payment_intent_id: session.payment_intent 
+      payment_intent_id: session.payment_intent,
+      user_email 
     })
   } catch (error) {
     console.error('Error verifying payment:', error)

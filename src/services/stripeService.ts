@@ -98,7 +98,7 @@ class StripeService {
   }
 
   // Verify payment after successful checkout
-  async verifyPayment(sessionId: string): Promise<{ success: boolean; productType?: string; error?: string }> {
+  async verifyPayment(sessionId: string): Promise<{ success: boolean; productType?: string; userEmail?: string; error?: string }> {
     try {
       console.log('🔍 Verifying payment for session:', sessionId)
 
@@ -113,11 +113,11 @@ class StripeService {
         return { success: false, error: errorData.error || 'Payment verification failed' }
       }
 
-      const { product_type, payment_intent_id } = await response.json()
+      const { product_type, payment_intent_id, user_email } = await response.json()
       
       console.log('✅ Payment verified for product:', product_type)
       
-      return { success: true, productType: product_type }
+      return { success: true, productType: product_type, userEmail: user_email }
     } catch (error) {
       console.error('❌ Payment verification error:', error)
       return { success: false, error: 'Failed to verify payment' }

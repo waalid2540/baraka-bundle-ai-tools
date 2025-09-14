@@ -79,6 +79,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
       )
 
       if (result.success && result.session) {
+        // Store email before redirecting so user has seamless access after payment
+        localStorage.setItem('user_email', userEmail.trim())
+        console.log('✅ Stored email before redirect:', userEmail.trim())
+        
         // Redirect to Stripe Checkout
         stripeService.redirectToCheckout(result.session.url)
       } else {
@@ -103,7 +107,11 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
 
     try {
       // Check access by email directly
-      const response = await fetch('/api/access/check', {
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
+        : '/api'
+        
+      const response = await fetch(`${apiUrl}/access/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -120,6 +128,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
       const { has_access } = await response.json()
       
       if (has_access) {
+        // Store email for seamless access
+        localStorage.setItem('user_email', userEmail.trim())
+        console.log('✅ Stored email after access verification:', userEmail.trim())
+        
         setHasAccess(true)
         onPaymentSuccess()
         onClose()

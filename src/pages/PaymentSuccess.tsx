@@ -32,10 +32,20 @@ const PaymentSuccess = () => {
       const verification = await stripeService.verifyPayment(sessionId)
 
       if (verification.success) {
+        // Store email in localStorage for seamless access
+        if (verification.userEmail) {
+          localStorage.setItem('user_email', verification.userEmail)
+          console.log('✅ Stored user email for future access:', verification.userEmail)
+        }
+        
         // Handle successful payment
         await stripeService.handlePaymentSuccess(sessionId, product)
         setVerificationStatus('success')
       } else {
+        // Even on verification "error", store email if available for access
+        if (verification.userEmail) {
+          localStorage.setItem('user_email', verification.userEmail)
+        }
         setError(verification.error || 'Payment verification failed')
         setVerificationStatus('error')
       }
