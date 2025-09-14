@@ -350,38 +350,36 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
   }
 
   const renderPage = (page: PageData) => {
-    const baseClasses = "w-full h-full flex flex-col items-center justify-center p-8 text-center"
-    
     switch (page.type) {
       case 'cover':
         return (
-          <div className={`${baseClasses} bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50`}>
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 h-full flex flex-col items-center justify-center">
             {page.content.coverImage && (
-              <div className="w-80 h-56 mb-8 rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+              <div className="w-80 h-56 mb-8 rounded-xl overflow-hidden shadow-xl">
                 <img 
                   src={page.content.coverImage} 
-                  alt="Book Cover" 
+                  alt="Story Cover" 
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
-            <h1 className="text-4xl font-bold text-center text-emerald-800 mb-6 font-serif leading-tight max-w-2xl">
+            <h1 className="text-5xl font-bold text-emerald-800 mb-6 font-serif leading-tight">
               {page.content.title}
             </h1>
-            <div className="text-emerald-600 text-xl font-medium mb-4">
+            <div className="text-emerald-600 text-2xl font-medium mb-4">
               ✨ An Islamic Story for Children ✨
             </div>
-            <div className="text-emerald-700 text-sm">
-              📖 Listen and follow along
+            <div className="text-emerald-700 text-lg">
+              📖 Tap play to begin the narrated story
             </div>
           </div>
         )
 
       case 'story':
         return (
-          <div className={`${baseClasses} bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50`}>
+          <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-100 h-full">
             {page.illustration && (
-              <div className="w-96 h-64 mb-8 rounded-xl overflow-hidden shadow-xl border-3 border-white">
+              <div className="w-full max-w-2xl mx-auto h-80 mb-8 rounded-xl overflow-hidden shadow-lg">
                 <img 
                   src={page.illustration} 
                   alt="Story illustration" 
@@ -393,7 +391,7 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
                 />
               </div>
             )}
-            <div className="text-gray-800 text-xl leading-relaxed text-center max-w-2xl font-serif px-6">
+            <div className="text-gray-800 text-2xl leading-relaxed text-center font-serif max-w-4xl mx-auto">
               {page.content.text}
             </div>
           </div>
@@ -401,12 +399,12 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
 
       case 'moral':
         return (
-          <div className={`${baseClasses} bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50`}>
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 h-full flex flex-col items-center justify-center">
             <div className="text-8xl mb-8">🌟</div>
-            <h2 className="text-3xl font-bold text-amber-800 mb-8 text-center font-serif">
+            <h2 className="text-4xl font-bold text-amber-800 mb-8 font-serif">
               Moral Lesson
             </h2>
-            <div className="text-gray-800 text-xl leading-relaxed text-center max-w-2xl font-serif px-6">
+            <div className="text-gray-800 text-2xl leading-relaxed text-center max-w-3xl font-serif">
               {page.content.moralLesson}
             </div>
           </div>
@@ -414,20 +412,20 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
 
       case 'quran':
         return (
-          <div className={`${baseClasses} bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50`}>
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 h-full flex flex-col items-center justify-center">
             <div className="text-8xl mb-8">📖</div>
-            <h2 className="text-3xl font-bold text-emerald-800 mb-8 text-center font-serif">
+            <h2 className="text-4xl font-bold text-emerald-800 mb-8 font-serif">
               From the Holy Quran
             </h2>
-            <div className="text-emerald-700 text-lg font-medium mb-6 text-center">
+            <div className="text-emerald-700 text-xl font-medium mb-8">
               {page.content.quranReference}
             </div>
             {page.content.arabicVerse && (
-              <div className="text-3xl text-center mb-6 text-emerald-900 font-arabic leading-loose px-4">
+              <div className="text-4xl text-center mb-8 text-emerald-900 font-arabic leading-loose">
                 {page.content.arabicVerse}
               </div>
             )}
-            <div className="text-gray-700 text-xl leading-relaxed text-center max-w-2xl font-serif italic px-6">
+            <div className="text-gray-700 text-2xl leading-relaxed text-center max-w-3xl font-serif italic">
               "{page.content.verseTranslation}"
             </div>
           </div>
@@ -435,19 +433,23 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
 
       case 'parents':
         return (
-          <div className={`${baseClasses} bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50`}>
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 h-full flex flex-col items-center justify-center">
             <div className="text-8xl mb-8">👨‍👩‍👧‍👦</div>
-            <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center font-serif">
+            <h2 className="text-4xl font-bold text-purple-800 mb-8 font-serif">
               For Parents
             </h2>
-            <div className="text-gray-800 text-lg leading-relaxed text-center max-w-2xl font-serif px-6">
+            <div className="text-gray-800 text-xl leading-relaxed text-center max-w-3xl font-serif">
               {page.content.parentNotes}
             </div>
           </div>
         )
 
       default:
-        return <div className={baseClasses}>Page not found</div>
+        return (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 h-full flex flex-col items-center justify-center">
+            <div className="text-gray-500">Page not found</div>
+          </div>
+        )
     }
   }
 
@@ -463,73 +465,79 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-800 via-gray-800 to-slate-900 z-50 flex items-center justify-center p-4">
-      {/* Close Button */}
-      <button
-        onClick={onClose}
-        className="absolute top-6 right-6 bg-white bg-opacity-20 backdrop-blur-md text-white w-12 h-12 rounded-full hover:bg-opacity-30 transition-all duration-300 z-20 flex items-center justify-center text-xl font-bold"
-      >
-        ✕
-      </button>
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-100 via-white to-gray-50 z-50">
+      {/* Header with Controls */}
+      <div className="absolute top-0 left-0 right-0 bg-white border-b shadow-sm z-20 p-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-800 font-serif">{title}</h1>
+            <div className="text-sm text-gray-500">Page {currentPage + 1} of {allPages.length}</div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={prevPage}
+              disabled={currentPage === 0}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300 transition-all duration-300 flex items-center gap-2 text-sm"
+            >
+              ← Previous
+            </button>
 
-      {/* Story Book */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full aspect-[4/3] overflow-hidden">
-        {/* Page Content */}
-        <div className="w-full h-full transition-all duration-700 ease-in-out">
-          {allPages[currentPage] && renderPage(allPages[currentPage])}
+            {audioUrl && (
+              <button
+                onClick={togglePlayPause}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+              >
+                {isPlaying ? '⏸️ Pause Audio' : '▶️ Play Audio'}
+              </button>
+            )}
+
+            <button
+              onClick={exportToPDF}
+              className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-lg text-sm"
+            >
+              📄 Export PDF
+            </button>
+
+            <button
+              onClick={nextPage}
+              disabled={currentPage === allPages.length - 1}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300 transition-all duration-300 flex items-center gap-2 text-sm"
+            >
+              Next →
+            </button>
+
+            <button
+              onClick={onClose}
+              className="bg-red-500 text-white w-10 h-10 rounded-full hover:bg-red-600 transition-all duration-300 flex items-center justify-center font-bold"
+            >
+              ✕
+            </button>
+          </div>
         </div>
-
+        
         {/* Audio Progress Bar */}
         {audioUrl && (
-          <div className="absolute bottom-20 left-8 right-8 bg-black bg-opacity-20 rounded-full p-3">
-            <div className="bg-gray-300 h-3 rounded-full overflow-hidden mb-2">
+          <div className="mt-3 max-w-6xl mx-auto">
+            <div className="bg-gray-200 h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-emerald-500 to-teal-600 h-full rounded-full transition-all duration-300"
                 style={{ width: `${audioProgress * 100}%` }}
               />
             </div>
-            <div className="flex justify-between text-sm text-gray-700 px-2">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>{formatTime(currentTime)}</span>
-              <span>Page {currentPage + 1} of {allPages.length}</span>
               <span>{formatTime(audioDuration)}</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-3">
-        <button
-          onClick={prevPage}
-          disabled={currentPage === 0}
-          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-4 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium text-sm"
-        >
-          ← Previous
-        </button>
-
-        {audioUrl && (
-          <button
-            onClick={togglePlayPause}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-4 rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center gap-2 shadow-xl font-medium"
-          >
-            {isPlaying ? '⏸️ Pause' : '▶️ Read Aloud'}
-          </button>
-        )}
-
-        <button
-          onClick={exportToPDF}
-          className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-full hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-lg font-medium text-sm"
-        >
-          📄 PDF
-        </button>
-
-        <button
-          onClick={nextPage}
-          disabled={currentPage === allPages.length - 1}
-          className="bg-white bg-opacity-20 backdrop-blur-md text-white px-4 py-3 rounded-full disabled:opacity-50 hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2 font-medium text-sm"
-        >
-          Next →
-        </button>
+      {/* Story Content */}
+      <div className="pt-24 pb-8 px-8 h-full overflow-auto">
+        <div className="max-w-4xl mx-auto h-full">
+          {allPages[currentPage] && renderPage(allPages[currentPage])}
+        </div>
       </div>
 
       {/* Audio Element */}
