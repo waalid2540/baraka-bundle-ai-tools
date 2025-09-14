@@ -12,6 +12,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^2.0.0",
     "axios": "^1.11.0",
+    "bidi-js": "^1.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
