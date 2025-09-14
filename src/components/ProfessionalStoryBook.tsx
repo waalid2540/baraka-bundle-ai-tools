@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
-import './StoryBook.css'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 interface StoryBookProps {
   title: string
@@ -15,6 +14,14 @@ interface StoryBookProps {
   onClose: () => void
 }
 
+interface PageData {
+  type: 'cover' | 'story' | 'moral' | 'quran' | 'parents' | 'end'
+  content: any
+  illustration?: string
+  audioStartTime?: number
+  audioEndTime?: number
+}
+
 const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
   title,
   story,
@@ -28,64 +35,110 @@ const ProfessionalStoryBook: React.FC<StoryBookProps> = ({
   coverImage,
   onClose
 }) => {
-  const [currentPage, setCurrentPage] = useState(-1) // Start with closed book
+  const [currentPage, setCurrentPage] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [bookState, setBookState] = useState<'closed' | 'opening' | 'open'>('closed')
+  const [audioProgress, setAudioProgress] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [showStoryBook, setShowStoryBook] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [progress, setProgress] = useState(0)
 
-  // Split story into pages - MUST match dalleService page count exactly
-  const splitIntoPages = (text: string, wordsPerPage: number = 80): string[] => {
-    const words = text.split(' ')
+  // Split story into pages with better pacing and shorter pages
+  const splitStoryIntoPages = useCallback((text: string, wordsPerPage: number = 50): string[] => {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim())
     const pages: string[] = []
-    
-    for (let i = 0; i < words.length; i += wordsPerPage) {
-      const pageText = words.slice(i, Math.min(i + wordsPerPage, words.length)).join(' ')
-      if (pageText.trim()) {
-        pages.push(pageText.trim())
+    let currentPageText = ''
+    let wordCount = 0
+
+    for (const sentence of sentences) {
+      const words = sentence.trim().split(' ')
+      if (wordCount + words.length > wordsPerPage && currentPageText) {
+        pages.push(currentPageText.trim() + '.')
+        currentPageText = sentence.trim()
+        wordCount = words.length
+      } else {
+        currentPageText += (currentPageText ? '. ' : '') + sentence.trim()
+        wordCount += words.length
       }
     }
-    
-    return pages.length > 0 ? pages : [text] // Ensure at least one page
-  }
 
-  const storyPages = splitIntoPages(story)
-  
-  // Build all pages array
-  const allPages: { type: string; content: any }[] = [
-    { type: 'cover', content: { title, coverImage } },
-    ...storyPages.map((text, index) => ({
-      type: 'story',
-      content: {
-        text,
-        illustration: sceneIllustrations?.[index] || null,
-        pageNumber: index + 1,
-        totalPages: storyPages.length
-      }
-    })),
-    { type: 'moral', content: { moralLesson } },
-    { type: 'quran', content: { quranReference, arabicVerse, verseTranslation } },
-    { type: 'parents', content: { parentNotes } },
-    { type: 'end', content: { title } }
-  ]
+    if (currentPageText) {
+      pages.push(currentPageText.trim() + '.')
+    }
 
-  // Open book animation on mount
+    return pages.length > 0 ? pages : [text]
+  }, [])
+
+  // Create pages with proper audio timing
+  const createPages = useCallback((): PageData[] => {
+    const storyPages = splitStoryIntoPages(story)
+    const pages: PageData[] = []
+    const totalStoryTime = audioDuration * 0.7 // 70% for story
+    const timePerPage = totalStoryTime / (storyPages.length || 1)
+
+    // Cover page (0-10% of audio)
+    pages.push({
+      type: 'cover',
+      content: { title, coverImage },
+      audioStartTime: 0,
+      audioEndTime: audioDuration * 0.1
+    })
+
+    // Story pages (10-80% of audio) with slower pacing
+    storyPages.forEach((pageText, index) => {
+      const startTime = audioDuration * 0.1 + (index * timePerPage * 1.2) // 20% slower
+      const endTime = startTime + (timePerPage * 1.2)
+      
+      pages.push({
+        type: 'story',
+        content: { text: pageText },
+        illustration: sceneIllustrations[index % sceneIllustrations.length],
+        audioStartTime: startTime,
+        audioEndTime: Math.min(endTime, audioDuration * 0.8)
+      })
+    })
+
+    // Moral lesson page (80-85% of audio)
+    pages.push({
+      type: 'moral',
+      content: { moralLesson },
+      audioStartTime: audioDuration * 0.8,
+      audioEndTime: audioDuration * 0.85
+    })
+
+    // Quran reference page (85-95% of audio)
+    pages.push({
+      type: 'quran',
+      content: { quranReference, arabicVerse, verseTranslation },
+      audioStartTime: audioDuration * 0.85,
+      audioEndTime: audioDuration * 0.95
+    })
+
+    // Parent notes page (95-100% of audio)
+    pages.push({
+      type: 'parents',
+      content: { parentNotes },
+      audioStartTime: audioDuration * 0.95,
+      audioEndTime: audioDuration
+    })
+
+    return pages
+  }, [story, title, coverImage, moralLesson, quranReference, arabicVerse, verseTranslation, parentNotes, sceneIllustrations, audioDuration, splitStoryIntoPages])
+
+  const allPages = createPages()
+
+  // Show story book with fade-in effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      setBookState('opening')
-      setTimeout(() => {
-        setBookState('open')
-        setCurrentPage(0)
-        // Auto-start audio if available
-        if (audioUrl && audioRef.current) {
-          setTimeout(() => {
-            audioRef.current?.play()
-            setIsPlaying(true)
-          }, 1000)
-        }
-      }, 800)
+      setShowStoryBook(true)
+      // Auto-start audio if available
+      if (audioUrl && audioRef.current) {
+        setTimeout(() => {
+          audioRef.current?.play()
+          setIsPlaying(true)
+        }, 1000)
+      }
     }, 500)
-    
     return () => clearTimeout(timer)
   }, [audioUrl])
 

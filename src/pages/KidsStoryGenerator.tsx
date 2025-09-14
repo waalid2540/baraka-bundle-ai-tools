@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { openaiService } from '../services/openaiService'
 import { dalleService } from '../services/dalleService'
 import { databaseService } from '../services/databaseService'
-import EnhancedStoryBook from '../components/EnhancedStoryBook'
+import ProfessionalStoryBook from '../components/ProfessionalStoryBookNew'
 import PaymentGateway from '../components/PaymentGateway'
 
 interface StoryResult {
@@ -519,9 +519,9 @@ const KidsStoryGenerator = () => {
         </div>
       </main>
 
-      {/* Enhanced Storybook Modal */}
+      {/* Professional Storybook Modal */}
       {showStoryBook && result && (
-        <EnhancedStoryBook
+        <ProfessionalStoryBook
           title={result.title}
           story={result.story}
           moralLesson={result.moralLesson}
