@@ -263,7 +263,44 @@ const KidsStoryGenerator = () => {
               Create Your Story
             </h3>
             
-            <div className="space-y-6">
+            {/* Show payment required if no access */}
+            {!checkingAccess && !hasAccess ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-6">🔒</div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                  Unlock Kids Story Generator
+                </h3>
+                <p className="text-gray-600 mb-8">
+                  Get unlimited access to create personalized Islamic stories for children
+                </p>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowPayment(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    🚀 Get Unlimited Access - $2.99
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShowPayment(true)}
+                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>✅</span>
+                      <span>Already Purchased? Access Now</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ) : checkingAccess ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-islamic-green-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Checking access...</p>
+              </div>
+            ) : (
+              /* User has access - show form */
+              <div className="space-y-6">
               {/* Story Mode Selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -393,65 +430,34 @@ const KidsStoryGenerator = () => {
                 </select>
               </div>
 
-              {/* Generate Button */}
-              {checkingAccess ? (
-                /* Loading state while checking access */
-                <button disabled className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Checking access...</span>
-                  </div>
-                </button>
-              ) : hasAccess ? (
-                /* User has access - show generate button */
-                <button
-                  onClick={generateStory}
-                  disabled={isLoading || (storyMode === 'preset' && !name.trim()) || (storyMode === 'custom' && !customPrompt.trim())}
-                  className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating Story...
-                    </span>
-                  ) : (
-                    '📚 Generate Story'
-                  )}
-                </button>
-              ) : (
-                /* User needs to pay */
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setShowPayment(true)}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    🚀 Get Unlimited Access - $2.99
-                  </button>
-                  
-                  {/* Already Purchased Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowPayment(true)}
-                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>✅</span>
-                      <span>Already Purchased? Access Now</span>
-                    </div>
-                  </button>
-                </div>
-              )}
+              {/* Generate Button - Only show when user has access */}
+              <button
+                onClick={generateStory}
+                disabled={isLoading || (storyMode === 'preset' && !name.trim()) || (storyMode === 'custom' && !customPrompt.trim())}
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Story...
+                  </span>
+                ) : (
+                  '📚 Generate Story'
+                )}
+              </button>
             </div>
+            )}  {/* Close the access check conditional */}
           </div>
 
-          {/* Results */}
-          <div className="card">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">
-              Generated Story
-            </h3>
+          {/* Results - Only show for users with access */}
+          {hasAccess && (
+            <div className="card">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                Generated Story
+              </h3>
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -516,6 +522,7 @@ const KidsStoryGenerator = () => {
               </div>
             )}
           </div>
+          )}  {/* Close the hasAccess check for results */}
         </div>
       </main>
 
