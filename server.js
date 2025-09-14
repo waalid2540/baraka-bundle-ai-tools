@@ -140,24 +140,12 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
     
     const product = productResult.rows[0]
     
-    // Get Stripe Price ID from environment variables
-    let stripePriceId
-    switch (product_type) {
-      case 'dua_generator':
-        stripePriceId = process.env.STRIPE_DUA_PRICE_ID
-        break
-      case 'story_generator':
-        stripePriceId = process.env.STRIPE_STORY_PRICE_ID
-        break
-      case 'poster_generator':
-        stripePriceId = process.env.STRIPE_POSTER_PRICE_ID
-        break
-      default:
-        return res.status(400).json({ error: 'Invalid product type' })
-    }
+    // Get Stripe Price ID from database
+    const stripePriceId = product.stripe_price_id
     
     if (!stripePriceId) {
-      console.error(`❌ Missing Stripe Price ID for ${product_type}`)
+      console.error(`❌ Missing Stripe Price ID in database for ${product_type}`)
+      console.error('Product data:', product)
       return res.status(500).json({ error: 'Product pricing not configured' })
     }
     
