@@ -8,11 +8,19 @@ const stripe = require('stripe')
 const path = require('path')
 require('dotenv').config()
 
+// OpenAI import for backend-only API calls
+const { OpenAI } = require('openai')
+
 const app = express()
 const PORT = process.env.PORT || 3001
 
 // Initialize Stripe
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY)
+
+// Initialize OpenAI (backend only - secure)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // Use backend env var without REACT_APP prefix
+})
 
 // Initialize PostgreSQL connection
 const connectionString = process.env.DATABASE_URL || 'postgresql://waalid_legacy_db_user:dD5PV96lz21Zuh9Kd03lUuds15iZZbKt@dpg-d2rtj5m3jp1c738k0t20-a.oregon-postgres.render.com/waalid_legacy_db?sslmode=require'
