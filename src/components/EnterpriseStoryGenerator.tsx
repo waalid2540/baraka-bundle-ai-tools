@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { openaiService } from '../services/openaiService'
+import { backendApiService } from '../services/backendApiService'
 import { dalleService } from '../services/dalleService'
 import jsPDF from 'jspdf'
 
@@ -250,21 +250,15 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       setGenerationProgress(prev => ({ ...prev, story: true }))
       
       const response = formData.storyMode === 'preset' 
-        ? await openaiService.generateKidsStory(formData.age, formData.name, formData.theme, formData.language)
-        : await openaiService.generateCustomStory(formData.customPrompt, formData.age, formData.language)
+        ? await backendApiService.generateKidsStory(formData.age, formData.name, formData.theme, formData.language)
+        : await backendApiService.generateCustomStory(formData.customPrompt, formData.age, formData.language)
       
-      if (!response.success || !response.data?.choices?.[0]?.message?.content) {
+      if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to generate story')
       }
 
-      const content = response.data.choices[0].message.content.trim()
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      
-      if (!jsonMatch) {
-        throw new Error('Invalid response format from AI')
-      }
-
-      const storyData = JSON.parse(jsonMatch[0])
+      // Backend already returns parsed data
+      const storyData = response.data
       setResult(storyData)
 
       // Step 2: Generate Cover Image
@@ -298,7 +292,7 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       // Step 4: Generate Audio
       setGenerationProgress(prev => ({ ...prev, audio: true }))
       try {
-        const audioUrl = await openaiService.generateStoryAudio(storyData.story, formData.language)
+        const audioUrl = await backendApiService.generateStoryAudio(storyData.story, formData.language)
         setResult(prev => prev ? { ...prev, audioUrl } : null)
       } catch (audioError) {
         console.error('Audio generation error:', audioError)

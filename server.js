@@ -341,6 +341,222 @@ app.post('/api/usage', async (req, res) => {
   }
 })
 
+// Kids Story Generation API (Backend-only, secure)
+app.post('/api/generate/kids-story', async (req, res) => {
+  try {
+    const { age, name, theme, language, mode, customPrompt } = req.body
+    
+    // Check user access first
+    const email = req.body.email || req.headers['x-user-email']
+    if (!email) {
+      return res.status(401).json({ error: 'User email required' })
+    }
+    
+    // Verify access
+    const accessResult = await pool.query(`
+      SELECT ua.has_access 
+      FROM user_access ua
+      JOIN users u ON ua.user_id = u.id
+      WHERE u.email = $1 AND ua.product_type = 'story_generator'
+    `, [email])
+    
+    if (accessResult.rows.length === 0 || !accessResult.rows[0].has_access) {
+      return res.status(403).json({ error: 'Access denied. Please purchase the story generator.' })
+    }
+    
+    // Build the prompt based on mode
+    let prompt
+    if (mode === 'preset') {
+      prompt = `Create an Islamic children's story with these specifications:
+- Main character name: ${name}
+- Age group: ${age} years old
+- Theme/Moral: ${theme}
+- Language: ${language}
+
+Make the story engaging, educational, and appropriate for the age group. Include specific Islamic teachings and make ${name} a relatable, positive role model for children.`
+    } else {
+      prompt = `Create a custom Islamic children's story based on this request: "${customPrompt}"
+
+Requirements:
+- Age group: ${age} years old
+- Language: ${language}
+- Make it educational and engaging for children
+- Include Islamic teachings and moral lessons
+- Ensure cultural sensitivity and authenticity`
+    }
+    
+    const systemMessage = `You are an expert Islamic children's story writer. Create educational, engaging stories that teach Islamic values and morals appropriate for ${age} year olds.
+
+CRITICAL REQUIREMENTS:
+- Write story in ${language} language
+- Age-appropriate content for ${age} year olds
+- Include authentic Islamic teachings and values
+- Reference relevant Qur'anic verses when appropriate
+- Provide practical guidance for parents
+- Make stories engaging and culturally appropriate
+
+OUTPUT FORMAT: Return ONLY a valid JSON object:
+{
+  "title": "[Creative story title]",
+  "story": "[Complete age-appropriate story]",
+  "moralLesson": "[Key Islamic lesson learned]",
+  "quranReference": "[Relevant Qur'an reference if applicable]",
+  "arabicVerse": "[Arabic verse if included]",
+  "verseTranslation": "[Translation if Arabic verse included]",
+  "parentNotes": "[Discussion guidance for parents]",
+  "ageGroup": "${age}",
+  "theme": "[Main theme/moral of the story]"
+}`
+
+    // Call OpenAI API from backend (secure)
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.8,
+      max_tokens: 1200
+    })
+    
+    const content = completion.choices[0].message.content.trim()
+    
+    // Parse JSON response
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      const storyData = JSON.parse(jsonMatch[0])
+      res.json({ success: true, data: storyData })
+    } else {
+      throw new Error('Invalid response format from AI')
+    }
+  } catch (error) {
+    console.error('Story generation error:', error)
+    res.status(500).json({ error: 'Failed to generate story. Please try again.' })
+  }
+})
+
+// Generate Dua API (Backend-only, secure)
+app.post('/api/generate/dua', async (req, res) => {
+  try {
+    const { name, situation, languages } = req.body
+    const email = req.body.email || req.headers['x-user-email']
+    
+    if (!email) {
+      return res.status(401).json({ error: 'User email required' })
+    }
+    
+    // Verify access
+    const accessResult = await pool.query(`
+      SELECT ua.has_access 
+      FROM user_access ua
+      JOIN users u ON ua.user_id = u.id
+      WHERE u.email = $1 AND ua.product_type = 'dua_generator'
+    `, [email])
+    
+    if (accessResult.rows.length === 0 || !accessResult.rows[0].has_access) {
+      return res.status(403).json({ error: 'Access denied. Please purchase the dua generator.' })
+    }
+    
+    const languageList = languages.join(', ')
+    const prompt = `Generate a powerful Islamic duʿā for ${name} regarding: ${situation}.
+
+ONLY provide translations for these languages: ${languageList}
+
+Do NOT include any other languages - ONLY the requested ones.`
+
+    // Build language instructions
+    let languageInstructions = ''
+    for (const lang of languages) {
+      languageInstructions += `**Translation in ${lang}:**\n[Duʿā meaning in ${lang}]\n\n`
+    }
+
+    const systemMessage = `You are an Islamic duʿā generator designed to produce authentic, powerful, and respectful supplications inspired by the Qur'an and authentic Sunnah.
+
+CRITICAL REQUIREMENTS:
+- Write Arabic text with FULL tashkeel (diacritical marks)
+- Keep duʿā short (2–5 lines), but meaningful
+- Use respectful invocations
+- Only authentic content from Qur'an and Sunnah
+- Natural, heartfelt translations
+
+Format output as:
+
+**Arabic:**
+[Duʿā in Arabic script WITH COMPLETE TASHKEEL]
+
+**Transliteration:**
+[Clear pronunciation guide using Latin letters]
+
+${languageInstructions}
+
+Tone: Uplifting, sincere, spiritually moving.`
+
+    // Call OpenAI API from backend
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 800
+    })
+    
+    res.json({
+      success: true,
+      data: {
+        content: completion.choices[0].message.content,
+        type: 'dua',
+        name: name,
+        situation: situation,
+        languages: languages,
+        premium: true
+      }
+    })
+  } catch (error) {
+    console.error('Dua generation error:', error)
+    res.status(500).json({ error: 'Failed to generate dua. Please try again.' })
+  }
+})
+
+// Generate Story Audio API (Backend-only)
+app.post('/api/generate/story-audio', async (req, res) => {
+  try {
+    const { storyText, language } = req.body
+    
+    // Voice mapping
+    const voiceMapping = {
+      'english': 'nova',
+      'arabic': 'alloy',
+      'somali': 'echo',
+      'urdu': 'fable',
+      'default': 'nova'
+    }
+    
+    const voice = voiceMapping[language] || voiceMapping.default
+    
+    // Generate audio using OpenAI TTS
+    const mp3 = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: voice,
+      input: storyText,
+      speed: 0.9 // Slightly slower for kids
+    })
+    
+    // Convert to base64 for frontend
+    const buffer = Buffer.from(await mp3.arrayBuffer())
+    const base64Audio = buffer.toString('base64')
+    
+    res.json({
+      success: true,
+      audioData: `data:audio/mp3;base64,${base64Audio}`
+    })
+  } catch (error) {
+    console.error('Audio generation error:', error)
+    res.status(500).json({ error: 'Failed to generate audio' })
+  }
+})
+
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
