@@ -81,132 +81,221 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
     const pdf = new jsPDF('p', 'mm', 'a4')
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
-    const margin = 20
+    const margin = 25
+    const innerWidth = pageWidth - 2 * margin
 
     try {
-      // Professional Header
-      pdf.setFillColor(0, 102, 51) // Islamic green
-      pdf.rect(0, 0, pageWidth, 40, 'F')
+      // === PAGE 1: Beautiful Title Page ===
+      // Islamic Pattern Background (Decorative frame)
+      pdf.setDrawColor(0, 102, 51) // Islamic green
+      pdf.setLineWidth(3)
+      pdf.rect(10, 10, pageWidth - 20, pageHeight - 20, 'D')
+      pdf.setLineWidth(1)
+      pdf.rect(15, 15, pageWidth - 30, pageHeight - 30, 'D')
       
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(24)
-      pdf.text('Islamic Children\'s Story', pageWidth / 2, 25, { align: 'center' })
-
-      // Title Page
-      pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(20)
-      pdf.setFont('helvetica', 'bold')
+      // Add decorative Islamic star pattern corners
+      const drawStar = (x: number, y: number, size: number) => {
+        pdf.setFillColor(204, 153, 0) // Gold
+        pdf.circle(x, y, size, 'F')
+        pdf.setFillColor(0, 102, 51)
+        pdf.circle(x, y, size * 0.6, 'F')
+      }
+      drawStar(30, 30, 8)
+      drawStar(pageWidth - 30, 30, 8)
+      drawStar(30, pageHeight - 30, 8)
+      drawStar(pageWidth - 30, pageHeight - 30, 8)
       
-      const titleLines = pdf.splitTextToSize(result.title, pageWidth - 2 * margin)
-      let yPos = 70
+      // Bismillah at top
+      pdf.setTextColor(0, 102, 51)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(14)
+      pdf.text('In the Name of Allah, the Most Gracious, the Most Merciful', pageWidth / 2, 50, { align: 'center' })
+      
+      // Main Title with Golden accent
+      pdf.setTextColor(204, 153, 0) // Gold
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(28)
+      const titleLines = pdf.splitTextToSize(result.title, innerWidth - 20)
+      let yPos = 100
       titleLines.forEach((line: string) => {
         pdf.text(line, pageWidth / 2, yPos, { align: 'center' })
-        yPos += 12
+        yPos += 14
       })
-
-      // Metadata box
-      pdf.setFillColor(245, 245, 245)
-      pdf.rect(margin, yPos + 10, pageWidth - 2 * margin, 40, 'F')
       
-      pdf.setFontSize(12)
+      // Decorative divider
+      pdf.setDrawColor(204, 153, 0)
+      pdf.setLineWidth(2)
+      pdf.line(pageWidth/2 - 40, yPos + 10, pageWidth/2 + 40, yPos + 10)
+      
+      // Story info in elegant box
+      yPos += 30
+      pdf.setFillColor(245, 248, 250)
+      pdf.setDrawColor(0, 102, 51)
+      pdf.setLineWidth(0.5)
+      pdf.roundedRect(margin, yPos, innerWidth, 45, 5, 5, 'FD')
+      
+      pdf.setTextColor(0, 102, 51)
       pdf.setFont('helvetica', 'normal')
-      pdf.text(`Age Group: ${result.ageGroup} years`, margin + 10, yPos + 25)
-      pdf.text(`Theme: ${result.theme}`, margin + 10, yPos + 35)
-      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, margin + 10, yPos + 45)
-
-      // Story Content
+      pdf.setFontSize(11)
+      pdf.text(`✦ Age Group: ${result.ageGroup} years`, margin + 10, yPos + 15)
+      pdf.text(`✦ Theme: ${result.theme}`, margin + 10, yPos + 25)
+      pdf.text(`✦ Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, margin + 10, yPos + 35)
+      
+      // === PAGE 2: Story Content (Compact) ===
       pdf.addPage()
-      pdf.setFillColor(0, 102, 51)
-      pdf.rect(0, 0, pageWidth, 15, 'F')
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(16)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Story', pageWidth / 2, 10, { align: 'center' })
-
-      pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'normal')
       
-      const storyLines = pdf.splitTextToSize(result.story, pageWidth - 2 * margin)
-      yPos = 30
+      // Header with Islamic pattern
+      pdf.setFillColor(0, 102, 51)
+      pdf.rect(0, 0, pageWidth, 25, 'F')
+      
+      // Add gold accent stripe
+      pdf.setFillColor(204, 153, 0)
+      pdf.rect(0, 25, pageWidth, 3, 'F')
+      
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(18)
+      pdf.text('The Story', pageWidth / 2, 16, { align: 'center' })
+      
+      // Story text with better formatting
+      pdf.setTextColor(0, 0, 0)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(11)
+      pdf.setLineHeightFactor(1.5)
+      
+      const storyLines = pdf.splitTextToSize(result.story, innerWidth)
+      yPos = 45
       
       storyLines.forEach((line: string) => {
-        if (yPos > pageHeight - 30) {
+        if (yPos > pageHeight - 35) {
+          // Add new page with consistent header
           pdf.addPage()
-          yPos = 20
+          pdf.setFillColor(0, 102, 51)
+          pdf.rect(0, 0, pageWidth, 15, 'F')
+          pdf.setTextColor(255, 255, 255)
+          pdf.setFontSize(12)
+          pdf.text('Story (continued)', pageWidth / 2, 10, { align: 'center' })
+          pdf.setTextColor(0, 0, 0)
+          pdf.setFontSize(11)
+          yPos = 30
         }
         pdf.text(line, margin, yPos)
         yPos += 6
       })
-
-      // Moral Lesson Page
-      pdf.addPage()
-      pdf.setFillColor(204, 153, 0)
-      pdf.rect(0, 0, pageWidth, 15, 'F')
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(16)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Moral Lesson', pageWidth / 2, 10, { align: 'center' })
-
-      pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(14)
-      const moralLines = pdf.splitTextToSize(result.moralLesson, pageWidth - 2 * margin)
-      yPos = 35
       
+      // === COMBINED PAGE: Moral Lesson & Quranic Guidance ===
+      // Add spacing if we're near bottom
+      if (yPos > pageHeight - 80) {
+        pdf.addPage()
+        yPos = 30
+      } else {
+        yPos += 20
+      }
+      
+      // Moral Lesson Section
+      pdf.setFillColor(204, 153, 0)
+      pdf.setDrawColor(204, 153, 0)
+      pdf.rect(margin, yPos, innerWidth, 8, 'F')
+      
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(14)
+      pdf.text('Moral Lesson', margin + 5, yPos + 6)
+      
+      yPos += 18
+      pdf.setTextColor(0, 0, 0)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(12)
+      const moralLines = pdf.splitTextToSize(result.moralLesson, innerWidth)
       moralLines.forEach((line: string) => {
         pdf.text(line, margin, yPos)
-        yPos += 8
+        yPos += 7
       })
-
-      // Quranic Reference Page
-      pdf.addPage()
-      pdf.setFillColor(0, 102, 51)
-      pdf.rect(0, 0, pageWidth, 15, 'F')
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(16)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Quranic Guidance', pageWidth / 2, 10, { align: 'center' })
-
-      pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(12)
-      pdf.setFont('helvetica', 'italic')
-      pdf.text(result.quranReference, pageWidth / 2, 35, { align: 'center' })
-
-      if (result.arabicVerse) {
-        pdf.setFontSize(16)
-        pdf.setFont('helvetica', 'bold')
-        pdf.text('[Arabic Verse - Best viewed in digital format]', pageWidth / 2, 55, { align: 'center' })
+      
+      // Quranic Reference Section (on same page)
+      yPos += 15
+      if (yPos > pageHeight - 60) {
+        pdf.addPage()
+        yPos = 30
       }
-
-      pdf.setFontSize(14)
-      pdf.setFont('helvetica', 'normal')
-      const verseLines = pdf.splitTextToSize(`"${result.verseTranslation}"`, pageWidth - 2 * margin)
-      yPos = 75
       
-      verseLines.forEach((line: string) => {
-        pdf.text(line, margin, yPos)
-        yPos += 8
-      })
-
-      // Parent Notes Page
-      pdf.addPage()
-      pdf.setFillColor(102, 51, 153)
-      pdf.rect(0, 0, pageWidth, 15, 'F')
+      pdf.setFillColor(0, 102, 51)
+      pdf.rect(margin, yPos, innerWidth, 8, 'F')
+      
       pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(16)
       pdf.setFont('helvetica', 'bold')
-      pdf.text('For Parents & Educators', pageWidth / 2, 10, { align: 'center' })
-
-      pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(12)
-      const parentLines = pdf.splitTextToSize(result.parentNotes, pageWidth - 2 * margin)
-      yPos = 35
+      pdf.setFontSize(14)
+      pdf.text('Quranic Guidance', margin + 5, yPos + 6)
       
-      parentLines.forEach((line: string) => {
-        pdf.text(line, margin, yPos)
-        yPos += 6
-      })
+      yPos += 18
+      pdf.setTextColor(0, 0, 0)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(11)
+      
+      // Quran Reference
+      if (result.quranReference) {
+        pdf.text(result.quranReference, pageWidth / 2, yPos, { align: 'center' })
+        yPos += 10
+      }
+      
+      // Arabic verse placeholder
+      if (result.arabicVerse) {
+        pdf.setFillColor(245, 248, 250)
+        pdf.rect(margin + 10, yPos, innerWidth - 20, 25, 'D')
+        pdf.setFont('helvetica', 'italic')
+        pdf.setFontSize(10)
+        pdf.text('[Arabic Verse - Best viewed in digital format]', pageWidth / 2, yPos + 15, { align: 'center' })
+        yPos += 35
+      }
+      
+      // Verse Translation
+      if (result.verseTranslation) {
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(11)
+        const verseLines = pdf.splitTextToSize(`"${result.verseTranslation}"`, innerWidth - 20)
+        verseLines.forEach((line: string) => {
+          if (yPos > pageHeight - 30) {
+            pdf.addPage()
+            yPos = 30
+          }
+          pdf.text(line, pageWidth / 2, yPos, { align: 'center' })
+          yPos += 6
+        })
+      }
+      
+      // Parent Notes Section (on same or next page)
+      yPos += 20
+      if (yPos > pageHeight - 80 || !result.parentNotes) {
+        if (result.parentNotes) {
+          pdf.addPage()
+          yPos = 30
+        }
+      }
+      
+      if (result.parentNotes) {
+        pdf.setFillColor(102, 51, 153) // Purple for parents
+        pdf.rect(margin, yPos, innerWidth, 8, 'F')
+        
+        pdf.setTextColor(255, 255, 255)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(14)
+        pdf.text('For Parents & Educators', margin + 5, yPos + 6)
+        
+        yPos += 18
+        pdf.setTextColor(0, 0, 0)
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(11)
+        const parentLines = pdf.splitTextToSize(result.parentNotes, innerWidth)
+        
+        parentLines.forEach((line: string) => {
+          if (yPos > pageHeight - 30) {
+            pdf.addPage()
+            yPos = 30
+          }
+          pdf.text(line, margin, yPos)
+          yPos += 6
+        })
+      }
 
       // Footer on all pages
       const pageCount = pdf.getNumberOfPages()
