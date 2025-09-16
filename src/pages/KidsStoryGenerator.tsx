@@ -125,7 +125,10 @@ const KidsStoryGenerator = () => {
           </div>
         ) : (
           /* User has access - show enterprise generator */
-          <EnterpriseStoryGenerator />
+          <EnterpriseStoryGenerator 
+            hasAccess={hasAccess}
+            onPaymentClick={() => setShowPayment(true)}
+          />
         )}
       </main>
 
