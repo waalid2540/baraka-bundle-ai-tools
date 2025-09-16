@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import openaiService from '../services/openaiService'
+import backendApiService from '../services/backendApiService'
 import dalleService from '../services/dalleService'
 import professionalIslamicPdf from '../services/professionalIslamicPdf'
 import { stripeService } from '../services/stripeService'
@@ -23,7 +23,7 @@ const DuaGenerator = () => {
   const [checkingAccess, setCheckingAccess] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
 
-  const languages = openaiService.getSupportedLanguages()
+  const languages = backendApiService.getSupportedLanguages()
 
   // Check user access on component mount
   useEffect(() => {
@@ -190,7 +190,7 @@ const DuaGenerator = () => {
         ? duaTopics.find(topic => topic.id === formData.topic)?.name || formData.topic
         : formData.customRequest
 
-      const response = await openaiService.generateDua('User', request, [formData.language])
+      const response = await backendApiService.generateDua('User', request, [formData.language])
 
       if (response.success && response.data) {
         const content = response.data.content
@@ -201,7 +201,7 @@ const DuaGenerator = () => {
         const translationMatch = content.match(new RegExp(`\\*\\*Translation in ${formData.language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
         
         // Generate AI reflections for this specific dua
-        const reflectionsResponse = await openaiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '', formData.language)
+        const reflectionsResponse = await backendApiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '', formData.language)
         
         const duaData = {
           arabicText: arabicMatch ? arabicMatch[1].trim() : '',
