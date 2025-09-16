@@ -18,9 +18,17 @@ const PORT = process.env.PORT || 3001
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY)
 
 // Initialize OpenAI (backend only - secure)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY // Use backend env var without REACT_APP prefix
-})
+const openaiApiKey = process.env.OPENAI_API_KEY
+let openai = null
+
+if (openaiApiKey) {
+  openai = new OpenAI({
+    apiKey: openaiApiKey
+  })
+  console.log('✅ OpenAI API initialized')
+} else {
+  console.warn('⚠️ OpenAI API key not found. AI features will be disabled.')
+}
 
 // Initialize PostgreSQL connection
 const connectionString = process.env.DATABASE_URL || 'postgresql://waalid_legacy_db_user:dD5PV96lz21Zuh9Kd03lUuds15iZZbKt@dpg-d2rtj5m3jp1c738k0t20-a.oregon-postgres.render.com/waalid_legacy_db?sslmode=require'
@@ -344,6 +352,12 @@ app.post('/api/usage', async (req, res) => {
 // Kids Story Generation API (Backend-only, secure)
 app.post('/api/generate/kids-story', async (req, res) => {
   try {
+    if (!openai) {
+      return res.status(503).json({ 
+        error: 'AI service temporarily unavailable. OpenAI API key not configured.' 
+      })
+    }
+    
     const { age, name, theme, language, mode, customPrompt } = req.body
     
     // Check user access first
@@ -438,6 +452,12 @@ OUTPUT FORMAT: Return ONLY a valid JSON object:
 // Generate Dua API (Backend-only, secure)
 app.post('/api/generate/dua', async (req, res) => {
   try {
+    if (!openai) {
+      return res.status(503).json({ 
+        error: 'AI service temporarily unavailable. OpenAI API key not configured.' 
+      })
+    }
+    
     const { name, situation, languages } = req.body
     const email = req.body.email || req.headers['x-user-email']
     
@@ -522,6 +542,12 @@ Tone: Uplifting, sincere, spiritually moving.`
 // Generate Story Audio API (Backend-only)
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
+    if (!openai) {
+      return res.status(503).json({ 
+        error: 'AI service temporarily unavailable. OpenAI API key not configured.' 
+      })
+    }
+    
     const { storyText, language } = req.body
     
     // Voice mapping
