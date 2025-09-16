@@ -646,6 +646,30 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     </button>
                   </div>
                   
+                  {/* Audio Player - Prominent Position */}
+                  {result.audioUrl && (
+                    <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🎧</span>
+                        <h4 className="font-bold text-blue-800">Listen to Your Story</h4>
+                      </div>
+                      <audio 
+                        controls 
+                        className="w-full h-10 rounded-lg" 
+                        preload="metadata"
+                        style={{ background: '#f8fafc' }}
+                      >
+                        <source src={result.audioUrl} type="audio/mpeg" />
+                        <source src={result.audioUrl} type="audio/wav" />
+                        <source src={result.audioUrl} type="audio/mp3" />
+                        Your browser does not support the audio element.
+                      </audio>
+                      <p className="text-sm text-blue-600 mt-2">
+                        🎵 Professional AI narration of your Islamic story
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="bg-white rounded-lg p-4 mb-4">
                     <h4 className="font-bold text-lg text-gray-800 mb-2">{result.title}</h4>
                     <p className="text-gray-600 text-sm mb-3">
@@ -665,9 +689,22 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     </div>
                     <div className="bg-white rounded-lg p-3">
                       <div className="font-semibold text-gray-700 mb-1">🎵 Audio</div>
-                      <div className="text-gray-600">
-                        {result.audioUrl ? 'Professional narration' : 'Processing...'}
-                      </div>
+                      {result.audioUrl ? (
+                        <div className="space-y-2">
+                          <div className="text-green-600 text-sm">✓ Professional narration ready</div>
+                          <audio 
+                            controls 
+                            className="w-full h-8" 
+                            style={{ maxWidth: '100%' }}
+                            preload="metadata"
+                          >
+                            <source src={result.audioUrl} type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      ) : (
+                        <div className="text-gray-600">Processing audio...</div>
+                      )}
                     </div>
                   </div>
                 </div>
