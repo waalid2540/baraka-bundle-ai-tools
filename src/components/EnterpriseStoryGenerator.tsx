@@ -713,8 +713,10 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     <p className="text-gray-600 text-sm mb-3">
                       {result.ageGroup} years • {result.theme} • Generated {new Date().toLocaleDateString()}
                     </p>
-                    <div className="max-h-40 overflow-y-auto text-sm text-gray-700 leading-relaxed">
-                      {result.story.substring(0, 300)}...
+                    <div className="max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                      <div className="whitespace-pre-wrap">
+                        {result.story}
+                      </div>
                     </div>
                   </div>
 
