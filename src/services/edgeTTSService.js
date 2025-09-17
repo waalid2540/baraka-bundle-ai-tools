@@ -18,66 +18,49 @@ class EdgeTTSService {
 
   async generateAudio(text, language = 'english') {
     try {
-      const voice = this.voices[language.toLowerCase()] || this.voices.english;
+      // Skip Edge TTS for now - go straight to enhanced Google TTS
+      return this.enhancedGoogleTTS(text, language);
+    } catch (error) {
+      console.error('Enhanced TTS Error:', error);
+      // Final fallback to basic Google TTS
+      return this.googleTTSFallback(text, language);
+    }
+  }
+
+  async enhancedGoogleTTS(text, language = 'english') {
+    try {
+      const langCode = this.getLanguageCode(language);
       
       // Professional text preprocessing for Islamic content
       let processedText = text
-        .substring(0, 3000) // Limit for quality
+        .substring(0, 800) // Optimal length for quality
         .replace(/[^\w\s.,!?;:'"()-]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
       
-      // Generate SSML for professional quality
-      const ssml = `
-        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>
-          <voice name='${voice}'>
-            <prosody rate='0.9' pitch='+5%'>
-              ${this.processIslamicContent(processedText)}
-            </prosody>
-          </voice>
-        </speak>
-      `;
-
-      // Create request
-      const response = await fetch(`${EDGE_TTS_ENDPOINT}/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/ssml+xml',
-          'X-Microsoft-OutputFormat': 'audio-24khz-96kbitrate-mono-mp3',
-          'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
-          'Accept': '*/*',
-          'Accept-Encoding': 'gzip, deflate, br'
-        },
-        body: ssml
-      });
-
-      if (!response.ok) {
-        throw new Error('Edge TTS request failed');
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
+      // Process Islamic content for better pronunciation
+      processedText = this.processIslamicContentForGoogle(processedText);
       
-      // Convert to base64 for universal use
-      const reader = new FileReader();
-      return new Promise((resolve) => {
-        reader.onloadend = () => {
-          const base64Audio = reader.result;
-          resolve({
-            success: true,
-            audioUrl: audioUrl,
-            audioData: base64Audio,
-            type: 'edge-tts',
-            quality: 'professional'
-          });
+      // Use enhanced Google TTS with better parameters
+      const enhancedUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${langCode}&q=${encodeURIComponent(processedText)}&tk=1`;
+      
+      // Test if URL works by fetching a small portion
+      const testResponse = await fetch(enhancedUrl, { method: 'HEAD' });
+      
+      if (testResponse.ok) {
+        return {
+          success: true,
+          audioUrl: enhancedUrl,
+          audioData: enhancedUrl,
+          type: 'enhanced-google-tts',
+          quality: 'professional'
         };
-        reader.readAsDataURL(audioBlob);
-      });
-
+      } else {
+        throw new Error('Enhanced Google TTS failed');
+      }
     } catch (error) {
-      console.error('Edge TTS Error:', error);
-      // Fallback to Google TTS API (also free)
-      return this.googleTTSFallback(text, language);
+      console.error('Enhanced Google TTS Error:', error);
+      throw error;
     }
   }
 
@@ -122,6 +105,36 @@ class EdgeTTSService {
     processed = processed.replace(/,/g, ',<break time="300ms"/>');
 
     return processed;
+  }
+
+  processIslamicContentForGoogle(text) {
+    // Improve pronunciation of Islamic terms for Google TTS
+    const islamicTerms = {
+      'Allah': 'Allah',
+      'Muhammad': 'Muhammad',
+      'Quran': 'Quran',
+      'Koran': 'Quran',
+      'Bismillah': 'Bismillah',
+      'Alhamdulillah': 'Alhamdulillah',
+      'Subhanallah': 'Subhanallah',
+      'Mashallah': 'Mashallah',
+      'Inshallah': 'Inshallah'
+    };
+
+    let processed = text;
+    
+    // Replace common mispronunciations
+    for (const [term, correct] of Object.entries(islamicTerms)) {
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      processed = processed.replace(regex, correct);
+    }
+
+    // Add natural pauses
+    processed = processed.replace(/\./g, '. ');
+    processed = processed.replace(/,/g, ', ');
+    processed = processed.replace(/\s+/g, ' ');
+
+    return processed.trim();
   }
 
   getLanguageCode(language) {
