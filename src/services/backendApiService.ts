@@ -18,8 +18,11 @@ class BackendApiService {
   private async makeRequest<T>(endpoint: string, payload: any): Promise<ApiResponse<T>> {
     try {
       const userEmail = localStorage.getItem('user_email')
-      
-      const response = await fetch(`${this.apiUrl}${endpoint}`, {
+      const url = `${this.apiUrl}${endpoint}`
+
+      console.log(`🌐 Making API request to: ${url}`)
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,12 +31,21 @@ class BackendApiService {
         body: JSON.stringify({ ...payload, email: userEmail })
       })
 
+      console.log(`📨 Response status: ${response.status}`)
+
       const data = await response.json()
-      
+
       if (!response.ok) {
-        return { 
-          success: false, 
-          error: data.error || `Server error: ${response.status}` 
+        console.error(`❌ API Error Response:`, {
+          status: response.status,
+          error: data.error,
+          details: data.details,
+          fullData: data
+        })
+        return {
+          success: false,
+          error: data.error || `Server error: ${response.status}`,
+          data: data // Include data even on error for debugging
         }
       }
 
@@ -79,18 +91,31 @@ class BackendApiService {
 
   // 🔊 Generate Story Audio (Backend Secure)
   async generateStoryAudio(storyText: string, language: string): Promise<string | object> {
-    const response = await this.makeRequest<{ 
-      audioData?: string, 
+    console.log('🎤 Calling backend audio generation...')
+    console.log('API URL:', `${this.apiUrl}/generate/story-audio`)
+    console.log('Story text length:', storyText.length)
+    console.log('Language:', language)
+
+    const response = await this.makeRequest<{
+      audioData?: string,
       audioUrl?: string,
       type?: string,
       quality?: string,
       useEnhancedBrowserTTS?: boolean,
-      audioMetadata?: any 
+      audioMetadata?: any,
+      details?: string
     }>('/generate/story-audio', {
       storyText,
       language
     })
-    
+
+    console.log('📡 Backend response:', {
+      success: response.success,
+      hasData: !!response.data,
+      error: response.error,
+      dataKeys: response.data ? Object.keys(response.data) : []
+    })
+
     if (response.success && response.data) {
       // Check for real audio URL first (best quality)
       if (response.data.audioUrl || response.data.audioData) {
@@ -99,13 +124,21 @@ class BackendApiService {
       }
       // Fallback to enhanced browser TTS
       else if (response.data.useEnhancedBrowserTTS && response.data.audioMetadata) {
+        console.log('🔊 Using enhanced browser TTS fallback')
         return {
           useEnhancedBrowserTTS: true,
           audioMetadata: response.data.audioMetadata
         }
       }
     }
-    
+
+    // Log the actual error for debugging
+    console.error('❌ Audio generation failed:', {
+      error: response.error,
+      details: response.data?.details,
+      fullResponse: response
+    })
+
     throw new Error(response.error || 'Failed to generate audio')
   }
 
