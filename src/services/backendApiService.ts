@@ -12,15 +12,40 @@ class BackendApiService {
 
   constructor() {
     // Always use production API for audio generation
-    this.apiUrl = 'https://baraka-bundle-ai-tools.onrender.com/api'
+    const baseUrl = 'https://baraka-bundle-ai-tools.onrender.com'
+    this.apiUrl = `${baseUrl}/api`
+    console.log('🔧 BackendApiService initialized')
+    console.log('🔧 Base URL:', baseUrl)
+    console.log('🔧 API URL:', this.apiUrl)
+    console.log('🔧 API URL type:', typeof this.apiUrl)
+    console.log('🔧 API URL length:', this.apiUrl?.length || 0)
   }
 
   private async makeRequest<T>(endpoint: string, payload: any): Promise<ApiResponse<T>> {
     try {
       const userEmail = localStorage.getItem('user_email')
+
+      // Safeguard against empty URLs
+      if (!this.apiUrl) {
+        console.error('❌ API URL is empty!')
+        console.error('this.apiUrl:', this.apiUrl)
+        console.error('typeof this.apiUrl:', typeof this.apiUrl)
+        this.apiUrl = 'https://baraka-bundle-ai-tools.onrender.com/api'
+        console.log('🔧 Reset API URL to:', this.apiUrl)
+      }
+
+      if (!endpoint) {
+        console.error('❌ Endpoint is empty!')
+        console.error('endpoint:', endpoint)
+        console.error('typeof endpoint:', typeof endpoint)
+        throw new Error('API endpoint is required')
+      }
+
       const url = `${this.apiUrl}${endpoint}`
 
       console.log(`🌐 Making API request to: ${url}`)
+      console.log(`🔗 Base URL: "${this.apiUrl}", Endpoint: "${endpoint}"`)
+      console.log(`📧 User email: ${userEmail || 'not set'}`)
 
       const response = await fetch(url, {
         method: 'POST',
@@ -92,7 +117,8 @@ class BackendApiService {
   // 🔊 Generate Story Audio (Backend Secure)
   async generateStoryAudio(storyText: string, language: string): Promise<string | object> {
     console.log('🎤 Calling backend audio generation...')
-    console.log('API URL:', `${this.apiUrl}/generate/story-audio`)
+    console.log('this.apiUrl:', this.apiUrl)
+    console.log('Expected full URL:', `${this.apiUrl}/generate/story-audio`)
     console.log('Story text length:', storyText.length)
     console.log('Language:', language)
 
