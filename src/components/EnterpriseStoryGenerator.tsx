@@ -389,8 +389,11 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
         console.log('🎵 Starting professional audio generation...')
         const audioResult = await backendApiService.generateStoryAudio(storyData.story, formData.language)
         
-        // Check if we got enhanced browser TTS metadata or legacy audio URL
-        if (typeof audioResult === 'object' && audioResult.useEnhancedBrowserTTS) {
+        // Handle real audio URL response from enhanced TTS
+        if (typeof audioResult === 'string' && audioResult.startsWith('http')) {
+          console.log('✅ Audio generated successfully with enhanced TTS URL')
+          setResult(prev => prev ? { ...prev, audioUrl: audioResult, audioError: null } : null)
+        } else if (typeof audioResult === 'object' && audioResult.useEnhancedBrowserTTS) {
           console.log('✅ Using enhanced browser TTS with Islamic optimization')
           setResult(prev => prev ? { 
             ...prev, 
@@ -398,10 +401,8 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
             audioMetadata: audioResult.audioMetadata,
             audioError: null
           } : null)
-        } else if (typeof audioResult === 'string') {
-          console.log('✅ Audio generated successfully with legacy format')
-          setResult(prev => prev ? { ...prev, audioUrl: audioResult } : null)
         } else {
+          console.log('❌ Unexpected audio response format:', audioResult)
           throw new Error('Invalid audio response format')
         }
       } catch (audioError) {
