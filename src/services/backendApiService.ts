@@ -157,18 +157,23 @@ class BackendApiService {
     console.log('🔍 FULL RESPONSE OBJECT:')
     console.log(JSON.stringify(response, null, 2))
 
-    if (response.success && response.data) {
-      // Check for real audio URL first (best quality)
-      if (response.data.audioUrl || response.data.audioData) {
-        console.log(`✅ Got REAL audio: ${response.data.type}, quality: ${response.data.quality}`)
+    if (response.success) {
+      // The backend returns the audio data directly in the response, not nested in response.data
+      if (response.audioUrl || response.audioData) {
+        console.log(`✅ Got REAL audio: ${response.type}, quality: ${response.quality}`)
+        return response.audioUrl || response.audioData
+      }
+      // Also check response.data for backward compatibility
+      else if (response.data && (response.data.audioUrl || response.data.audioData)) {
+        console.log(`✅ Got REAL audio from data: ${response.data.type}, quality: ${response.data.quality}`)
         return response.data.audioUrl || response.data.audioData
       }
       // Fallback to enhanced browser TTS
-      else if (response.data.useEnhancedBrowserTTS && response.data.audioMetadata) {
+      else if (response.useEnhancedBrowserTTS || (response.data?.useEnhancedBrowserTTS)) {
         console.log('🔊 Using enhanced browser TTS fallback')
         return {
           useEnhancedBrowserTTS: true,
-          audioMetadata: response.data.audioMetadata
+          audioMetadata: response.audioMetadata || response.data?.audioMetadata
         }
       }
     }
