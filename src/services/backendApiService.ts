@@ -11,9 +11,8 @@ class BackendApiService {
   private apiUrl: string
 
   constructor() {
-    this.apiUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://baraka-bundle-ai-tools.onrender.com/api'
-      : '/api'
+    // Always use production API for audio generation
+    this.apiUrl = 'https://baraka-bundle-ai-tools.onrender.com/api'
   }
 
   private async makeRequest<T>(endpoint: string, payload: any): Promise<ApiResponse<T>> {
