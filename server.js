@@ -8,12 +8,30 @@ const stripe = require('stripe')
 const path = require('path')
 // Import fetch for Node.js compatibility
 const fetch = require('node-fetch')
-// Load environment variables from both current and parent directories
-require('dotenv').config()
-// Also load parent .env if it exists (for OPENAI_API_KEY)
-require('dotenv').config({ path: '../.env' })
+// Load environment variables
+// In production, these come from Render's environment variables
+// In development, load from .env files
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+  // Also load parent .env if it exists (for OPENAI_API_KEY in dev)
+  require('dotenv').config({ path: '../.env' })
+} else {
+  // In production, just use dotenv to load any local .env if present
+  require('dotenv').config()
+}
 
-// OpenAI import for backend-only API calls  
+// Debug: Log OpenAI API key status
+console.log('🔍 Environment Check at Startup:')
+console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY)
+if (process.env.OPENAI_API_KEY) {
+  const key = process.env.OPENAI_API_KEY
+  console.log('OPENAI_API_KEY format:', key.substring(0, 15) + '...' + key.substring(key.length - 4))
+} else {
+  console.log('⚠️ WARNING: OPENAI_API_KEY not found in environment!')
+  console.log('Available OPENAI vars:', Object.keys(process.env).filter(k => k.includes('OPENAI')))
+}
+
+// OpenAI import for backend-only API calls
 const { OpenAI } = require('openai')
 
 // Coqui TTS import for professional audio generation
