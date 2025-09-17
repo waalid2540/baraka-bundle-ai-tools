@@ -7,3 +7,5 @@ services:
     envVars:
       - key: REACT_APP_OPENAI_API_KEY
         sync: false
+    # Force rebuild to include enhanced TTS components
+    # Build updated: 2025-09-17 with enhanced Islamic TTS
