@@ -71,10 +71,12 @@ const pool = new Pool({
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, 'https://baraka-bundle-ai-tools.onrender.com'] 
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
-  credentials: true
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://baraka-bundle-ai-tools.onrender.com', process.env.FRONTEND_URL].filter(Boolean)
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:3003'],
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Email']
 }))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.static(path.join(__dirname, 'dist')))
@@ -89,6 +91,20 @@ pool.on('error', (err) => {
 })
 
 // API Routes
+
+// Health check endpoint with debugging info
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    openai_configured: !!process.env.OPENAI_API_KEY,
+    openai_key_format: process.env.OPENAI_API_KEY
+      ? `${process.env.OPENAI_API_KEY.substring(0, 7)}...${process.env.OPENAI_API_KEY.substring(process.env.OPENAI_API_KEY.length - 4)}`
+      : 'not set',
+    total_env_vars: Object.keys(process.env).length
+  })
+})
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -586,7 +602,7 @@ app.post('/api/generate/story-audio', async (req, res) => {
     try {
       const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-      console.log('🔍 Checking OpenAI API key...')
+      console.log('🔍 Checking OpenAI API key for audio generation...')
       console.log('API Key exists:', !!OPENAI_API_KEY)
       if (OPENAI_API_KEY) {
         console.log('API Key format:', OPENAI_API_KEY.substring(0, 10) + '...' + OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4))
@@ -595,7 +611,15 @@ app.post('/api/generate/story-audio', async (req, res) => {
       if (!OPENAI_API_KEY) {
         console.error('❌ OPENAI_API_KEY not found in environment variables')
         console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('OPENAI')))
-        throw new Error('OpenAI API key not configured')
+        console.log('NODE_ENV:', process.env.NODE_ENV)
+        console.log('All env var keys:', Object.keys(process.env).length, 'variables')
+
+        // Return a specific error that the frontend can handle
+        return res.status(500).json({
+          success: false,
+          error: 'Audio generation service not configured. Please check backend configuration.',
+          details: 'OPENAI_API_KEY not found'
+        })
       }
 
       // Language voice mapping for OpenAI TTS
@@ -626,8 +650,24 @@ app.post('/api/generate/story-audio', async (req, res) => {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('OpenAI TTS API error:', response.status, errorText)
-        throw new Error(`OpenAI TTS API error: ${response.status}`)
+        console.error('❌ OpenAI TTS API error:')
+        console.error('Status:', response.status)
+        console.error('Error:', errorText)
+
+        // Parse OpenAI error for better debugging
+        let errorMessage = `OpenAI TTS API error: ${response.status}`
+        try {
+          const errorJson = JSON.parse(errorText)
+          if (errorJson.error) {
+            errorMessage = errorJson.error.message || errorJson.error
+            console.error('OpenAI Error Details:', errorJson.error)
+          }
+        } catch (e) {
+          // If not JSON, use the text error
+          errorMessage = errorText || errorMessage
+        }
+
+        throw new Error(errorMessage)
       }
 
       // Convert response to base64 for sending to frontend
@@ -644,16 +684,36 @@ app.post('/api/generate/story-audio', async (req, res) => {
         quality: 'premium'
       })
     } catch (audioError) {
-      console.error('OpenAI TTS error, trying fallback:', audioError.message)
+      console.error('❌ OpenAI TTS error:', audioError.message)
+      console.error('Full error:', audioError)
+
+      // Check if it's an API key issue
+      if (audioError.message.includes('401') || audioError.message.includes('Incorrect API key')) {
+        return res.status(500).json({
+          success: false,
+          error: 'Invalid OpenAI API key. Please check your API key configuration.',
+          details: audioError.message
+        })
+      }
+
+      // Check if it's a quota/billing issue
+      if (audioError.message.includes('429') || audioError.message.includes('quota') || audioError.message.includes('billing')) {
+        return res.status(500).json({
+          success: false,
+          error: 'OpenAI API quota exceeded or billing issue. Please check your OpenAI account.',
+          details: audioError.message
+        })
+      }
 
       // Fallback to Google TTS (still better than browser TTS)
+      console.log('📻 Falling back to Google TTS...')
       const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(storyText.substring(0, 200))}`
 
       res.json({
         success: true,
         audioUrl: googleUrl,
         type: 'google-tts',
-        quality: 'good'
+        quality: 'fallback'
       })
     }
   } catch (error) {
