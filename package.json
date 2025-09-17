@@ -10,6 +10,7 @@
     "install-server": "npm install express cors pg stripe dotenv --no-save"
   },
   "dependencies": {
+    "@google-cloud/text-to-speech": "^6.3.0",
     "@stripe/stripe-js": "^2.0.0",
     "axios": "^1.11.0",
     "cors": "^2.8.5",

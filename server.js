@@ -8,8 +8,11 @@ const stripe = require('stripe')
 const path = require('path')
 require('dotenv').config()
 
-// OpenAI import for backend-only API calls
+// OpenAI import for backend-only API calls  
 const { OpenAI } = require('openai')
+
+// Google TTS import for audio generation
+const googleTTSService = require('./src/services/googleTTSService')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -28,6 +31,18 @@ if (openaiApiKey) {
   console.log('✅ OpenAI API initialized')
 } else {
   console.warn('⚠️ OpenAI API key not found. AI features will be disabled.')
+}
+
+// Setup Google Cloud credentials for production
+if (process.env.GOOGLE_CLOUD_CREDENTIALS_JSON && process.env.NODE_ENV === 'production') {
+  const fs = require('fs');
+  try {
+    fs.writeFileSync('/tmp/google-credentials.json', process.env.GOOGLE_CLOUD_CREDENTIALS_JSON);
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = '/tmp/google-credentials.json';
+    console.log('✅ Google Cloud credentials configured for production');
+  } catch (error) {
+    console.error('❌ Failed to setup Google Cloud credentials:', error.message);
+  }
 }
 
 // Initialize PostgreSQL connection
@@ -539,16 +554,16 @@ Tone: Uplifting, sincere, spiritually moving.`
   }
 })
 
-// Generate Story Audio API (Backend-only)
+// Generate Story Audio API (Backend-only) - Using Google Cloud TTS
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
-    // Check if OpenAI is configured
-    if (!openai) {
-      console.error('⚠️ Audio generation failed: OpenAI API key not configured')
-      console.error('Please add OPENAI_API_KEY to your environment variables')
+    // Check if Google TTS is available
+    if (!googleTTSService.isAvailable) {
+      console.error('⚠️ Audio generation failed: Google Cloud TTS not configured')
+      console.error('Please add GOOGLE_APPLICATION_CREDENTIALS to your environment variables')
       return res.status(503).json({ 
         success: false,
-        error: 'Audio service unavailable. Please contact support - OpenAI API key not configured in production.' 
+        error: 'Audio service unavailable. Please contact support - Google Cloud TTS not configured in production.' 
       })
     }
     
@@ -561,52 +576,34 @@ app.post('/api/generate/story-audio', async (req, res) => {
       })
     }
     
-    console.log(`🔊 Generating audio for ${language || 'english'} language...`)
+    console.log(`🔊 Generating Google TTS audio for ${language || 'english'} language...`)
     
-    // Voice mapping
-    const voiceMapping = {
-      'english': 'nova',
-      'arabic': 'alloy',
-      'somali': 'echo',
-      'urdu': 'fable',
-      'default': 'nova'
-    }
+    // Generate audio using Google Cloud TTS
+    const audioDataUrl = await googleTTSService.synthesizeSpeech(storyText, language)
     
-    const voice = voiceMapping[language?.toLowerCase()] || voiceMapping.default
-    
-    console.log(`Using voice: ${voice} for language: ${language}`)
-    
-    // Generate audio using OpenAI TTS
-    const mp3 = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: voice,
-      input: storyText.substring(0, 4096), // TTS has character limit
-      speed: 0.9 // Slightly slower for kids
-    })
-    
-    console.log('✅ Audio generated successfully')
-    
-    // Convert to base64 for frontend
-    const buffer = Buffer.from(await mp3.arrayBuffer())
-    const base64Audio = buffer.toString('base64')
+    console.log('✅ Google TTS audio generated successfully')
     
     res.json({
       success: true,
-      audioData: `data:audio/mp3;base64,${base64Audio}`
+      audioData: audioDataUrl
     })
   } catch (error) {
-    console.error('❌ Audio generation error:', error)
+    console.error('❌ Google TTS generation error:', error)
     console.error('Error details:', error.message)
     
     // More specific error messages
     let errorMessage = 'Failed to generate audio'
     
-    if (error.message?.includes('API key')) {
-      errorMessage = 'OpenAI API key is invalid or expired. Please check your API key.'
+    if (error.message?.includes('credentials')) {
+      errorMessage = 'Google Cloud credentials not configured properly. Please check your service account key.'
     } else if (error.message?.includes('quota')) {
-      errorMessage = 'OpenAI API quota exceeded. Please check your billing.'
-    } else if (error.message?.includes('rate')) {
-      errorMessage = 'Too many requests. Please try again in a moment.'
+      errorMessage = 'Google Cloud TTS quota exceeded. Please check your billing.'
+    } else if (error.message?.includes('permission')) {
+      errorMessage = 'Google Cloud TTS permission denied. Please check your service account permissions.'
+    } else if (error.message?.includes('billing')) {
+      errorMessage = 'Google Cloud billing not enabled. Please enable billing for your project.'
+    } else {
+      errorMessage = `Google TTS failed: ${error.message}`
     }
     
     res.status(500).json({ 
