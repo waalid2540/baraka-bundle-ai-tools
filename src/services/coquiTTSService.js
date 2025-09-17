@@ -29,26 +29,44 @@ class CoquiTTSService {
 
   async testPythonService() {
     return new Promise((resolve) => {
-      const testProcess = spawn(this.pythonPath, ['-c', 'import pyttsx3; print("OK")']);
+      const testProcess = spawn(this.pythonPath, ['-c', 'import pyttsx3; print("OK")'], {
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
       
       let output = '';
+      let errorOutput = '';
+      
       testProcess.stdout.on('data', (data) => {
         output += data.toString();
       });
 
-      testProcess.on('close', (code) => {
-        resolve(code === 0 && output.includes('OK'));
+      testProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
       });
 
-      testProcess.on('error', () => {
+      testProcess.on('close', (code) => {
+        if (code === 0 && output.includes('OK')) {
+          console.log('✅ Python pyttsx3 test successful');
+          resolve(true);
+        } else {
+          console.error('❌ Python pyttsx3 test failed:', errorOutput || 'Unknown error');
+          console.error('💡 Run: pip3 install pyttsx3 to fix this issue');
+          resolve(false);
+        }
+      });
+
+      testProcess.on('error', (error) => {
+        console.error('❌ Python process error:', error.message);
+        console.error('💡 Make sure Python3 is installed and available in PATH');
         resolve(false);
       });
 
-      // Timeout after 5 seconds
+      // Timeout after 10 seconds
       setTimeout(() => {
         testProcess.kill();
+        console.error('❌ Python TTS test timeout - service may be slow');
         resolve(false);
-      }, 5000);
+      }, 10000);
     });
   }
 

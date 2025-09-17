@@ -551,10 +551,12 @@ app.post('/api/generate/story-audio', async (req, res) => {
     // Check if Coqui TTS is available
     if (!coquiTTSService.isAvailable) {
       console.error('⚠️ Audio generation failed: Coqui TTS not initialized')
-      console.error('Please ensure Python dependencies are installed')
+      console.error('💡 Please run: pip3 install pyttsx3 to enable professional audio')
+      console.error('🔄 Falling back to browser TTS for now')
       return res.status(503).json({ 
         success: false,
-        error: 'Professional audio service is starting up. Please try again in a moment.' 
+        error: 'Professional audio service not available. Install Python dependencies with: pip3 install pyttsx3',
+        fallbackToBrowser: true
       })
     }
     
