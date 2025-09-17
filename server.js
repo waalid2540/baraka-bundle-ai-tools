@@ -542,13 +542,26 @@ Tone: Uplifting, sincere, spiritually moving.`
 // Generate Story Audio API (Backend-only)
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
+    // Check if OpenAI is configured
     if (!openai) {
+      console.error('⚠️ Audio generation failed: OpenAI API key not configured')
+      console.error('Please add OPENAI_API_KEY to your environment variables')
       return res.status(503).json({ 
-        error: 'AI service temporarily unavailable. OpenAI API key not configured.' 
+        success: false,
+        error: 'Audio service unavailable. Please contact support - OpenAI API key not configured in production.' 
       })
     }
     
     const { storyText, language } = req.body
+    
+    if (!storyText) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'No story text provided for audio generation' 
+      })
+    }
+    
+    console.log(`🔊 Generating audio for ${language || 'english'} language...`)
     
     // Voice mapping
     const voiceMapping = {
@@ -559,15 +572,19 @@ app.post('/api/generate/story-audio', async (req, res) => {
       'default': 'nova'
     }
     
-    const voice = voiceMapping[language] || voiceMapping.default
+    const voice = voiceMapping[language?.toLowerCase()] || voiceMapping.default
+    
+    console.log(`Using voice: ${voice} for language: ${language}`)
     
     // Generate audio using OpenAI TTS
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
       voice: voice,
-      input: storyText,
+      input: storyText.substring(0, 4096), // TTS has character limit
       speed: 0.9 // Slightly slower for kids
     })
+    
+    console.log('✅ Audio generated successfully')
     
     // Convert to base64 for frontend
     const buffer = Buffer.from(await mp3.arrayBuffer())
@@ -578,8 +595,24 @@ app.post('/api/generate/story-audio', async (req, res) => {
       audioData: `data:audio/mp3;base64,${base64Audio}`
     })
   } catch (error) {
-    console.error('Audio generation error:', error)
-    res.status(500).json({ error: 'Failed to generate audio' })
+    console.error('❌ Audio generation error:', error)
+    console.error('Error details:', error.message)
+    
+    // More specific error messages
+    let errorMessage = 'Failed to generate audio'
+    
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API key is invalid or expired. Please check your API key.'
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'OpenAI API quota exceeded. Please check your billing.'
+    } else if (error.message?.includes('rate')) {
+      errorMessage = 'Too many requests. Please try again in a moment.'
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: errorMessage 
+    })
   }
 })
 

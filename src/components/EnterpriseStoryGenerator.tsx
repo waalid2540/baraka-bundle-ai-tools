@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { backendApiService } from '../services/backendApiService'
 import { dalleService } from '../services/dalleService'
+import browserTTSService from '../services/browserTTSService'
 import jsPDF from 'jspdf'
 
 interface StoryResult {
@@ -18,6 +19,7 @@ interface StoryResult {
   audioUrl?: string
   audioError?: string
   coverImage?: string
+  useBrowserTTS?: boolean
 }
 
 interface EnterpriseStoryGeneratorProps {
@@ -388,8 +390,23 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
         setResult(prev => prev ? { ...prev, audioUrl } : null)
       } catch (audioError) {
         console.error('❌ Audio generation error:', audioError)
-        // Set a flag to show audio error to user
-        setResult(prev => prev ? { ...prev, audioError: audioError.message } : null)
+        console.log('🔄 Attempting browser TTS fallback...')
+        
+        // Try browser TTS as fallback
+        if (browserTTSService.isAvailable) {
+          console.log('✅ Browser TTS is available, using as fallback')
+          setResult(prev => prev ? { 
+            ...prev, 
+            audioError: null,
+            useBrowserTTS: true 
+          } : null)
+        } else {
+          console.error('❌ Browser TTS not available')
+          setResult(prev => prev ? { 
+            ...prev, 
+            audioError: 'Audio generation failed. OpenAI service unavailable and browser TTS not supported.' 
+          } : null)
+        }
       }
 
       // Complete
@@ -673,6 +690,34 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                         🎵 Professional AI narration of your Islamic story
                       </p>
                     </div>
+                  ) : result.useBrowserTTS ? (
+                    <div className="bg-yellow-50 rounded-lg p-4 mb-4 border border-yellow-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🔊</span>
+                        <h4 className="font-bold text-yellow-800">Browser Text-to-Speech</h4>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            browserTTSService.stop() // Stop any ongoing speech first
+                            browserTTSService.speak(result.story, formData.language)
+                              .catch(err => console.error('TTS Error:', err))
+                          }}
+                          className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                        >
+                          ▶️ Play Story
+                        </button>
+                        <button
+                          onClick={() => browserTTSService.stop()}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          ⏹️ Stop
+                        </button>
+                      </div>
+                      <p className="text-sm text-yellow-700 mt-2">
+                        Using browser narration (OpenAI unavailable). Quality may vary by browser.
+                      </p>
+                    </div>
                   ) : result.audioError ? (
                     <div className="bg-red-50 rounded-lg p-4 mb-4 border border-red-200">
                       <div className="flex items-center gap-3 mb-2">
@@ -717,6 +762,20 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                             <source src={result.audioUrl} type="audio/mpeg" />
                             Your browser does not support the audio element.
                           </audio>
+                        </div>
+                      ) : result.useBrowserTTS ? (
+                        <div className="space-y-2">
+                          <div className="text-yellow-600 text-sm">🔊 Browser TTS available</div>
+                          <button
+                            onClick={() => {
+                              browserTTSService.stop()
+                              browserTTSService.speak(result.story, formData.language)
+                                .catch(err => console.error('TTS Error:', err))
+                            }}
+                            className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            ▶️ Play Story
+                          </button>
                         </div>
                       ) : result.audioError ? (
                         <div className="text-red-600 text-sm">
