@@ -82,6 +82,9 @@ class BackendApiService {
   async generateStoryAudio(storyText: string, language: string): Promise<string | object> {
     const response = await this.makeRequest<{ 
       audioData?: string, 
+      audioUrl?: string,
+      type?: string,
+      quality?: string,
       useEnhancedBrowserTTS?: boolean,
       audioMetadata?: any 
     }>('/generate/story-audio', {
@@ -90,16 +93,17 @@ class BackendApiService {
     })
     
     if (response.success && response.data) {
-      // Check if we should use enhanced browser TTS
-      if (response.data.useEnhancedBrowserTTS && response.data.audioMetadata) {
-        // Return metadata for enhanced browser TTS
+      // Check for real audio URL first (best quality)
+      if (response.data.audioUrl || response.data.audioData) {
+        console.log(`✅ Got REAL audio: ${response.data.type}, quality: ${response.data.quality}`)
+        return response.data.audioUrl || response.data.audioData
+      }
+      // Fallback to enhanced browser TTS
+      else if (response.data.useEnhancedBrowserTTS && response.data.audioMetadata) {
         return {
           useEnhancedBrowserTTS: true,
           audioMetadata: response.data.audioMetadata
         }
-      } else if (response.data.audioData) {
-        // Return legacy audio data URL
-        return response.data.audioData
       }
     }
     

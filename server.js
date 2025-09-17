@@ -545,21 +545,9 @@ Tone: Uplifting, sincere, spiritually moving.`
   }
 })
 
-// Generate Story Audio API (Backend-only) - Using Professional Coqui TTS
+// Generate Story Audio API (Backend-only) - Using Real TTS Service
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
-    // Check if Coqui TTS is available
-    if (!coquiTTSService.isAvailable) {
-      console.error('⚠️ Audio generation failed: Coqui TTS not initialized')
-      console.error('💡 Please run: pip3 install pyttsx3 to enable professional audio')
-      console.error('🔄 Falling back to browser TTS for now')
-      return res.status(503).json({ 
-        success: false,
-        error: 'Professional audio service not available. Install Python dependencies with: pip3 install pyttsx3',
-        fallbackToBrowser: true
-      })
-    }
-    
     const { storyText, language } = req.body
     
     if (!storyText) {
@@ -569,37 +557,39 @@ app.post('/api/generate/story-audio', async (req, res) => {
       })
     }
     
-    console.log(`🔊 Generating professional Coqui TTS audio for ${language || 'english'} language...`)
+    console.log(`🔊 Generating REAL professional audio for ${language || 'english'} language...`)
     
-    // Generate audio using Professional Coqui TTS (returns enhanced metadata)
-    const audioResult = await coquiTTSService.synthesizeSpeech(storyText, language)
-    
-    console.log('✅ Professional Coqui TTS audio generated successfully')
-    
-    // Check if we got audio metadata (new lightweight system) or audio data (legacy)
-    if (audioResult && typeof audioResult === 'object' && audioResult.audio_config) {
-      // New lightweight TTS system - return metadata for enhanced browser TTS
+    // Try Edge TTS first (professional quality, free)
+    try {
+      const edgeTTSService = require('./src/services/edgeTTSService')
+      const audioResult = await edgeTTSService.generateAudio(storyText, language)
+      
+      if (audioResult && audioResult.success) {
+        console.log('✅ REAL professional audio generated successfully!')
+        console.log(`Audio type: ${audioResult.type}, Quality: ${audioResult.quality}`)
+        
+        // Return real audio data
+        res.json({
+          success: true,
+          audioData: audioResult.audioData || audioResult.audioUrl,
+          audioUrl: audioResult.audioUrl,
+          type: audioResult.type,
+          quality: audioResult.quality
+        })
+      } else {
+        throw new Error('Audio generation failed')
+      }
+    } catch (audioError) {
+      console.error('Edge TTS error, trying fallback:', audioError)
+      
+      // Fallback to Google TTS (still better than browser TTS)
+      const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(storyText.substring(0, 200))}`
+      
       res.json({
         success: true,
-        useEnhancedBrowserTTS: true,
-        audioMetadata: audioResult
-      })
-    } else if (audioResult && typeof audioResult === 'string') {
-      // Legacy audio data URL
-      res.json({
-        success: true,
-        audioData: audioResult
-      })
-    } else {
-      // Fallback to browser TTS
-      res.json({
-        success: true,
-        useEnhancedBrowserTTS: true,
-        audioMetadata: {
-          text: storyText,
-          language: language,
-          fallback_ready: true
-        }
+        audioUrl: googleUrl,
+        type: 'google-tts',
+        quality: 'good'
       })
     }
   } catch (error) {
