@@ -25,72 +25,99 @@ class GoogleTTSService {
     }
   }
 
-  // Language and voice mapping for better quality
+  // Professional voice mapping with highest quality voices
   getVoiceConfig(language) {
     const voiceConfigs = {
       'english': {
         languageCode: 'en-US',
-        name: 'en-US-Neural2-F', // Female neural voice
+        name: 'en-US-Studio-O', // Premium Studio voice - most professional
         ssmlGender: 'FEMALE'
       },
       'arabic': {
         languageCode: 'ar-XA',
-        name: 'ar-XA-Standard-A',
-        ssmlGender: 'FEMALE'
+        name: 'ar-XA-Wavenet-B', // Wavenet for better quality
+        ssmlGender: 'MALE'
       },
       'somali': {
-        languageCode: 'en-US', // Fallback to English for Somali
-        name: 'en-US-Neural2-F',
-        ssmlGender: 'FEMALE'
+        languageCode: 'en-US', // Professional English for Somali
+        name: 'en-US-Studio-M', // Premium male voice
+        ssmlGender: 'MALE'
       },
       'urdu': {
-        languageCode: 'en-IN', // Use Indian English for Urdu (closer accent)
-        name: 'en-IN-Neural2-A',
+        languageCode: 'en-IN', // Professional Indian English
+        name: 'en-IN-Wavenet-D',
         ssmlGender: 'FEMALE'
       },
       'turkish': {
         languageCode: 'tr-TR',
-        name: 'tr-TR-Standard-A',
+        name: 'tr-TR-Wavenet-A', // Wavenet for professional quality
         ssmlGender: 'FEMALE'
       },
       'indonesian': {
         languageCode: 'id-ID',
-        name: 'id-ID-Standard-A',
+        name: 'id-ID-Wavenet-A', // Wavenet quality
         ssmlGender: 'FEMALE'
       },
       'french': {
         languageCode: 'fr-FR',
-        name: 'fr-FR-Neural2-A',
+        name: 'fr-FR-Studio-A', // Premium Studio voice
         ssmlGender: 'FEMALE'
       },
       'spanish': {
         languageCode: 'es-ES',
-        name: 'es-ES-Neural2-A',
+        name: 'es-ES-Studio-F', // Premium Studio voice
         ssmlGender: 'FEMALE'
       },
       'german': {
         languageCode: 'de-DE',
-        name: 'de-DE-Neural2-A',
+        name: 'de-DE-Studio-B', // Premium Studio voice
         ssmlGender: 'FEMALE'
       },
       'russian': {
         languageCode: 'ru-RU',
-        name: 'ru-RU-Standard-A',
+        name: 'ru-RU-Wavenet-A', // Wavenet quality
         ssmlGender: 'FEMALE'
       },
       'chinese': {
         languageCode: 'zh-CN',
-        name: 'zh-CN-Standard-A',
+        name: 'zh-CN-Wavenet-A', // Wavenet quality
         ssmlGender: 'FEMALE'
       },
       'japanese': {
         languageCode: 'ja-JP',
-        name: 'ja-JP-Neural2-B',
+        name: 'ja-JP-Wavenet-A', // Wavenet quality
         ssmlGender: 'FEMALE'
       }
     };
 
     return voiceConfigs[language?.toLowerCase()] || voiceConfigs.english;
+  }
+
+  // Format text with professional SSML markup for better narration
+  formatTextWithSSML(text) {
+    // Escape any existing XML/HTML tags
+    const escapedText = text.replace(/[<>&'"]/g, (char) => {
+      const entities = { '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' };
+      return entities[char];
+    });
+
+    // Professional SSML formatting for Islamic stories
+    let ssml = `<speak>
+      <prosody rate="0.95" pitch="0st" volume="loud">
+        <emphasis level="moderate">${escapedText}</emphasis>
+      </prosody>
+    </speak>`;
+
+    // Add pauses for better narration flow
+    ssml = ssml.replace(/\./g, '.<break time="0.5s"/>');
+    ssml = ssml.replace(/,/g, ',<break time="0.3s"/>');
+    ssml = ssml.replace(/:/g, ':<break time="0.4s"/>');
+    
+    // Emphasis for Islamic terms
+    ssml = ssml.replace(/\b(Allah|Prophet|Muhammad|Islam|Islamic|Quran|Bismillah|Alhamdulillah|Subhanallah|Mashallah|Inshallah)\b/gi, 
+      '<emphasis level="strong">$1</emphasis>');
+
+    return ssml;
   }
 
   async synthesizeSpeech(text, language = 'english') {
@@ -104,9 +131,12 @@ class GoogleTTSService {
       console.log(`🔊 Generating Google TTS audio for ${language} language...`);
       console.log(`Using voice: ${voiceConfig.name} (${voiceConfig.languageCode})`);
 
+      // Format text with professional SSML for better narration
+      const formattedText = this.formatTextWithSSML(text.substring(0, 5000));
+      
       // Construct the request
       const request = {
-        input: { text: text.substring(0, 5000) }, // Google TTS character limit
+        input: { ssml: formattedText }, // Use SSML for professional formatting
         voice: {
           languageCode: voiceConfig.languageCode,
           name: voiceConfig.name,
@@ -114,10 +144,10 @@ class GoogleTTSService {
         },
         audioConfig: {
           audioEncoding: 'MP3',
-          speakingRate: 0.9, // Slightly slower for kids
-          pitch: 2.0, // Higher pitch for children's content
-          volumeGainDb: 0.0,
-          effectsProfileId: ['small-bluetooth-speaker-class-device'], // Optimize for small speakers
+          speakingRate: 0.95, // Professional speaking rate
+          pitch: 0.0, // Natural pitch for professional sound
+          volumeGainDb: 2.0, // Slightly louder for clarity
+          effectsProfileId: ['large-home-entertainment-class-device'], // Optimize for quality speakers
         },
       };
 
