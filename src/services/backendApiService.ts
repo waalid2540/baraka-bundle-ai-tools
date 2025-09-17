@@ -60,6 +60,8 @@ class BackendApiService {
 
       const data = await response.json()
 
+      console.log('🔍 Raw response data from server:', data)
+
       if (!response.ok) {
         console.error(`❌ API Error Response:`, {
           status: response.status,
@@ -74,7 +76,18 @@ class BackendApiService {
         }
       }
 
-      return data
+      // For successful responses, return the data directly if it has success field
+      // Otherwise wrap it in our expected format
+      if (data && typeof data === 'object' && 'success' in data) {
+        console.log('✅ Response has success field:', data.success)
+        return data
+      } else {
+        console.log('⚠️ Response missing success field, wrapping it')
+        return {
+          success: true,
+          data: data
+        }
+      }
     } catch (error) {
       console.error('Backend API Error:', error)
       return { 
@@ -139,8 +152,12 @@ class BackendApiService {
       success: response.success,
       hasData: !!response.data,
       error: response.error,
-      dataKeys: response.data ? Object.keys(response.data) : []
+      dataKeys: response.data ? Object.keys(response.data) : [],
+      fullData: response.data
     })
+
+    // Log the FULL response for debugging
+    console.log('🔍 FULL RESPONSE OBJECT:', response)
 
     if (response.success && response.data) {
       // Check for real audio URL first (best quality)
