@@ -70,6 +70,10 @@ class DalleService {
 
   constructor() {
     this.apiKey = OPENAI_API_KEY
+    console.log('🎨 DALL-E Service initialized')
+    console.log('🔑 API key exists:', !!this.apiKey)
+    console.log('🔑 API key format:', this.apiKey ? `${this.apiKey.substring(0, 7)}...${this.apiKey.substring(this.apiKey.length - 4)}` : 'NOT SET')
+    console.log('🔑 API key length:', this.apiKey?.length || 0)
   }
 
   async generateDuaImage(duaData: DuaData, theme: string = 'light'): Promise<string> {
