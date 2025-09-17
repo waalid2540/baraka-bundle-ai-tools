@@ -60,7 +60,8 @@ class BackendApiService {
 
       const data = await response.json()
 
-      console.log('🔍 Raw response data from server:', data)
+      console.log('🔍 Raw response data from server:')
+      console.log(JSON.stringify(data, null, 2))
 
       if (!response.ok) {
         console.error(`❌ API Error Response:`, {
@@ -148,16 +149,13 @@ class BackendApiService {
       language
     })
 
-    console.log('📡 Backend response:', {
-      success: response.success,
-      hasData: !!response.data,
-      error: response.error,
-      dataKeys: response.data ? Object.keys(response.data) : [],
-      fullData: response.data
-    })
+    console.log('📡 Backend response success:', response.success)
+    console.log('📡 Backend response error:', response.error)
+    console.log('📡 Backend response data keys:', response.data ? Object.keys(response.data) : [])
 
     // Log the FULL response for debugging
-    console.log('🔍 FULL RESPONSE OBJECT:', response)
+    console.log('🔍 FULL RESPONSE OBJECT:')
+    console.log(JSON.stringify(response, null, 2))
 
     if (response.success && response.data) {
       // Check for real audio URL first (best quality)
@@ -176,11 +174,11 @@ class BackendApiService {
     }
 
     // Log the actual error for debugging
-    console.error('❌ Audio generation failed:', {
-      error: response.error,
-      details: response.data?.details,
-      fullResponse: response
-    })
+    console.error('❌ Audio generation failed:')
+    console.error('Error:', response.error)
+    console.error('Data details:', response.data?.details)
+    console.error('Full response JSON:')
+    console.error(JSON.stringify(response, null, 2))
 
     throw new Error(response.error || 'Failed to generate audio')
   }
