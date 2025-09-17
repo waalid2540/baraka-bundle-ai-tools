@@ -8,7 +8,10 @@ const stripe = require('stripe')
 const path = require('path')
 // Import fetch for Node.js compatibility
 const fetch = require('node-fetch')
+// Load environment variables from both current and parent directories
 require('dotenv').config()
+// Also load parent .env if it exists (for OPENAI_API_KEY)
+require('dotenv').config({ path: '../.env' })
 
 // OpenAI import for backend-only API calls  
 const { OpenAI } = require('openai')
@@ -565,7 +568,15 @@ app.post('/api/generate/story-audio', async (req, res) => {
     try {
       const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
+      console.log('🔍 Checking OpenAI API key...')
+      console.log('API Key exists:', !!OPENAI_API_KEY)
+      if (OPENAI_API_KEY) {
+        console.log('API Key format:', OPENAI_API_KEY.substring(0, 10) + '...' + OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4))
+      }
+
       if (!OPENAI_API_KEY) {
+        console.error('❌ OPENAI_API_KEY not found in environment variables')
+        console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('OPENAI')))
         throw new Error('OpenAI API key not configured')
       }
 

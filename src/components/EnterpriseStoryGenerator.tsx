@@ -388,15 +388,15 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       try {
         console.log('🎵 Starting professional audio generation...')
         const audioResult = await backendApiService.generateStoryAudio(storyData.story, formData.language)
-        
+
         // Handle real audio URL response from enhanced TTS
-        if (typeof audioResult === 'string' && audioResult.startsWith('http')) {
-          console.log('✅ Audio generated successfully with enhanced TTS URL')
+        if (typeof audioResult === 'string' && (audioResult.startsWith('http') || audioResult.startsWith('data:'))) {
+          console.log('✅ Audio generated successfully')
           setResult(prev => prev ? { ...prev, audioUrl: audioResult, audioError: null } : null)
         } else if (typeof audioResult === 'object' && audioResult.useEnhancedBrowserTTS) {
           console.log('✅ Using enhanced browser TTS with Islamic optimization')
-          setResult(prev => prev ? { 
-            ...prev, 
+          setResult(prev => prev ? {
+            ...prev,
             useEnhancedBrowserTTS: true,
             audioMetadata: audioResult.audioMetadata,
             audioError: null

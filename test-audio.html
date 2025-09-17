@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Audio Test</title>
+</head>
+<body>
+    <h1>Direct Audio Test</h1>
+    <button onclick="testAudio()">Test Audio Generation</button>
+    <div id="result"></div>
+    <audio id="audioPlayer" controls style="display:none;"></audio>
+
+    <script>
+    async function testAudio() {
+        const resultDiv = document.getElementById('result');
+        const audioPlayer = document.getElementById('audioPlayer');
+        
+        resultDiv.innerHTML = 'Testing audio generation...';
+        
+        try {
+            const response = await fetch('https://baraka-bundle-ai-tools.onrender.com/api/generate/story-audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Email': 'test@example.com'
+                },
+                body: JSON.stringify({
+                    storyText: 'Once upon a time, there was a little Muslim boy named Ahmed.',
+                    language: 'english'
+                })
+            });
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (data.success && (data.audioUrl || data.audioData)) {
+                const audioUrl = data.audioUrl || data.audioData;
+                resultDiv.innerHTML = `
+                    <p>✅ Audio generated successfully!</p>
+                    <p>Type: ${data.type}</p>
+                    <p>Quality: ${data.quality}</p>
+                    <p>URL: <a href="${audioUrl}" target="_blank">${audioUrl}</a></p>
+                `;
+                audioPlayer.src = audioUrl;
+                audioPlayer.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `❌ Error: ${data.error || 'Unknown error'}`;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerHTML = `❌ Network Error: ${error.message}`;
+        }
+    }
+    </script>
+</body>
+</html>
