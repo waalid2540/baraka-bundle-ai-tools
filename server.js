@@ -11,8 +11,8 @@ require('dotenv').config()
 // OpenAI import for backend-only API calls  
 const { OpenAI } = require('openai')
 
-// Google TTS import for audio generation
-const googleTTSService = require('./src/services/googleTTSService')
+// Coqui TTS import for professional audio generation
+const coquiTTSService = require('./src/services/coquiTTSService')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -33,17 +33,8 @@ if (openaiApiKey) {
   console.warn('⚠️ OpenAI API key not found. AI features will be disabled.')
 }
 
-// Setup Google Cloud credentials for production
-if (process.env.GOOGLE_CLOUD_CREDENTIALS_JSON && process.env.NODE_ENV === 'production') {
-  const fs = require('fs');
-  try {
-    fs.writeFileSync('/tmp/google-credentials.json', process.env.GOOGLE_CLOUD_CREDENTIALS_JSON);
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = '/tmp/google-credentials.json';
-    console.log('✅ Google Cloud credentials configured for production');
-  } catch (error) {
-    console.error('❌ Failed to setup Google Cloud credentials:', error.message);
-  }
-}
+// Coqui TTS is open source and doesn't require cloud credentials
+console.log('🔊 Using Coqui TTS for professional audio generation');
 
 // Initialize PostgreSQL connection
 const connectionString = process.env.DATABASE_URL || 'postgresql://waalid_legacy_db_user:dD5PV96lz21Zuh9Kd03lUuds15iZZbKt@dpg-d2rtj5m3jp1c738k0t20-a.oregon-postgres.render.com/waalid_legacy_db?sslmode=require'
@@ -554,16 +545,16 @@ Tone: Uplifting, sincere, spiritually moving.`
   }
 })
 
-// Generate Story Audio API (Backend-only) - Using Google Cloud TTS
+// Generate Story Audio API (Backend-only) - Using Professional Coqui TTS
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
-    // Check if Google TTS is available
-    if (!googleTTSService.isAvailable) {
-      console.error('⚠️ Audio generation failed: Google Cloud TTS not configured')
-      console.error('Please add GOOGLE_APPLICATION_CREDENTIALS to your environment variables')
+    // Check if Coqui TTS is available
+    if (!coquiTTSService.isAvailable) {
+      console.error('⚠️ Audio generation failed: Coqui TTS not initialized')
+      console.error('Please ensure Python dependencies are installed')
       return res.status(503).json({ 
         success: false,
-        error: 'Audio service unavailable. Please contact support - Google Cloud TTS not configured in production.' 
+        error: 'Professional audio service is starting up. Please try again in a moment.' 
       })
     }
     
@@ -576,40 +567,98 @@ app.post('/api/generate/story-audio', async (req, res) => {
       })
     }
     
-    console.log(`🔊 Generating Google TTS audio for ${language || 'english'} language...`)
+    console.log(`🔊 Generating professional Coqui TTS audio for ${language || 'english'} language...`)
     
-    // Generate audio using Google Cloud TTS
-    const audioDataUrl = await googleTTSService.synthesizeSpeech(storyText, language)
+    // Generate audio using Professional Coqui TTS
+    const audioDataUrl = await coquiTTSService.synthesizeSpeech(storyText, language)
     
-    console.log('✅ Google TTS audio generated successfully')
+    console.log('✅ Professional Coqui TTS audio generated successfully')
     
     res.json({
       success: true,
       audioData: audioDataUrl
     })
   } catch (error) {
-    console.error('❌ Google TTS generation error:', error)
+    console.error('❌ Coqui TTS generation error:', error)
     console.error('Error details:', error.message)
     
     // More specific error messages
-    let errorMessage = 'Failed to generate audio'
+    let errorMessage = 'Failed to generate professional audio'
     
-    if (error.message?.includes('credentials')) {
-      errorMessage = 'Google Cloud credentials not configured properly. Please check your service account key.'
-    } else if (error.message?.includes('quota')) {
-      errorMessage = 'Google Cloud TTS quota exceeded. Please check your billing.'
-    } else if (error.message?.includes('permission')) {
-      errorMessage = 'Google Cloud TTS permission denied. Please check your service account permissions.'
-    } else if (error.message?.includes('billing')) {
-      errorMessage = 'Google Cloud billing not enabled. Please enable billing for your project.'
+    if (error.message?.includes('dependencies')) {
+      errorMessage = 'Professional audio service dependencies not installed. Please install Python TTS library.'
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Audio generation is taking longer than expected. Please try with shorter text.'
+    } else if (error.message?.includes('process')) {
+      errorMessage = 'Professional audio service process error. Please try again.'
+    } else if (error.message?.includes('Python')) {
+      errorMessage = 'Python TTS service not available. Please check server configuration.'
     } else {
-      errorMessage = `Google TTS failed: ${error.message}`
+      errorMessage = `Professional TTS failed: ${error.message}`
     }
     
     res.status(500).json({ 
       success: false,
       error: errorMessage 
     })
+  }
+})
+
+// Manual Access Grant Endpoint (for admin use)
+app.post('/api/admin/grant-access', async (req, res) => {
+  try {
+    const { email, product_type, admin_key } = req.body
+    
+    // Simple admin key check (you should use a proper admin system)
+    if (admin_key !== 'baraka_admin_2024') {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+    
+    console.log(`🎁 Manual access grant requested for ${email} - ${product_type}`)
+    
+    // Find or create user
+    let user = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+    
+    if (user.rows.length === 0) {
+      // Create user if doesn't exist
+      const insertUser = await pool.query(
+        'INSERT INTO users (email, created_at) VALUES ($1, NOW()) RETURNING *',
+        [email]
+      )
+      user = insertUser
+    }
+    
+    const userId = user.rows[0].id
+    
+    // Find product
+    const product = await pool.query('SELECT * FROM products WHERE product_type = $1', [product_type])
+    
+    if (product.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' })
+    }
+    
+    const productId = product.rows[0].id
+    
+    // Grant access by creating a purchase record
+    const purchaseResult = await pool.query(
+      `INSERT INTO user_purchases (user_id, product_id, amount_paid_cents, currency, payment_status, purchased_at, stripe_payment_intent_id, stripe_session_id) 
+       VALUES ($1, $2, 299, 'usd', 'succeeded', NOW(), 'manual_admin_grant', 'manual_admin_grant') 
+       ON CONFLICT (user_id, product_id) DO NOTHING
+       RETURNING *`,
+      [userId, productId]
+    )
+    
+    console.log(`✅ Access granted to ${email} for ${product_type}`)
+    
+    res.json({ 
+      success: true, 
+      message: `Access granted to ${email} for ${product_type}`,
+      purchase_id: purchaseResult.rows[0]?.id
+    })
+    
+  } catch (error) {
+    console.error('❌ Manual grant error:', error)
+    res.status(500).json({ error: 'Failed to grant access' })
   }
 })
 
