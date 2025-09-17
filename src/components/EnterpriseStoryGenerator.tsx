@@ -16,6 +16,7 @@ interface StoryResult {
   illustration?: string
   sceneIllustrations?: string[]
   audioUrl?: string
+  audioError?: string
   coverImage?: string
 }
 
@@ -381,10 +382,14 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       // Step 4: Generate Audio
       setGenerationProgress(prev => ({ ...prev, audio: true }))
       try {
+        console.log('🎵 Starting audio generation...')
         const audioUrl = await backendApiService.generateStoryAudio(storyData.story, formData.language)
+        console.log('🎵 Audio generated successfully:', audioUrl ? 'Yes' : 'No')
         setResult(prev => prev ? { ...prev, audioUrl } : null)
       } catch (audioError) {
-        console.error('Audio generation error:', audioError)
+        console.error('❌ Audio generation error:', audioError)
+        // Set a flag to show audio error to user
+        setResult(prev => prev ? { ...prev, audioError: audioError.message } : null)
       }
 
       // Complete
@@ -647,7 +652,7 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                   </div>
                   
                   {/* Audio Player - Prominent Position */}
-                  {result.audioUrl && (
+                  {result.audioUrl ? (
                     <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-2xl">🎧</span>
@@ -668,7 +673,18 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                         🎵 Professional AI narration of your Islamic story
                       </p>
                     </div>
-                  )}
+                  ) : result.audioError ? (
+                    <div className="bg-red-50 rounded-lg p-4 mb-4 border border-red-200">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl">❌</span>
+                        <h4 className="font-bold text-red-800">Audio Generation Failed</h4>
+                      </div>
+                      <p className="text-red-700">{result.audioError}</p>
+                      <p className="text-sm text-red-600 mt-2">
+                        Please check that OpenAI API key is configured in the backend.
+                      </p>
+                    </div>
+                  ) : null}
                   
                   <div className="bg-white rounded-lg p-4 mb-4">
                     <h4 className="font-bold text-lg text-gray-800 mb-2">{result.title}</h4>
@@ -701,6 +717,10 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                             <source src={result.audioUrl} type="audio/mpeg" />
                             Your browser does not support the audio element.
                           </audio>
+                        </div>
+                      ) : result.audioError ? (
+                        <div className="text-red-600 text-sm">
+                          ❌ Audio failed: {result.audioError}
                         </div>
                       ) : (
                         <div className="text-gray-600">Processing audio...</div>
