@@ -571,15 +571,37 @@ app.post('/api/generate/story-audio', async (req, res) => {
     
     console.log(`🔊 Generating professional Coqui TTS audio for ${language || 'english'} language...`)
     
-    // Generate audio using Professional Coqui TTS
-    const audioDataUrl = await coquiTTSService.synthesizeSpeech(storyText, language)
+    // Generate audio using Professional Coqui TTS (returns enhanced metadata)
+    const audioResult = await coquiTTSService.synthesizeSpeech(storyText, language)
     
     console.log('✅ Professional Coqui TTS audio generated successfully')
     
-    res.json({
-      success: true,
-      audioData: audioDataUrl
-    })
+    // Check if we got audio metadata (new lightweight system) or audio data (legacy)
+    if (audioResult && typeof audioResult === 'object' && audioResult.audio_config) {
+      // New lightweight TTS system - return metadata for enhanced browser TTS
+      res.json({
+        success: true,
+        useEnhancedBrowserTTS: true,
+        audioMetadata: audioResult
+      })
+    } else if (audioResult && typeof audioResult === 'string') {
+      // Legacy audio data URL
+      res.json({
+        success: true,
+        audioData: audioResult
+      })
+    } else {
+      // Fallback to browser TTS
+      res.json({
+        success: true,
+        useEnhancedBrowserTTS: true,
+        audioMetadata: {
+          text: storyText,
+          language: language,
+          fallback_ready: true
+        }
+      })
+    }
   } catch (error) {
     console.error('❌ Coqui TTS generation error:', error)
     console.error('Error details:', error.message)

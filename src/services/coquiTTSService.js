@@ -155,7 +155,17 @@ class CoquiTTSService {
               
               if (result.success) {
                 console.log('✅ Coqui TTS audio generated successfully');
-                resolve(result.audio_data);
+                // Check if we have audio metadata from lightweight service
+                if (result.audio_config && result.processing_instructions === 'use_enhanced_browser_tts') {
+                  // Return the full lightweight TTS result for enhanced browser TTS
+                  resolve(result);
+                } else if (result.audio_data) {
+                  // Return legacy audio data
+                  resolve(result.audio_data);
+                } else {
+                  // Fallback for other cases
+                  resolve(result);
+                }
               } else {
                 console.error('❌ Coqui TTS generation failed:', result.error);
                 reject(new Error(`Coqui TTS failed: ${result.error}`));

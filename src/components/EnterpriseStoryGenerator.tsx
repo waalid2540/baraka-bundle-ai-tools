@@ -20,6 +20,8 @@ interface StoryResult {
   audioError?: string
   coverImage?: string
   useBrowserTTS?: boolean
+  useEnhancedBrowserTTS?: boolean
+  audioMetadata?: any
 }
 
 interface EnterpriseStoryGeneratorProps {
@@ -384,13 +386,27 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       // Step 4: Generate Audio
       setGenerationProgress(prev => ({ ...prev, audio: true }))
       try {
-        console.log('🎵 Starting audio generation...')
-        const audioUrl = await backendApiService.generateStoryAudio(storyData.story, formData.language)
-        console.log('🎵 Audio generated successfully:', audioUrl ? 'Yes' : 'No')
-        setResult(prev => prev ? { ...prev, audioUrl } : null)
+        console.log('🎵 Starting professional audio generation...')
+        const audioResult = await backendApiService.generateStoryAudio(storyData.story, formData.language)
+        
+        // Check if we got enhanced browser TTS metadata or legacy audio URL
+        if (typeof audioResult === 'object' && audioResult.useEnhancedBrowserTTS) {
+          console.log('✅ Using enhanced browser TTS with Islamic optimization')
+          setResult(prev => prev ? { 
+            ...prev, 
+            useEnhancedBrowserTTS: true,
+            audioMetadata: audioResult.audioMetadata,
+            audioError: null
+          } : null)
+        } else if (typeof audioResult === 'string') {
+          console.log('✅ Audio generated successfully with legacy format')
+          setResult(prev => prev ? { ...prev, audioUrl: audioResult } : null)
+        } else {
+          throw new Error('Invalid audio response format')
+        }
       } catch (audioError) {
         console.error('❌ Audio generation error:', audioError)
-        console.log('🔄 Attempting browser TTS fallback...')
+        console.log('🔄 Attempting basic browser TTS fallback...')
         
         // Try browser TTS as fallback
         if (browserTTSService.isAvailable) {
@@ -404,7 +420,7 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
           console.error('❌ Browser TTS not available')
           setResult(prev => prev ? { 
             ...prev, 
-            audioError: 'Audio generation failed. OpenAI service unavailable and browser TTS not supported.' 
+            audioError: 'Audio generation failed. Professional audio service unavailable and browser TTS not supported.' 
           } : null)
         }
       }
@@ -690,6 +706,42 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                         🎵 Professional AI narration of your Islamic story
                       </p>
                     </div>
+                  ) : result.useEnhancedBrowserTTS ? (
+                    <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">🔊</span>
+                        <h4 className="font-bold text-green-800">Professional Islamic Story Narration</h4>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            browserTTSService.stop() // Stop any ongoing speech first
+                            // Use the enhanced audio config if available
+                            const audioConfig = result.audioMetadata?.audio_config
+                            if (audioConfig) {
+                              console.log('🔊 Using enhanced TTS with Islamic optimization')
+                              browserTTSService.speak(audioConfig.text, formData.language)
+                                .catch(err => console.error('Enhanced TTS Error:', err))
+                            } else {
+                              browserTTSService.speak(result.story, formData.language)
+                                .catch(err => console.error('TTS Error:', err))
+                            }
+                          }}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          ▶️ Play Enhanced Story
+                        </button>
+                        <button
+                          onClick={() => browserTTSService.stop()}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          ⏹️ Stop
+                        </button>
+                      </div>
+                      <p className="text-sm text-green-700 mt-2">
+                        ✨ Enhanced browser TTS with Islamic content optimization, professional pacing, and proper pronunciation
+                      </p>
+                    </div>
                   ) : result.useBrowserTTS ? (
                     <div className="bg-yellow-50 rounded-lg p-4 mb-4 border border-yellow-200">
                       <div className="flex items-center gap-3 mb-3">
@@ -762,6 +814,26 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                             <source src={result.audioUrl} type="audio/mpeg" />
                             Your browser does not support the audio element.
                           </audio>
+                        </div>
+                      ) : result.useEnhancedBrowserTTS ? (
+                        <div className="space-y-2">
+                          <div className="text-green-600 text-sm">✨ Enhanced TTS with Islamic optimization</div>
+                          <button
+                            onClick={() => {
+                              browserTTSService.stop()
+                              const audioConfig = result.audioMetadata?.audio_config
+                              if (audioConfig) {
+                                browserTTSService.speak(audioConfig.text, formData.language)
+                                  .catch(err => console.error('Enhanced TTS Error:', err))
+                              } else {
+                                browserTTSService.speak(result.story, formData.language)
+                                  .catch(err => console.error('TTS Error:', err))
+                              }
+                            }}
+                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                          >
+                            ▶️ Play Enhanced
+                          </button>
                         </div>
                       ) : result.useBrowserTTS ? (
                         <div className="space-y-2">

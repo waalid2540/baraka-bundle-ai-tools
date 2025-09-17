@@ -79,15 +79,28 @@ class BackendApiService {
   }
 
   // 🔊 Generate Story Audio (Backend Secure)
-  async generateStoryAudio(storyText: string, language: string): Promise<string> {
-    const response = await this.makeRequest<{ audioData: string }>('/generate/story-audio', {
+  async generateStoryAudio(storyText: string, language: string): Promise<string | object> {
+    const response = await this.makeRequest<{ 
+      audioData?: string, 
+      useEnhancedBrowserTTS?: boolean,
+      audioMetadata?: any 
+    }>('/generate/story-audio', {
       storyText,
       language
     })
     
-    if (response.success && response.data?.audioData) {
-      // Return the base64 audio data URL
-      return response.data.audioData
+    if (response.success && response.data) {
+      // Check if we should use enhanced browser TTS
+      if (response.data.useEnhancedBrowserTTS && response.data.audioMetadata) {
+        // Return metadata for enhanced browser TTS
+        return {
+          useEnhancedBrowserTTS: true,
+          audioMetadata: response.data.audioMetadata
+        }
+      } else if (response.data.audioData) {
+        // Return legacy audio data URL
+        return response.data.audioData
+      }
     }
     
     throw new Error(response.error || 'Failed to generate audio')
