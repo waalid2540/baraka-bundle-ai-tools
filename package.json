@@ -4,7 +4,7 @@
   "description": "✨ BarakahTool - Premium Islamic Digital SaaS Platform | High-Class AI Tools",
   "scripts": {
     "dev": "vite --port 3001",
-    "build": "vite build && npm run install-server && pip3 install pyttsx3",
+    "build": "vite build && npm run install-server",
     "preview": "vite preview --port 3001",
     "start": "node server.js",
     "install-server": "npm install express cors pg stripe dotenv --no-save"

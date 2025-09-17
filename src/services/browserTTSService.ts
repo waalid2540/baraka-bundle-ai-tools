@@ -67,6 +67,32 @@ class BrowserTTSService {
     return this.voices[0] || null
   }
 
+  private preprocessIslamicText(text: string): string {
+    // Add natural pauses for better narration
+    let processedText = text
+      .replace(/\./g, '. ')
+      .replace(/,/g, ', ')
+      .replace(/:/g, ': ')
+      .replace(/;/g, '; ')
+    
+    // Ensure proper spacing
+    processedText = processedText.replace(/\s+/g, ' ').trim()
+    
+    // Add emphasis markers for Islamic terms (some browsers support SSML-like markup)
+    const islamicTerms = [
+      'Allah', 'Muhammad', 'Quran', 'Qur\'an', 'Bismillah',
+      'Alhamdulillah', 'Subhanallah', 'Mashallah', 'Inshallah',
+      'Astaghfirullah', 'Prophet'
+    ]
+    
+    islamicTerms.forEach(term => {
+      const regex = new RegExp(`\\b${term}\\b`, 'gi')
+      processedText = processedText.replace(regex, ` ${term} `)
+    })
+    
+    return processedText
+  }
+
   async speak(text: string, language: string = 'english'): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.isSupported) {
@@ -77,7 +103,9 @@ class BrowserTTSService {
       // Cancel any ongoing speech
       this.synthesis.cancel()
 
-      const utterance = new SpeechSynthesisUtterance(text)
+      // Preprocess text for Islamic content
+      const processedText = this.preprocessIslamicText(text)
+      const utterance = new SpeechSynthesisUtterance(processedText)
       
       // Select appropriate voice
       const voice = this.selectVoice(language)
@@ -85,9 +113,9 @@ class BrowserTTSService {
         utterance.voice = voice
       }
 
-      // Configure speech parameters for kids
-      utterance.rate = 0.85 // Slightly slower for children
-      utterance.pitch = 1.1 // Slightly higher pitch
+      // Professional Islamic content settings
+      utterance.rate = 0.75 // Slower for professional narration
+      utterance.pitch = 1.0 // Natural pitch for storytelling
       utterance.volume = 1.0
 
       // Event handlers

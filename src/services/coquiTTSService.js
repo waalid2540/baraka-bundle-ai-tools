@@ -6,7 +6,7 @@ class CoquiTTSService {
   constructor() {
     this.isInitialized = false;
     this.pythonPath = 'python3'; // Can be configured via environment
-    this.servicePath = path.join(__dirname, '../../simple_tts_service.py');
+    this.servicePath = path.join(__dirname, '../../lightweight_tts_service.py');
     this.initializeService();
   }
 
@@ -29,7 +29,7 @@ class CoquiTTSService {
 
   async testPythonService() {
     return new Promise((resolve) => {
-      const testProcess = spawn(this.pythonPath, ['-c', 'import pyttsx3; print("OK")'], {
+      const testProcess = spawn(this.pythonPath, ['-c', 'print("OK")'], {
         stdio: ['pipe', 'pipe', 'pipe']
       });
       
@@ -46,11 +46,11 @@ class CoquiTTSService {
 
       testProcess.on('close', (code) => {
         if (code === 0 && output.includes('OK')) {
-          console.log('✅ Python pyttsx3 test successful');
+          console.log('✅ Python lightweight TTS test successful');
           resolve(true);
         } else {
-          console.error('❌ Python pyttsx3 test failed:', errorOutput || 'Unknown error');
-          console.error('💡 Run: pip3 install pyttsx3 to fix this issue');
+          console.error('❌ Python test failed:', errorOutput || 'Unknown error');
+          console.error('💡 Python is required for professional TTS');
           resolve(false);
         }
       });
