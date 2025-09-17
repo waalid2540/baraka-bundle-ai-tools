@@ -6,6 +6,8 @@ const cors = require('cors')
 const { Pool } = require('pg')
 const stripe = require('stripe')
 const path = require('path')
+// Import fetch for Node.js compatibility
+const fetch = require('node-fetch')
 require('dotenv').config()
 
 // OpenAI import for backend-only API calls  
@@ -549,42 +551,75 @@ Tone: Uplifting, sincere, spiritually moving.`
 app.post('/api/generate/story-audio', async (req, res) => {
   try {
     const { storyText, language } = req.body
-    
+
     if (!storyText) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'No story text provided for audio generation' 
+        error: 'No story text provided for audio generation'
       })
     }
-    
-    console.log(`🔊 Generating REAL professional audio for ${language || 'english'} language...`)
-    
-    // Try Edge TTS first (professional quality, free)
+
+    console.log(`🔊 Generating professional audio using OpenAI TTS for ${language || 'english'} language...`)
+
+    // Use OpenAI TTS API for high-quality audio generation
     try {
-      const edgeTTSService = require('./src/services/edgeTTSService')
-      const audioResult = await edgeTTSService.generateAudio(storyText, language)
-      
-      if (audioResult && audioResult.success) {
-        console.log('✅ REAL professional audio generated successfully!')
-        console.log(`Audio type: ${audioResult.type}, Quality: ${audioResult.quality}`)
-        
-        // Return real audio data
-        res.json({
-          success: true,
-          audioData: audioResult.audioData || audioResult.audioUrl,
-          audioUrl: audioResult.audioUrl,
-          type: audioResult.type,
-          quality: audioResult.quality
-        })
-      } else {
-        throw new Error('Audio generation failed')
+      const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+
+      if (!OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured')
       }
+
+      // Language voice mapping for OpenAI TTS
+      const voiceMapping = {
+        'english': 'nova',    // Clear female voice
+        'arabic': 'alloy',    // Best for Arabic pronunciation
+        'somali': 'echo',     // Clear multilingual voice
+        'urdu': 'fable',      // Good for South Asian languages
+        'default': 'nova'
+      }
+
+      const voice = voiceMapping[language] || voiceMapping.default
+
+      // Call OpenAI TTS API
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: storyText.substring(0, 4000), // OpenAI has a 4096 character limit
+          voice: voice,
+          speed: 0.9 // Slightly slower for kids
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('OpenAI TTS API error:', response.status, errorText)
+        throw new Error(`OpenAI TTS API error: ${response.status}`)
+      }
+
+      // Convert response to base64 for sending to frontend
+      const audioBuffer = await response.arrayBuffer()
+      const base64Audio = Buffer.from(audioBuffer).toString('base64')
+      const audioDataUrl = `data:audio/mpeg;base64,${base64Audio}`
+
+      console.log('✅ OpenAI TTS audio generated successfully!')
+
+      res.json({
+        success: true,
+        audioData: audioDataUrl,
+        type: 'openai-tts',
+        quality: 'premium'
+      })
     } catch (audioError) {
-      console.error('Edge TTS error, trying fallback:', audioError)
-      
+      console.error('OpenAI TTS error, trying fallback:', audioError.message)
+
       // Fallback to Google TTS (still better than browser TTS)
       const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(storyText.substring(0, 200))}`
-      
+
       res.json({
         success: true,
         audioUrl: googleUrl,
