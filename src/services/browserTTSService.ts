@@ -103,7 +103,7 @@ class BrowserTTSService {
       // Cancel any ongoing speech
       this.synthesis.cancel()
 
-      // Preprocess text for Islamic content
+      // ENHANCED: Always use professional Islamic content processing
       const processedText = this.preprocessIslamicText(text)
       const utterance = new SpeechSynthesisUtterance(processedText)
       
@@ -113,14 +113,21 @@ class BrowserTTSService {
         utterance.voice = voice
       }
 
-      // Professional Islamic content settings
-      utterance.rate = 0.75 // Slower for professional narration
-      utterance.pitch = 1.0 // Natural pitch for storytelling
-      utterance.volume = 1.0
+      // ENHANCED: Professional Islamic children's content settings (optimized for Islamic stories)
+      utterance.rate = 0.85  // Slower for children and Islamic content clarity
+      utterance.pitch = 1.1  // Slightly higher pitch for child-friendly narration
+      utterance.volume = 0.9 // Professional volume level
 
       // Event handlers
-      utterance.onend = () => resolve()
+      utterance.onend = () => {
+        console.log('✅ Enhanced Islamic TTS completed with professional settings')
+        resolve()
+      }
       utterance.onerror = (event) => reject(new Error(event.error))
+
+      // ENHANCED: Log enhanced usage
+      console.log('🔊 Using ENHANCED Islamic Browser TTS with professional settings')
+      console.log('📈 Settings: rate=0.85, pitch=1.1, volume=0.9 (optimized for Islamic children\'s content)')
 
       // Start speaking
       this.synthesis.speak(utterance)
