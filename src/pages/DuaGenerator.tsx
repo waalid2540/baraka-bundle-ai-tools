@@ -32,11 +32,6 @@ const DuaGenerator = () => {
     }
   }
 
-  // Handle refresh after payment or checking access
-  const handleAccessCheck = () => {
-    window.location.reload()
-  }
-
   const generateDua = async () => {
     if (!userHasAccess) {
       handlePaymentClick()
@@ -142,18 +137,6 @@ const DuaGenerator = () => {
                   🚀 {!user ? 'Login to Access' : 'Get Unlimited Access - $2.99'}
                 </button>
 
-                {user && (
-                  <button
-                    type="button"
-                    onClick={handleAccessCheck}
-                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>✅</span>
-                      <span>Already Purchased? Refresh Access</span>
-                    </div>
-                  </button>
-                )}
               </div>
             </div>
           </div>

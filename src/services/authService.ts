@@ -216,7 +216,7 @@ class AuthService {
     return user.purchased_features.some(feature =>
       feature.product_type === featureType &&
       feature.has_access &&
-      new Date(feature.expires_at) > new Date()
+      (!feature.expires_at || new Date(feature.expires_at) > new Date()) // null expires_at means lifetime access
     )
   }
 }
