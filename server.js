@@ -80,8 +80,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'baraka_jwt_secret_2024_change_in_p
 // Rate limiting
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: { error: 'Too many authentication attempts, please try again later.' }
+  max: 20, // limit each IP to 20 requests per windowMs (increased for testing)
+  message: { error: 'Too many authentication attempts, please try again later.' },
+  skipSuccessfulRequests: true // Don't count successful requests against the limit
 })
 
 // Middleware
