@@ -96,6 +96,72 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
     }
   }
 
+  const downloadImage = async (imageUrl: string, imageName: string) => {
+    try {
+      console.log('📸 Downloading image:', imageName)
+
+      // Create a temporary link element
+      const link = document.createElement('a')
+      link.href = imageUrl
+      link.download = imageName
+      link.target = '_blank'
+
+      // For data URLs, download directly
+      if (imageUrl.startsWith('data:')) {
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        console.log('✅ Image downloaded successfully')
+        return
+      }
+
+      // For external URLs, fetch and convert to blob
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+
+      link.href = blobUrl
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up the blob URL
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
+      console.log('✅ Image downloaded successfully')
+
+    } catch (error) {
+      console.error('❌ Error downloading image:', error)
+      alert('Failed to download image. Please try right-clicking and saving manually.')
+    }
+  }
+
+  const downloadAllImages = async () => {
+    if (!result) return
+
+    try {
+      const storyTitle = result.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+
+      // Download cover image
+      if (result.coverImage) {
+        await downloadImage(result.coverImage, `${storyTitle}_cover.png`)
+        await new Promise(resolve => setTimeout(resolve, 500)) // Small delay between downloads
+      }
+
+      // Download scene illustrations
+      if (result.sceneIllustrations) {
+        for (let i = 0; i < result.sceneIllustrations.length; i++) {
+          await downloadImage(result.sceneIllustrations[i], `${storyTitle}_scene_${i + 1}.png`)
+          await new Promise(resolve => setTimeout(resolve, 500)) // Small delay between downloads
+        }
+      }
+
+      console.log('✅ All images downloaded successfully')
+    } catch (error) {
+      console.error('❌ Error downloading all images:', error)
+      alert('Some images may have failed to download. Please try downloading individual images.')
+    }
+  }
+
   const generateStory = async () => {
     if (!hasAccess) {
       onPaymentClick()
@@ -534,12 +600,26 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
 
                   {/* Cover Image */}
                   {result.coverImage && (
-                    <div className="mb-6 rounded-xl overflow-hidden shadow-lg">
+                    <div className="mb-6 rounded-xl overflow-hidden shadow-lg relative group">
                       <img
                         src={result.coverImage}
                         alt="Story Cover"
                         className="w-full h-64 object-cover"
                       />
+                      <div className="absolute top-3 right-3">
+                        <button
+                          onClick={() => downloadImage(result.coverImage!, `${result.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_cover.png`)}
+                          className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                          title="Download Cover Image"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        📖 Story Cover
+                      </div>
                     </div>
                   )}
 
@@ -548,12 +628,26 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     {splitStoryIntoPages(result.story, 80).map((pageContent, index) => (
                       <div key={index} className="story-page mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl shadow-md">
                         {result.sceneIllustrations && result.sceneIllustrations[index] && (
-                          <div className="mb-6 rounded-lg overflow-hidden shadow-md">
+                          <div className="mb-6 rounded-lg overflow-hidden shadow-md relative group">
                             <img
                               src={result.sceneIllustrations[index]}
                               alt={`Story illustration for page ${index + 1}`}
                               className="w-full h-48 object-cover"
                             />
+                            <div className="absolute top-3 right-3">
+                              <button
+                                onClick={() => downloadImage(result.sceneIllustrations![index], `${result.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_scene_${index + 1}.png`)}
+                                className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                                title={`Download Scene ${index + 1} Image`}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                            <div className="absolute bottom-3 left-3 bg-black/70 text-white px-2 py-1 rounded-full text-sm font-medium">
+                              🎨 Scene {index + 1}
+                            </div>
                           </div>
                         )}
                         <div className="text-base text-gray-800 leading-relaxed font-medium">
@@ -607,6 +701,13 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     {isPlayingAudio ? '⏸️ Pause' : '🔊 Play Audio'}
                   </button>
 
+                  <button
+                    onClick={downloadAllImages}
+                    className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    title="Download all story images individually"
+                  >
+                    🖼️ All Images
+                  </button>
                   <button
                     onClick={generateProfessionalPDF}
                     className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl"
