@@ -8,6 +8,11 @@ const stripe = require('stripe')
 const path = require('path')
 // Import fetch for Node.js compatibility
 const fetch = require('node-fetch')
+// Authentication dependencies
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
+const rateLimit = require('express-rate-limit')
 // Load environment variables
 // In production, these come from Render's environment variables
 // In development, load from .env files
@@ -69,17 +74,60 @@ const pool = new Pool({
   }
 })
 
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'baraka_jwt_secret_2024_change_in_production'
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: { error: 'Too many authentication attempts, please try again later.' }
+})
+
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://baraka-bundle-ai-tools.onrender.com', process.env.FRONTEND_URL].filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:3003'],
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:3002', 'http://localhost:3003'],
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Email']
 }))
 app.use(express.json({ limit: '10mb' }))
+app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'dist')))
+
+// Authentication middleware
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' })
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET)
+    const user = await pool.query('SELECT id, email, name, role FROM users WHERE id = $1', [decoded.userId])
+
+    if (user.rows.length === 0) {
+      return res.status(403).json({ error: 'Invalid token' })
+    }
+
+    req.user = user.rows[0]
+    next()
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' })
+  }
+}
+
+// Admin middleware
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' })
+  }
+  next()
+}
 
 // Database connection test
 pool.on('connect', () => {
@@ -91,6 +139,294 @@ pool.on('error', (err) => {
 })
 
 // API Routes
+
+// ===== AUTHENTICATION ENDPOINTS =====
+
+// Register endpoint
+app.post('/api/auth/register', authLimiter, async (req, res) => {
+  try {
+    const { email, password, name } = req.body
+
+    // Validation
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, password, and name are required' })
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' })
+    }
+
+    // Check if user already exists
+    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()])
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'User already exists with this email' })
+    }
+
+    // Hash password
+    const saltRounds = 12
+    const passwordHash = await bcrypt.hash(password, saltRounds)
+
+    // Create user
+    const result = await pool.query(`
+      INSERT INTO users (email, name, password_hash, email_verified, created_at)
+      VALUES ($1, $2, $3, $4, NOW())
+      RETURNING id, email, name, role, created_at
+    `, [email.toLowerCase(), name, passwordHash, false])
+
+    const user = result.rows[0]
+
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    console.log(`✅ New user registered: ${email}`)
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      },
+      token
+    })
+
+  } catch (error) {
+    console.error('Registration error:', error)
+    res.status(500).json({ error: 'Registration failed' })
+  }
+})
+
+// Login endpoint
+app.post('/api/auth/login', authLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' })
+    }
+
+    // Find user
+    const result = await pool.query(
+      'SELECT id, email, name, password_hash, role, email_verified FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' })
+    }
+
+    const user = result.rows[0]
+
+    // Check password
+    const validPassword = await bcrypt.compare(password, user.password_hash)
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' })
+    }
+
+    // Update last login
+    await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id])
+
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    console.log(`✅ User logged in: ${email}`)
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        email_verified: user.email_verified
+      },
+      token
+    })
+
+  } catch (error) {
+    console.error('Login error:', error)
+    res.status(500).json({ error: 'Login failed' })
+  }
+})
+
+// Get current user profile
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    // Get user with access information
+    const userResult = await pool.query(`
+      SELECT u.id, u.email, u.name, u.role, u.email_verified, u.created_at, u.last_login
+      FROM users u
+      WHERE u.id = $1
+    `, [req.user.id])
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const user = userResult.rows[0]
+
+    // Get user's purchased features
+    const accessResult = await pool.query(`
+      SELECT product_type, has_access, purchased_at, expires_at, payment_status
+      FROM user_access
+      WHERE user_id = $1 AND has_access = true
+    `, [user.id])
+
+    const purchasedFeatures = accessResult.rows
+
+    res.json({
+      success: true,
+      user: {
+        ...user,
+        purchased_features: purchasedFeatures
+      }
+    })
+
+  } catch (error) {
+    console.error('Profile error:', error)
+    res.status(500).json({ error: 'Failed to get user profile' })
+  }
+})
+
+// Logout endpoint (invalidate token on client side)
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+  try {
+    // In a more complex setup, you'd add the token to a blacklist
+    // For now, we'll just return success and let client remove the token
+
+    console.log(`✅ User logged out: ${req.user.email}`)
+
+    res.json({
+      success: true,
+      message: 'Logout successful'
+    })
+  } catch (error) {
+    console.error('Logout error:', error)
+    res.status(500).json({ error: 'Logout failed' })
+  }
+})
+
+// ===== ADMIN ENDPOINTS =====
+
+// Get all users (admin only)
+app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        u.id, u.email, u.name, u.role, u.email_verified, u.created_at, u.last_login,
+        COUNT(ua.id) as purchased_features_count,
+        MAX(ua.purchased_at) as last_purchase
+      FROM users u
+      LEFT JOIN user_access ua ON u.id = ua.user_id AND ua.has_access = true
+      GROUP BY u.id, u.email, u.name, u.role, u.email_verified, u.created_at, u.last_login
+      ORDER BY u.created_at DESC
+    `)
+
+    res.json({
+      success: true,
+      users: result.rows
+    })
+
+  } catch (error) {
+    console.error('Admin users error:', error)
+    res.status(500).json({ error: 'Failed to get users' })
+  }
+})
+
+// Get user details with purchases (admin only)
+app.get('/api/admin/users/:userId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    // Get user info
+    const userResult = await pool.query(`
+      SELECT id, email, name, role, email_verified, created_at, last_login
+      FROM users WHERE id = $1
+    `, [userId])
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Get user's purchases
+    const accessResult = await pool.query(`
+      SELECT product_type, has_access, purchased_at, expires_at, payment_status, amount_paid, currency
+      FROM user_access
+      WHERE user_id = $1
+      ORDER BY purchased_at DESC
+    `, [userId])
+
+    res.json({
+      success: true,
+      user: userResult.rows[0],
+      purchases: accessResult.rows
+    })
+
+  } catch (error) {
+    console.error('Admin user details error:', error)
+    res.status(500).json({ error: 'Failed to get user details' })
+  }
+})
+
+// Grant access to user (admin only)
+app.post('/api/admin/grant-access', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { email, product_type, expires_days = 365 } = req.body
+
+    if (!email || !product_type) {
+      return res.status(400).json({ error: 'Email and product_type are required' })
+    }
+
+    // Find user
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const userId = userResult.rows[0].id
+
+    // Calculate expiration
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + expires_days)
+
+    // Grant access
+    await pool.query(`
+      INSERT INTO user_access (user_id, email, product_type, payment_status, purchased_at, expires_at, has_access)
+      VALUES ($1, $2, $3, $4, NOW(), $5, $6)
+      ON CONFLICT (user_id, product_type)
+      DO UPDATE SET has_access = $6, expires_at = $5, purchased_at = NOW()
+    `, [userId, email.toLowerCase(), product_type, 'admin_granted', expiresAt, true])
+
+    // Log admin action
+    await pool.query(`
+      INSERT INTO admin_logs (admin_user_id, action, target_user_id, details)
+      VALUES ($1, $2, $3, $4)
+    `, [req.user.id, 'grant_access', userId, { product_type, expires_days }])
+
+    console.log(`✅ Admin ${req.user.email} granted ${product_type} access to ${email}`)
+
+    res.json({
+      success: true,
+      message: `Access granted to ${email} for ${product_type}`
+    })
+
+  } catch (error) {
+    console.error('Grant access error:', error)
+    res.status(500).json({ error: 'Failed to grant access' })
+  }
+})
 
 // Health check endpoint with debugging info
 app.get('/api/health', (req, res) => {

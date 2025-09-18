@@ -1,28 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-interface User {
-  id: number
-  email: string
-  name?: string
-  hasAccess: {
-    dua_generator: boolean
-    story_generator: boolean
-    poster_generator: boolean
-  }
-}
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import authService, { User } from '../services/authService'
 
 interface AuthContextType {
   user: User | null
-  isLoading: boolean
-  login: (email: string, name?: string) => Promise<boolean>
-  logout: () => void
-  checkAccess: (productType: 'dua_generator' | 'story_generator' | 'poster_generator') => boolean
-  refreshAccess: () => Promise<void>
+  loading: boolean
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
+  register: (email: string, password: string, name: string) => Promise<{ success: boolean; message: string }>
+  logout: () => Promise<void>
+  refreshUser: () => Promise<void>
+  hasAccess: (featureType: string) => boolean
+  isAdmin: () => boolean
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
@@ -36,138 +28,102 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
-  // Check if user is logged in on app start
+  // Load user on component mount
   useEffect(() => {
-    checkExistingLogin()
+    loadUser()
   }, [])
 
-  const checkExistingLogin = async () => {
-    try {
-      // Temporarily disable API calls to diagnose white screen
-      const savedUser = localStorage.getItem('barakah_user')
-      if (savedUser) {
-        const userData = JSON.parse(savedUser)
-        // Set user without API calls for now
-        setUser(userData)
-      }
-      setIsLoading(false)
-    } catch (error) {
-      console.error('Failed to check existing login:', error)
-      localStorage.removeItem('barakah_user')
-      setIsLoading(false)
-    }
-  }
-
-  const refreshUserAccess = async (userData: any) => {
-    try {
-      // Check access for all products
-      const accessChecks = await Promise.all([
-        checkProductAccess(userData.email, 'dua_generator'),
-        checkProductAccess(userData.email, 'story_generator'),
-        checkProductAccess(userData.email, 'poster_generator')
-      ])
-
-      const userWithAccess: User = {
-        ...userData,
-        hasAccess: {
-          dua_generator: accessChecks[0],
-          story_generator: accessChecks[1],
-          poster_generator: accessChecks[2]
-        }
-      }
-
-      setUser(userWithAccess)
-      localStorage.setItem('barakah_user', JSON.stringify(userWithAccess))
-      setIsLoading(false)
-    } catch (error) {
-      console.error('Failed to refresh user access:', error)
-      logout()
-      setIsLoading(false)
-    }
-  }
-
-  const checkProductAccess = async (email: string, productType: string): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/access/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, product_type: productType })
-      })
-
-      if (!response.ok) return false
-
-      const { has_access } = await response.json()
-      return has_access
-    } catch (error) {
-      console.error('Failed to check product access:', error)
-      return false
-    }
-  }
-
-  const login = async (email: string, name?: string): Promise<boolean> => {
-    try {
-      setIsLoading(true)
-
-      // Get or create user
-      let userData
+  const loadUser = async () => {
+    if (authService.isLoggedIn()) {
       try {
-        const userResponse = await fetch(`/api/users/email/${encodeURIComponent(email)}`)
-        if (userResponse.ok) {
-          userData = await userResponse.json()
+        const response = await authService.getCurrentUser()
+        if (response.success && response.user) {
+          setUser(response.user)
         } else {
-          // Create new user
-          const createResponse = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, name })
-          })
-          if (createResponse.ok) {
-            userData = await createResponse.json()
-          } else {
-            throw new Error('Failed to create user')
-          }
+          // Token might be expired, clear it
+          authService.setToken(null)
         }
       } catch (error) {
-        throw new Error('Failed to get/create user')
+        console.error('Error loading user:', error)
+        authService.setToken(null)
       }
+    }
+    setLoading(false)
+  }
 
-      // Refresh access and set user
-      await refreshUserAccess(userData)
-      return true
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await authService.login(email, password)
 
+      if (response.success && response.user) {
+        setUser(response.user)
+        return { success: true, message: response.message }
+      } else {
+        return { success: false, message: response.error || 'Login failed' }
+      }
     } catch (error) {
-      console.error('Login failed:', error)
-      return false
-    } finally {
-      setIsLoading(false)
+      return { success: false, message: 'Network error occurred' }
     }
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('barakah_user')
-  }
+  const register = async (email: string, password: string, name: string) => {
+    try {
+      const response = await authService.register(email, password, name)
 
-  const checkAccess = (productType: 'dua_generator' | 'story_generator' | 'poster_generator'): boolean => {
-    if (!user) return false
-    return user.hasAccess[productType]
-  }
-
-  const refreshAccess = async () => {
-    if (user) {
-      await refreshUserAccess(user)
+      if (response.success && response.user) {
+        setUser(response.user)
+        return { success: true, message: response.message }
+      } else {
+        return { success: false, message: response.error || 'Registration failed' }
+      }
+    } catch (error) {
+      return { success: false, message: 'Network error occurred' }
     }
+  }
+
+  const logout = async () => {
+    try {
+      await authService.logout()
+      setUser(null)
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still clear user state even if logout request fails
+      setUser(null)
+    }
+  }
+
+  const refreshUser = async () => {
+    if (authService.isLoggedIn()) {
+      try {
+        const response = await authService.getCurrentUser()
+        if (response.success && response.user) {
+          setUser(response.user)
+        }
+      } catch (error) {
+        console.error('Error refreshing user:', error)
+      }
+    }
+  }
+
+  const hasAccess = (featureType: string): boolean => {
+    return authService.hasFeatureAccess(user, featureType)
+  }
+
+  const isAdmin = (): boolean => {
+    return user?.role === 'admin'
   }
 
   const value: AuthContextType = {
     user,
-    isLoading,
+    loading,
     login,
+    register,
     logout,
-    checkAccess,
-    refreshAccess
+    refreshUser,
+    hasAccess,
+    isAdmin
   }
 
   return (
@@ -176,3 +132,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   )
 }
+
+export default AuthContext
