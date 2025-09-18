@@ -805,6 +805,106 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
+// 🎨 DALL-E Image Generation Endpoint (Backend Secure)
+app.post('/api/generate/dalle-image', async (req, res) => {
+  console.log('🎨 DALL-E image generation request received')
+
+  try {
+    if (!openai) {
+      console.error('❌ OpenAI not initialized - API key missing')
+      return res.status(500).json({
+        success: false,
+        error: 'Image generation service not configured'
+      })
+    }
+
+    const { type, title, theme, ageGroup, pageContent, pageNumber, totalPages, characterName } = req.body
+
+    let prompt = ''
+
+    if (type === 'book-cover') {
+      prompt = `Create a beautiful children's book cover for an Islamic story titled "${title}".
+      VISUAL ELEMENTS:
+      - Professional children's book cover design
+      - Vibrant, engaging colors perfect for ages ${ageGroup}
+      - Islamic children characters in traditional modest clothing
+      - Boys wearing thobe/traditional Islamic dress with kufi caps
+      - Girls wearing hijab and modest colorful dresses
+      - Beautiful Islamic setting (mosque, Islamic garden, or traditional home)
+      COVER DESIGN:
+      - Central focus on happy Islamic children
+      - Islamic architectural elements in background
+      - Decorative Islamic geometric patterns as borders
+      - Warm, inviting atmosphere that appeals to children
+      - Theme: ${theme}
+      - Colors should be bright and child-friendly
+      STYLE REQUIREMENTS:
+      - Professional children's book cover quality
+      - Characters showing Islamic values and happiness
+      - Suitable for printing and publishing
+      - Diverse representation of Muslim children`
+    } else if (type === 'story-scene') {
+      const scenePosition = pageNumber === 1 ? 'beginning' :
+                          pageNumber === totalPages ? 'ending' : 'middle'
+
+      prompt = `Create a beautiful, engaging children's book illustration for page ${pageNumber} of "${title}".
+      PAGE CONTENT CONTEXT: ${pageContent?.substring(0, 300)}...
+      SCENE POSITION: ${scenePosition} of the story
+      VISUAL REQUIREMENTS:
+      - Professional children's book illustration style
+      - Colorful, warm, and engaging for ages ${ageGroup}
+      - Include Islamic children characters appropriate to the story
+      - Beautiful Islamic setting (mosque, Islamic home, garden, market)
+      - Characters wearing modest Islamic clothing (hijab, thobe, traditional dress)
+      CHARACTER GUIDELINES:
+      - Show Islamic children (boys and girls) in modest traditional clothing
+      - Boys: wearing thobe, kufi/cap, or traditional Islamic attire
+      - Girls: wearing hijab, modest dresses, or traditional Islamic clothing
+      - Diverse representation of Muslim children from different backgrounds
+      - Happy, friendly expressions showing Islamic values
+      STORY-SPECIFIC ELEMENTS:
+      ${scenePosition === 'beginning' ? '- Opening scene introducing the main character and Islamic setting' : ''}
+      ${scenePosition === 'middle' ? '- Key story moment with character interactions and Islamic values' : ''}
+      ${scenePosition === 'ending' ? '- Happy resolution showing lesson learned and character growth' : ''}
+      - Theme focus: ${theme}
+      - Islamic decorative elements and patterns in background
+      STYLE REQUIREMENTS:
+      - Bright, colorful children's book art style
+      - Professional quality suitable for publishing
+      - Characters should match the story narrative`
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image type'
+      })
+    }
+
+    console.log('🎯 Generating image with prompt length:', prompt.length)
+
+    const response = await openai.images.generate({
+      model: "dall-e-2",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024"
+    })
+
+    const imageUrl = response.data[0].url
+
+    console.log('✅ DALL-E image generated successfully')
+
+    res.json({
+      success: true,
+      imageUrl: imageUrl
+    })
+  } catch (error) {
+    console.error('❌ DALL-E generation error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate image'
+    })
+  }
+})
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error(error.stack)

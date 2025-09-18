@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { backendApiService } from '../services/backendApiService'
-import { dalleService } from '../services/dalleService'
+import { dalleBackendService } from '../services/dalleBackendService'
 import browserTTSService from '../services/browserTTSService'
 import jsPDF from 'jspdf'
 
@@ -358,7 +358,7 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       // Step 2: Generate Cover Image
       setGenerationProgress(prev => ({ ...prev, cover: true }))
       try {
-        const coverImage = await dalleService.generateBookCover(
+        const coverImage = await dalleBackendService.generateBookCover(
           storyData.title,
           storyData.theme || formData.theme,
           formData.age
@@ -371,7 +371,7 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
       // Step 3: Generate Scene Illustrations
       setGenerationProgress(prev => ({ ...prev, illustrations: true }))
       try {
-        const sceneIllustrations = await dalleService.generateStoryScenes(
+        const sceneIllustrations = await dalleBackendService.generateStoryScenes(
           storyData.title,
           storyData.story,
           formData.storyMode === 'preset' ? formData.name : 'protagonist',
