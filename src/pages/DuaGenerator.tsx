@@ -1,268 +1,185 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import openaiService from '../services/openaiService'
-import stripeService from '../services/stripeService'
-import canvaService from '../services/canvaService'
-import { getThemeNames, getTheme } from '../services/pdfTemplates'
+import dalleService from '../services/dalleService'
+import professionalIslamicPdf from '../services/professionalIslamicPdf'
+import { stripeService } from '../services/stripeService'
+import { databaseService } from '../services/databaseService'
 import PaymentGateway from '../components/PaymentGateway'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
-  const { user, hasAccess } = useAuth()
+  const { user, hasAccess: checkAccess } = useAuth()
   const [formData, setFormData] = useState({
-    situation: '',
+    topic: '',
+    customRequest: '',
     language: 'English',
-    theme: 'royalGold',
-    duaCategory: 'general', // 'prophet' or 'general'
-    selectedDua: ''
+    pdfTheme: 'gold'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
   const [showPayment, setShowPayment] = useState(false)
-  const userHasAccess = hasAccess('dua_generator')
+  const hasAccess = checkAccess('dua_generator')
 
   const languages = openaiService.getSupportedLanguages()
-  const themeNames = getThemeNames()
 
-  // Prophet's Dua Categories for AI to generate
-  const prophetDuaCategories = [
-    {
-      id: 'rizq',
-      name: 'Dua for Rizq (Sustenance)',
-      description: 'Authentic prophetic dua for lawful sustenance and provision'
-    },
-    {
-      id: 'protection',
-      name: 'Dua for Protection',
-      description: 'Authentic prophetic dua for protection from evil and harm'
-    },
-    {
-      id: 'guidance',
-      name: 'Dua for Guidance',
-      description: 'Authentic prophetic dua for guidance and right path'
-    },
-    {
-      id: 'forgiveness',
-      name: 'Dua for Forgiveness',
-      description: 'Authentic prophetic dua for forgiveness of sins'
-    },
-    {
-      id: 'health',
-      name: 'Dua for Health',
-      description: 'Authentic prophetic dua for physical and spiritual health'
-    },
-    {
-      id: 'knowledge',
-      name: 'Dua for Knowledge',
-      description: 'Authentic prophetic dua for increase in beneficial knowledge'
-    },
-    {
-      id: 'travel',
-      name: 'Dua for Travel',
-      description: 'Authentic prophetic dua for safe and blessed travel'
-    },
-    {
-      id: 'sleep',
-      name: 'Dua before Sleep',
-      description: 'Authentic prophetic dua to recite before sleeping'
-    }
+
+  const duaTopics = [
+    { id: 'forgiveness', name: 'Seeking Forgiveness', icon: '🤲' },
+    { id: 'guidance', name: 'Seeking Guidance', icon: '🌟' },
+    { id: 'protection', name: 'Protection & Safety', icon: '🛡️' },
+    { id: 'health', name: 'Health & Healing', icon: '💚' },
+    { id: 'sustenance', name: 'Rizq & Sustenance', icon: '💰' },
+    { id: 'knowledge', name: 'Knowledge & Wisdom', icon: '📚' },
+    { id: 'travel', name: 'Travel & Journey', icon: '✈️' },
+    { id: 'family', name: 'Family & Children', icon: '👨‍👩‍👧‍👦' },
+    { id: 'marriage', name: 'Marriage & Relationships', icon: '💕' },
+    { id: 'success', name: 'Success & Achievement', icon: '🏆' },
+    { id: 'patience', name: 'Patience & Strength', icon: '💪' },
+    { id: 'gratitude', name: 'Gratitude & Thanks', icon: '🙏' }
   ]
 
-  const generalDuas = [
-    {
-      id: 'success_work',
-      name: 'Success in Work/Business',
-      situation: 'Success in my work and business ventures'
-    },
-    {
-      id: 'family_protection',
-      name: 'Family Protection',
-      situation: 'Protection and blessings for my family'
-    },
-    {
-      id: 'marriage',
-      name: 'Finding a Spouse',
-      situation: 'Finding a righteous spouse and blessed marriage'
-    },
-    {
-      id: 'children',
-      name: 'Righteous Children',
-      situation: 'Righteous and healthy children'
-    },
-    {
-      id: 'debt_relief',
-      name: 'Relief from Debt',
-      situation: 'Relief from financial difficulties and debt'
-    },
-    {
-      id: 'travel_safety',
-      name: 'Safe Travel',
-      situation: 'Safety and blessings during travel'
-    },
-    {
-      id: 'exam_success',
-      name: 'Success in Exams/Studies',
-      situation: 'Success in my studies and examinations'
-    },
-    {
-      id: 'illness_recovery',
-      name: 'Recovery from Illness',
-      situation: 'Healing and recovery from illness'
-    },
-    {
-      id: 'anxiety_peace',
-      name: 'Peace from Anxiety',
-      situation: 'Peace of mind and relief from anxiety'
-    },
-    {
-      id: 'custom',
-      name: 'Custom Request',
-      situation: 'custom' // Will show text input
-    }
-  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (formData.duaCategory === 'general' && formData.selectedDua === 'custom' && !formData.situation.trim()) {
-      setError('Please describe your custom situation')
-      return
-    }
-
-    if (formData.duaCategory === 'general' && !formData.selectedDua) {
-      setError('Please select a dua category')
-      return
-    }
-
-    if (formData.duaCategory === 'prophet' && !formData.selectedDua) {
-      setError('Please select a Prophet\'s dua')
-      return
-    }
-
-    // Check access before showing payment
-    if (!userHasAccess) {
+    
+    // Check if user has access before generating
+    if (!hasAccess) {
       if (!user) {
         navigate('/login', { state: { from: { pathname: '/dua-generator' } } })
       } else {
         setShowPayment(true)
       }
-    } else {
-      // User has access, generate directly
-      await generateDua()
+      return
     }
+    
+    if (!formData.topic && !formData.customRequest.trim()) {
+      setError('Please select a topic or describe your specific need')
+      return
+    }
+
+    await generateDua()
   }
 
-  const handlePayment = async () => {
-    try {
-      setLoading(true)
-      setError('')
-
-      // For demo purposes, skip actual payment and generate dua
-      // In production, process payment first
-      await generateDua()
-    } catch (err) {
-      setError('Payment processing failed. Please try again.')
-      setLoading(false)
-    }
+  const handlePaymentSuccess = () => {
+    setShowPayment(false)
+    window.location.reload() // Reload to update access
   }
 
   const generateDua = async () => {
     try {
       setLoading(true)
+      
+      // Log dua generation
+      if (user) {
+        await databaseService.logUsage(
+          user.id,
+          'dua_generator',
+          'generate_dua',
+          {
+            topic: formData.topic,
+            language: formData.language,
+            custom_request: formData.customRequest
+          }
+        )
+      }
       setError('')
 
-      let duaData: any
+      const request = formData.topic 
+        ? duaTopics.find(topic => topic.id === formData.topic)?.name || formData.topic
+        : formData.customRequest
 
-      if (formData.duaCategory === 'prophet') {
-        // Generate authentic Prophet's dua using OpenAI
-        const selectedCategory = prophetDuaCategories.find(dua => dua.id === formData.selectedDua)
-        if (selectedCategory) {
-          const prophetDuaPrompt = `Generate an authentic prophetic dua from Quran and Sunnah for: ${selectedCategory.description}. 
-          IMPORTANT: Only provide AUTHENTIC duas that are found in Quran, authentic Hadith, or established Islamic sources. 
-          Do not create new duas. Provide the exact Arabic text with proper diacritical marks, accurate transliteration, and ${formData.language} translation.
-          
-          Format:
-          **Arabic:** [Authentic Arabic text with diacritics]
-          **Transliteration:** [Accurate pronunciation]
-          **Translation:** [Meaning in ${formData.language}]`
+      const response = await openaiService.generateDua('User', request, [formData.language])
 
-          const response = await openaiService.generateDua(
-            'User',
-            prophetDuaPrompt,
-            formData.language
-          )
-
-          if (response.success && response.data) {
-            const content = response.data.content
-            const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-            const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-            const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*([\s\S]*?)(?=\n\n|$)/i)
-            
-            duaData = {
-              arabicText: arabicMatch ? arabicMatch[1].trim() : '',
-              transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-              translation: translationMatch ? translationMatch[1].trim() : '',
-              name: 'User',
-              situation: selectedCategory.name,
-              language: formData.language,
-              theme: formData.theme
-            }
-          } else {
-            setError(response.error || 'Failed to generate Prophet\'s dua')
-            return
-          }
+      if (response.success && response.data) {
+        const content = response.data.content
+        
+        // Parse the response
+        const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
+        const translationMatch = content.match(new RegExp(`\\*\\*Translation in ${formData.language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
+        
+        // Generate AI reflections for this specific dua
+        const reflectionsResponse = await openaiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '', formData.language)
+        
+        const duaData = {
+          arabicText: arabicMatch ? arabicMatch[1].trim() : '',
+          transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
+          translation: translationMatch ? translationMatch[1].trim() : '',
+          situation: request,
+          language: formData.language,
+          topic: formData.topic,
+          reflections: reflectionsResponse,
+          generatedAt: new Date().toISOString()
         }
+
+        setGeneratedDua(duaData)
       } else {
-        // Generate dua using OpenAI for general requests
-        const situation = formData.selectedDua === 'custom' 
-          ? formData.situation 
-          : generalDuas.find(dua => dua.id === formData.selectedDua)?.situation || formData.situation
-
-        const response = await openaiService.generateDua(
-          'User',
-          situation,
-          formData.language
-        )
-
-        if (response.success && response.data) {
-          // Parse the response to extract Arabic, transliteration, and translation
-          const content = response.data.content
-          const arabicMatch = content.match(/\*\*Arabic:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-          const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*([\s\S]*?)(?=\n\*\*|$)/i)
-          const translationMatch = content.match(/\*\*Translation[^:]*:\*\*\s*([\s\S]*?)(?=\n\n|$)/i)
-          
-          duaData = {
-            arabicText: arabicMatch ? arabicMatch[1].trim() : '',
-            transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-            translation: translationMatch ? translationMatch[1].trim() : '',
-            name: 'User',
-            situation: situation,
-            language: formData.language,
-            theme: formData.theme
-          }
-        } else {
-          setError(response.error || 'Failed to generate dua')
-          return
-        }
+        setError(response.error || 'Failed to generate dua. Please try again.')
       }
-
-      // Debug: Log the parsed data
-      console.log('Generated Dua Data:', duaData)
-
-      setGeneratedDua(duaData)
-      
-    } catch (err) {
-      setError('An error occurred. Please try again.')
+    } catch (error) {
+      console.error('Error:', error)
+      setError('An error occurred. Please check your API key and try again.')
     } finally {
       setLoading(false)
     }
   }
 
+  const downloadPdf = async () => {
+    if (!generatedDua) return
+
+    try {
+      setLoading(true)
+      // Use working professional PDF with Arabic text support and color theme
+      const pdfBlob = await professionalIslamicPdf.generateProfessionalPdf({
+        arabicText: generatedDua.arabicText,
+        transliteration: generatedDua.transliteration,
+        translation: generatedDua.translation,
+        situation: generatedDua.situation || formData.customRequest,
+        language: generatedDua.language,
+        reflections: generatedDua.reflections
+      }, formData.pdfTheme as 'gold' | 'blue' | 'green' | 'purple')
+      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${formData.pdfTheme}_${Date.now()}.pdf`)
+    } catch (error) {
+      console.error('PDF generation error:', error)
+      alert('Failed to generate PDF. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const downloadImage = async () => {
+    if (!generatedDua) return
+
+    try {
+      setLoading(true)
+      
+      // Generate Islamic-themed image with DALL-E
+      const imageUrl = await dalleService.generateDuaImage(generatedDua, 'gold')
+      
+      // Download the image using dalleService's download method
+      await dalleService.downloadImage(imageUrl, `Islamic_Dua_Art_${Date.now()}.png`)
+      
+      alert('🎨 Beautiful Islamic art generated and downloaded!')
+    } catch (error) {
+      console.error('Image generation error:', error)
+      alert('Failed to generate image. Please check your OpenAI API key configuration.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resetGenerator = () => {
+    setGeneratedDua(null)
+    setFormData({ topic: '', customRequest: '', language: 'English', pdfTheme: 'gold' })
+    setError('')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
+      {/* Header - EXACT SAME AS NAME POSTER */}
       <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -274,174 +191,118 @@ const DuaGenerator = () => {
                 ← Back
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-yellow-400">BARAKAH ENTERPRISE • Duʿā Generator</h1>
-                <p className="text-yellow-300/60 text-sm">Professional Islamic Digital Solutions</p>
+                <h1 className="text-2xl font-bold text-yellow-400">Du'a Generator</h1>
+                <p className="text-yellow-300/60 text-sm">Authentic Islamic supplications</p>
               </div>
             </div>
-            <div className="text-3xl font-bold text-yellow-400">$2.99</div>
+            <div className="text-3xl font-bold text-yellow-400">🤲</div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - EXACT SAME STYLING */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
-          {!showPayment ? (
+          {!generatedDua ? (
             <>
               <div className="text-center mb-8">
-                <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <div className="w-24 h-24 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
                   <span className="text-5xl">🤲</span>
                 </div>
                 <h2 className="text-3xl font-bold text-white mb-3">
-                  BARAKAH ENTERPRISE • Premium Duʿā Generation
+                  Generate Your Islamic Du'a
                 </h2>
                 <p className="text-gray-400 max-w-2xl mx-auto">
-                  Professional Islamic Digital Solutions • Enterprise-grade Arabic text rendering • Guaranteed perfect PDFs
+                  Create personalized Islamic supplications with authentic Arabic text, 
+                  transliteration, and translations
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Dua Category Selection */}
+                {/* Topic Selection - Grid Style */}
                 <div>
-                  <label className="block text-yellow-400 font-semibold mb-3">
-                    Choose Dua Category
+                  <label className="block text-yellow-400 font-semibold mb-2">
+                    Select a Du'a Topic
                   </label>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, duaCategory: 'prophet', selectedDua: '' })}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        formData.duaCategory === 'prophet'
-                          ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
-                          : 'border-slate-600 bg-slate-800/30 text-gray-300 hover:border-yellow-500/50'
-                      }`}
-                    >
-                      <div className="text-2xl mb-2">📿</div>
-                      <div className="font-semibold">Prophet's Du'a</div>
-                      <div className="text-sm opacity-80">Authentic duas from Quran & Sunnah</div>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, duaCategory: 'general', selectedDua: '' })}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        formData.duaCategory === 'general'
-                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                          : 'border-slate-600 bg-slate-800/30 text-gray-300 hover:border-emerald-500/50'
-                      }`}
-                    >
-                      <div className="text-2xl mb-2">🤲</div>
-                      <div className="font-semibold">General Du'a</div>
-                      <div className="text-sm opacity-80">AI-generated for specific needs</div>
-                    </button>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {duaTopics.map((topic) => (
+                      <button
+                        key={topic.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, topic: topic.id, customRequest: '' })
+                        }}
+                        className={`p-3 rounded-xl border transition-all duration-200 text-left ${
+                          formData.topic === topic.id
+                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                            : 'bg-slate-800/50 border-slate-700 text-gray-300 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{topic.icon}</div>
+                        <div className="text-sm font-medium">{topic.name}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Prophet's Dua Selection */}
-                {formData.duaCategory === 'prophet' && (
-                  <div>
-                    <label className="block text-yellow-400 font-semibold mb-3">
-                      Select Prophet's Du'a
-                    </label>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {prophetDuaCategories.map((category) => (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, selectedDua: category.id })}
-                          className={`p-4 text-left rounded-xl border-2 transition-all ${
-                            formData.selectedDua === category.id
-                              ? 'border-yellow-500 bg-yellow-500/10'
-                              : 'border-slate-700 bg-slate-800/50 hover:border-yellow-500/50'
-                          }`}
-                        >
-                          <div className="font-semibold text-white mb-2">{category.name}</div>
-                          <div className="text-sm text-gray-400">{category.description}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Custom Request - SAME STYLING */}
+                <div>
+                  <label className="block text-yellow-400 font-semibold mb-2">
+                    Or Describe Your Specific Need
+                  </label>
+                  <textarea
+                    value={formData.customRequest}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customRequest: e.target.value, topic: '' })
+                    }}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
+                    placeholder="Describe what you need du'a for... (e.g., guidance in making an important decision)"
+                    rows={3}
+                  />
+                </div>
 
-                {/* General Dua Selection */}
-                {formData.duaCategory === 'general' && (
-                  <div>
-                    <label className="block text-emerald-400 font-semibold mb-3">
-                      Select Your Need
-                    </label>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {generalDuas.map((dua) => (
-                        <button
-                          key={dua.id}
-                          type="button"
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            selectedDua: dua.id,
-                            situation: dua.id === 'custom' ? formData.situation : dua.situation
-                          })}
-                          className={`p-3 text-left rounded-xl border-2 transition-all ${
-                            formData.selectedDua === dua.id
-                              ? 'border-emerald-500 bg-emerald-500/10'
-                              : 'border-slate-700 bg-slate-800/50 hover:border-emerald-500/50'
-                          }`}
-                        >
-                          <div className="font-semibold text-white text-sm">{dua.name}</div>
-                        </button>
-                      ))}
-                    </div>
+                {/* Language Selection */}
+                <div>
+                  <label className="block text-yellow-400 font-semibold mb-2">
+                    Language for Translation
+                  </label>
+                  <select
+                    value={formData.language}
+                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
+                  >
+                    {languages.map(lang => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
+                </div>
 
-                    {/* Custom input for general dua */}
-                    {formData.selectedDua === 'custom' && (
-                      <div className="mt-4">
-                        <label className="block text-emerald-400 font-semibold mb-2">
-                          Describe your specific need
-                        </label>
-                        <textarea
-                          value={formData.situation}
-                          onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
-                          className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-colors h-24 resize-none"
-                          placeholder="E.g., Protection for my family, Success in my studies, Healing from illness..."
-                          required
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-yellow-400 font-semibold mb-2">
-                      Translation Language
-                    </label>
-                    <select
-                      value={formData.language}
-                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                    >
-                      {languages.map(lang => (
-                        <option key={lang} value={lang}>{lang}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-yellow-400 font-semibold mb-2">
-                      PDF Color Theme
-                    </label>
-                    <select
-                      value={formData.theme}
-                      onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                    >
-                      {themeNames.map(themeKey => {
-                        const theme = getTheme(themeKey)
-                        return (
-                          <option key={themeKey} value={themeKey}>
-                            {theme.name}
-                          </option>
-                        )
-                      })}
-                    </select>
+                {/* Color Theme Selection */}
+                <div>
+                  <label className="block text-yellow-400 font-semibold mb-2">
+                    Select PDF Color Theme
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { id: 'gold', name: 'Gold Classic', color: 'from-yellow-600 to-yellow-400' },
+                      { id: 'blue', name: 'Ocean Blue', color: 'from-blue-600 to-blue-400' },
+                      { id: 'green', name: 'Nature Green', color: 'from-green-600 to-green-400' },
+                      { id: 'purple', name: 'Royal Purple', color: 'from-purple-600 to-purple-400' }
+                    ].map((theme) => (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, pdfTheme: theme.id })}
+                        className={`p-4 rounded-xl border transition-all duration-200 ${
+                          formData.pdfTheme === theme.id
+                            ? 'bg-yellow-500/20 border-yellow-500'
+                            : 'bg-slate-800/50 border-slate-700 hover:border-yellow-500/50'
+                        }`}
+                      >
+                        <div className={`w-full h-16 bg-gradient-to-r ${theme.color} rounded-lg mb-2`}></div>
+                        <div className="text-sm font-medium text-gray-300">{theme.name}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -451,404 +312,171 @@ const DuaGenerator = () => {
                   </div>
                 )}
 
+                {/* What You'll Get - SAME STYLE */}
                 <div className="bg-slate-800/50 rounded-xl p-6 space-y-3">
-                  <h3 className="text-yellow-400 font-semibold mb-3">What You'll Receive:</h3>
+                  <h3 className="text-yellow-400 font-semibold mb-3">What You'll Get:</h3>
                   <div className="space-y-2 text-gray-300">
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Beautiful Arabic duʿā with perfect diacritical marks</span>
+                      <span>Authentic Arabic du'a with full tashkeel</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Natural, heartfelt translation in your language</span>
+                      <span>Clear transliteration for pronunciation</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Authentic content from Qur'an and Sunnah</span>
+                      <span>Translation in your selected language</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>Short, powerful, and meaningful (2-5 lines)</span>
+                      <span>Clean, professional PDF format</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>ENTERPRISE PDF with luxury Islamic design</span>
+                      <span>Simple, readable layout</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-yellow-400">✓</span>
-                      <span>GUARANTEED perfect Arabic text rendering</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Professional-grade PDF generation (NO HTML/CSS issues)</span>
+                      <span>Instant download</span>
                     </div>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Processing Enterprise Request...' : 'ENTERPRISE ACCESS - $2.99'}
-                </button>
+                {/* Access Control for Submit Button */}
+                {hasAccess ? (
+                  /* User has access - show regular submit button */
+                  <button
+                    type="submit"
+                    disabled={loading || (!formData.topic && !formData.customRequest.trim())}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-2xl hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Generating Your Du'a...</span>
+                      </div>
+                    ) : (
+                      'Generate My Du\'a'
+                    )}
+                  </button>
+                ) : (
+                  /* User needs to purchase - show payment button */
+                  <div className="space-y-4">
+                    {/* Pricing Info */}
+                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 text-center">
+                      <h4 className="text-green-400 font-semibold mb-2">🤲 Du'a Generator - Premium</h4>
+                      <p className="text-2xl font-bold text-green-400 mb-2">$2.99</p>
+                      <p className="text-green-300 text-sm">One-time payment • Lifetime access • Unlimited generations</p>
+                    </div>
+                    
+                    {/* Purchase Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayment(true)}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-2xl hover:shadow-green-500/25"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span>💳</span>
+                        <span>Get Lifetime Access - $2.99</span>
+                      </div>
+                    </button>
+                    
+                    {/* Already Purchased Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPayment(true)}
+                      className="w-full bg-slate-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors border border-slate-600"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span>✅</span>
+                        <span>Already Purchased? Access Now</span>
+                      </div>
+                    </button>
+
+                    {/* Features List */}
+                    <div className="text-center text-sm text-gray-400">
+                      <p>✨ Unlock unlimited du'a generation with Arabic text, transliteration, and translations</p>
+                    </div>
+                  </div>
+                )}
               </form>
             </>
           ) : (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
-                <span className="text-5xl">💳</span>
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-4">
-                Complete Your Purchase
-              </h2>
-              <p className="text-gray-400 mb-8">
-                Get your personalized duʿā instantly
-              </p>
-              
-              <div className="bg-slate-800/50 rounded-xl p-6 mb-8 max-w-md mx-auto">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">Product:</span>
-                  <span className="text-white font-semibold">ENTERPRISE Duʿā</span>
+            /* Results Display - SAME DARK THEME */
+            <div className="space-y-8">
+              <div className="text-center">
+                <div className="w-24 h-24 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                  <span className="text-5xl">✨</span>
                 </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">Situation:</span>
-                  <span className="text-white text-sm">{formData.situation.substring(0, 30)}...</span>
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">Language:</span>
-                  <span className="text-white">{formData.language}</span>
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">PDF Theme:</span>
-                  <span className="text-white">{getTheme(formData.theme).name}</span>
-                </div>
-                <div className="border-t border-slate-700 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-yellow-400 font-semibold">Total:</span>
-                    <span className="text-3xl font-bold text-yellow-400">$2.99</span>
-                  </div>
-                </div>
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  Your Du'a Has Been Generated!
+                </h2>
+                <p className="text-gray-400">
+                  May Allah accept your supplication
+                </p>
               </div>
 
-              <div className="flex gap-4 max-w-md mx-auto">
-                <button
-                  onClick={() => setShowPayment(false)}
-                  className="flex-1 bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handlePayment}
-                  disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Generating Enterprise PDF...' : 'Generate ENTERPRISE Duʿā'}
-                </button>
+              {/* Arabic Text */}
+              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                <h3 className="text-yellow-400 font-semibold mb-4">Arabic Text</h3>
+                <p className="text-2xl text-white text-center leading-relaxed font-arabic" dir="rtl">
+                  {generatedDua.arabicText}
+                </p>
               </div>
 
-              <p className="text-gray-500 text-sm mt-6">
-                🔒 Secure payment powered by Stripe
-              </p>
-            </div>
-          )}
-
-          {generatedDua && (
-            <div className="mt-8">
-              {/* Success Header */}
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                  <span className="text-4xl">✨</span>
+              {/* Transliteration */}
+              {generatedDua.transliteration && (
+                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                  <h3 className="text-yellow-400 font-semibold mb-4">Transliteration</h3>
+                  <p className="text-lg text-gray-300 text-center italic">
+                    {generatedDua.transliteration}
+                  </p>
                 </div>
-                <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400 mb-2">
-                  ENTERPRISE Duʿā Generated Successfully!
+              )}
+
+              {/* Translation */}
+              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                <h3 className="text-yellow-400 font-semibold mb-4">
+                  Translation ({generatedDua.language})
                 </h3>
-                <p className="text-gray-400">Professional Islamic supplication with guaranteed perfect Arabic text</p>
+                <p className="text-lg text-gray-300 text-center">
+                  "{generatedDua.translation}"
+                </p>
               </div>
 
-              {/* Fancy Dua Display */}
-              <div className="relative">
-                {/* Decorative Corner Elements */}
-                <div className="absolute -top-3 -left-3 w-12 h-12 border-t-2 border-l-2 border-yellow-400/50 rounded-tl-2xl"></div>
-                <div className="absolute -top-3 -right-3 w-12 h-12 border-t-2 border-r-2 border-yellow-400/50 rounded-tr-2xl"></div>
-                <div className="absolute -bottom-3 -left-3 w-12 h-12 border-b-2 border-l-2 border-yellow-400/50 rounded-bl-2xl"></div>
-                <div className="absolute -bottom-3 -right-3 w-12 h-12 border-b-2 border-r-2 border-yellow-400/50 rounded-br-2xl"></div>
-                
-                <div className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-yellow-500/20">
-                  {/* Arabic Section */}
-                  <div className="text-center mb-8">
-                    <div className="inline-block px-4 py-1 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-full mb-4">
-                      <span className="text-yellow-400 text-sm font-semibold">✦ ARABIC SUPPLICATION ✦</span>
-                    </div>
-                    <div className="bg-black/30 rounded-xl p-6 border border-yellow-500/10">
-                      <p className="text-3xl md:text-4xl leading-loose text-white font-arabic text-center" dir="rtl" style={{
-                        textShadow: '0 0 30px rgba(250, 204, 21, 0.3)',
-                        letterSpacing: '0.05em'
-                      }}>
-                        {generatedDua.arabicText}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Pronunciation Section */}
-                  {generatedDua.transliteration && (
-                    <div className="text-center mb-8">
-                      <div className="inline-block px-4 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full mb-4">
-                        <span className="text-emerald-400 text-sm font-semibold">✦ PRONUNCIATION GUIDE ✦</span>
-                      </div>
-                      <div className="bg-black/30 rounded-xl p-6 border border-emerald-500/10">
-                        <p className="text-xl md:text-2xl text-emerald-200 leading-relaxed font-light italic text-center">
-                          {generatedDua.transliteration}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={resetGenerator}
+                  className="bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors"
+                >
+                  Generate Another
+                </button>
+                <button
+                  onClick={downloadPdf}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+{loading ? 'Generating...' : '📄 Download PDF'}
+                </button>
+                <button
+                  onClick={downloadImage}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Generating...' : '🎨 Generate Art'}
+                </button>
+              </div>
 
-                  {/* Decorative Divider */}
-                  <div className="flex items-center justify-center my-8">
-                    <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent flex-1"></div>
-                    <div className="mx-4">
-                      <span className="text-yellow-400 text-2xl">◆</span>
-                    </div>
-                    <div className="h-px bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent flex-1"></div>
-                  </div>
-
-                  {/* Translation Section */}
-                  <div className="text-center">
-                    <div className="inline-block px-4 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full mb-4">
-                      <span className="text-emerald-400 text-sm font-semibold">✦ {generatedDua.language.toUpperCase()} TRANSLATION ✦</span>
-                    </div>
-                    <div className="bg-black/30 rounded-xl p-6 border border-emerald-500/10">
-                      <p className="text-xl md:text-2xl text-gray-200 leading-relaxed font-light italic">
-                        "{generatedDua.translation}"
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-8 flex flex-col gap-4">
-                    
-                    {/* Canva Beautiful Designs */}
-                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
-                      <div className="bg-slate-800 rounded-2xl p-4">
-                        <h3 className="text-lg font-bold text-white mb-2 text-center">
-                          🎨 CANVA BEAUTIFUL DESIGNS 🎨
-                        </h3>
-                        <p className="text-sm text-gray-300 mb-2 text-center">
-                          Professional content creator quality using Canva API
-                        </p>
-                        
-                        {/* Test Connection Button */}
-                        <button
-                          onClick={async () => {
-                            console.log('🧪 Testing Canva connection...')
-                            await canvaService.testConnection()
-                          }}
-                          className="w-full mb-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 text-sm"
-                        >
-                          🧪 Test Canva Connection
-                        </button>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'default')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Beautiful_${Date.now()}.pdf`
-                                document.body.appendChild(link)
-                                link.click()
-                                document.body.removeChild(link)
-                                URL.revokeObjectURL(url)
-                                setLoading(false)
-                              } catch (error) {
-                                console.error('Canva PDF Error:', error)
-                                setError('Canva API error. Please check your API credentials.')
-                                setLoading(false)
-                              }
-                            }}
-                            disabled={loading}
-                            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-xl hover:shadow-emerald-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
-                          >
-                            <span>✨</span>
-                            <span>{loading ? 'Creating...' : 'Canva Beautiful PDF'}</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'rizq')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Premium_${Date.now()}.pdf`
-                                document.body.appendChild(link)
-                                link.click()
-                                document.body.removeChild(link)
-                                URL.revokeObjectURL(url)
-                                setLoading(false)
-                              } catch (error) {
-                                console.error('Canva PDF Error:', error)
-                                setError('Canva API error. Please check your API credentials.')
-                                setLoading(false)
-                              }
-                            }}
-                            disabled={loading}
-                            className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-rose-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-rose-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
-                          >
-                            <span>🌟</span>
-                            <span>{loading ? 'Creating...' : 'Canva Premium Theme'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Canva Professional PDF Options */}
-                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-1 rounded-2xl">
-                      <div className="bg-slate-800 rounded-2xl p-4">
-                        <h3 className="text-lg font-bold text-white mb-3 text-center flex items-center justify-center gap-2">
-                          <span>🎨</span>
-                          Beautiful Islamic PDF Designs
-                          <span>✨</span>
-                        </h3>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'rizq')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Rizq_${Date.now()}.pdf`
-                                link.click()
-                                URL.revokeObjectURL(url)
-                              } catch (error) {
-                                console.error('Error generating Canva PDF:', error)
-                              } finally {
-                                setLoading(false)
-                              }
-                            }}
-                            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 flex items-center justify-center gap-1"
-                          >
-                            <span>💰</span>
-                            <span>Rizq</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'protection')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Protection_${Date.now()}.pdf`
-                                link.click()
-                                URL.revokeObjectURL(url)
-                              } catch (error) {
-                                console.error('Error generating Canva PDF:', error)
-                              } finally {
-                                setLoading(false)
-                              }
-                            }}
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 flex items-center justify-center gap-1"
-                          >
-                            <span>🛡️</span>
-                            <span>Protection</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'guidance')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Guidance_${Date.now()}.pdf`
-                                link.click()
-                                URL.revokeObjectURL(url)
-                              } catch (error) {
-                                console.error('Error generating Canva PDF:', error)
-                              } finally {
-                                setLoading(false)
-                              }
-                            }}
-                            className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 flex items-center justify-center gap-1"
-                          >
-                            <span>⭐</span>
-                            <span>Guidance</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                setLoading(true)
-                                const pdfBlob = await canvaService.generateBeautifulPdf(generatedDua, 'forgiveness')
-                                const url = URL.createObjectURL(pdfBlob)
-                                const link = document.createElement('a')
-                                link.href = url
-                                link.download = `BarakahTool_Canva_Forgiveness_${Date.now()}.pdf`
-                                link.click()
-                                URL.revokeObjectURL(url)
-                              } catch (error) {
-                                console.error('Error generating Canva PDF:', error)
-                              } finally {
-                                setLoading(false)
-                              }
-                            }}
-                            className="bg-gradient-to-r from-purple-500 to-violet-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:from-purple-600 hover:to-violet-600 transition-all duration-300 flex items-center justify-center gap-1"
-                          >
-                            <span>✨</span>
-                            <span>Forgiveness</span>
-                          </button>
-                        </div>
-                        <div className="flex justify-center">
-                          <button
-                            onClick={async () => {
-                              try {
-                                const success = await canvaService.testConnection()
-                                if (success) {
-                                  alert('✅ Canva API connected! You can now generate professional PDFs.')
-                                }
-                              } catch (error) {
-                                console.error('Canva test error:', error)
-                              }
-                            }}
-                            className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:from-gray-600 hover:to-gray-700 transition-all duration-300"
-                          >
-                            🧪 Test Canva Connection
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={() => {
-                        setGeneratedDua(null)
-                        setShowPayment(false)
-                        setFormData({ 
-                          situation: '', 
-                          language: 'English', 
-                          theme: 'royalGold',
-                          duaCategory: 'general',
-                          selectedDua: ''
-                        })
-                      }}
-                      className="flex-1 bg-slate-800/50 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700/50 transition-all duration-300 border border-slate-700 flex items-center justify-center gap-2"
-                    >
-                      <span>✨</span>
-                      <span>Generate Another Dua</span>
-                    </button>
-                  </div>
-
-                  {/* Bottom Note */}
-                  <div className="mt-6 text-center">
-                    <p className="text-gray-500 text-sm">
-                      🌙 May Allah accept your dua and grant you the best in this world and the hereafter
-                    </p>
-                  </div>
-                </div>
+              {/* Success Message */}
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <p className="text-green-400 text-center mb-2">
+                  ✅ Du'a generated successfully!
+                </p>
+                <p className="text-green-400/80 text-center text-sm">
+                  Download as PDF with Arabic text or generate beautiful Islamic art
+                </p>
               </div>
             </div>
           )}
@@ -856,15 +484,12 @@ const DuaGenerator = () => {
       </main>
 
       {/* Payment Gateway Modal */}
-      {showPayment && !userHasAccess && (
+      {showPayment && (
         <PaymentGateway
           productType="dua_generator"
           isOpen={true}
           onClose={() => setShowPayment(false)}
-          onPaymentSuccess={() => {
-            setShowPayment(false)
-            window.location.reload() // Refresh to get updated access
-          }}
+          onPaymentSuccess={handlePaymentSuccess}
         />
       )}
     </div>
