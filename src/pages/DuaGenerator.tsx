@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import backendApiService from '../services/backendApiService'
-import dalleService from '../services/dalleService'
 import professionalIslamicPdf from '../services/professionalIslamicPdf'
-import { stripeService } from '../services/stripeService'
-import { databaseService } from '../services/databaseService'
 import PaymentGateway from '../components/PaymentGateway'
 
 const DuaGenerator = () => {
   const navigate = useNavigate()
+  const { user, hasAccess, loading: authLoading } = useAuth()
+
   const [formData, setFormData] = useState({
     topic: '',
     customRequest: '',
@@ -18,588 +18,292 @@ const DuaGenerator = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generatedDua, setGeneratedDua] = useState<any>(null)
-  const [hasAccess, setHasAccess] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
-  const [checkingAccess, setCheckingAccess] = useState(true)
-  const [currentUser, setCurrentUser] = useState<any>(null)
 
+  const userHasAccess = hasAccess('dua_generator')
   const languages = backendApiService.getSupportedLanguages()
 
-  // Check user access on component mount
-  useEffect(() => {
-    checkUserAccess()
-  }, [])
-
-  const checkUserAccess = async () => {
-    try {
-      setCheckingAccess(true)
-      
-      // Check if user email is stored in localStorage
-      const storedEmail = localStorage.getItem('user_email')
-      
-      if (!storedEmail) {
-        // No stored email, user needs to enter email or pay
-        setHasAccess(false)
-        setCheckingAccess(false)
-        return
-      }
-
-      // Check access by email using the API
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
-        : '/api'
-        
-      const response = await fetch(`${apiUrl}/access/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: storedEmail, 
-          product_type: 'dua_generator' 
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setHasAccess(data.has_access)
-        if (data.has_access) {
-          console.log('✅ User has access:', storedEmail)
-        } else {
-          console.log('❌ User needs to purchase access:', storedEmail)
-        }
-      } else {
-        console.error('Access check failed:', response.status)
-        setHasAccess(false)
-      }
-      
-    } catch (error) {
-      console.error('Failed to check user access:', error)
-      setHasAccess(false)
-    } finally {
-      setCheckingAccess(false)
-    }
-  }
-
-  const duaTopics = [
-    { id: 'forgiveness', name: 'Seeking Forgiveness', icon: '🤲' },
-    { id: 'guidance', name: 'Seeking Guidance', icon: '🌟' },
-    { id: 'protection', name: 'Protection & Safety', icon: '🛡️' },
-    { id: 'health', name: 'Health & Healing', icon: '💚' },
-    { id: 'sustenance', name: 'Rizq & Sustenance', icon: '💰' },
-    { id: 'knowledge', name: 'Knowledge & Wisdom', icon: '📚' },
-    { id: 'travel', name: 'Travel & Journey', icon: '✈️' },
-    { id: 'family', name: 'Family & Children', icon: '👨‍👩‍👧‍👦' },
-    { id: 'marriage', name: 'Marriage & Relationships', icon: '💕' },
-    { id: 'success', name: 'Success & Achievement', icon: '🏆' },
-    { id: 'patience', name: 'Patience & Strength', icon: '💪' },
-    { id: 'gratitude', name: 'Gratitude & Thanks', icon: '🙏' }
-  ]
-
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Check if user has access before generating
-    if (!hasAccess) {
+  // If not logged in, redirect to login
+  const handlePaymentClick = () => {
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/dua-generator' } } })
+    } else {
       setShowPayment(true)
-      return
-    }
-    
-    if (!formData.topic && !formData.customRequest.trim()) {
-      setError('Please select a topic or describe your specific need')
-      return
-    }
-
-    await generateDua()
-  }
-
-  const handlePaymentSuccess = (userEmail?: string) => {
-    setShowPayment(false)
-    setHasAccess(true)
-    
-    // Store email if provided for future access checks
-    if (userEmail) {
-      localStorage.setItem('user_email', userEmail)
-    }
-    
-    // Don't call checkUserAccess() - we already know they have access
-  }
-
-  const handleEmailAccess = async (email: string) => {
-    try {
-      setLoading(true)
-      setError('')
-
-      // Check access by email directly
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
-        : '/api'
-        
-      const response = await fetch(`${apiUrl}/access/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: email, 
-          product_type: 'dua_generator' 
-        })
-      })
-
-      if (!response.ok) {
-        setError('Failed to check access. Please try again.')
-        return
-      }
-
-      const { has_access } = await response.json()
-      
-      if (has_access) {
-        setHasAccess(true)
-        setError('')
-        // Store email for future access checks
-        localStorage.setItem('user_email', email)
-        alert('✅ Access verified! You can now generate unlimited Du\'as.')
-      } else {
-        setError('❌ No purchase found for this email. Please check your email or purchase access.')
-      }
-    } catch (error) {
-      console.error('Email access check error:', error)
-      setError('Failed to verify access. Please try again.')
-    } finally {
-      setLoading(false)
     }
   }
 
   const generateDua = async () => {
+    if (!userHasAccess) {
+      handlePaymentClick()
+      return
+    }
+
+    if (!formData.topic && !formData.customRequest) {
+      setError('Please select a topic or enter a custom request')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
     try {
-      setLoading(true)
-      
-      // Log dua generation
-      if (currentUser) {
-        await databaseService.logUsage(
-          currentUser.id,
-          'dua_generator',
-          'generate_dua',
-          {
-            topic: formData.topic,
-            language: formData.language,
-            custom_request: formData.customRequest
-          }
-        )
-      }
-      setError('')
+      const response = await backendApiService.generateDua(
+        formData.topic || formData.customRequest,
+        formData.language
+      )
 
-      const request = formData.topic 
-        ? duaTopics.find(topic => topic.id === formData.topic)?.name || formData.topic
-        : formData.customRequest
-
-      const response = await backendApiService.generateDua('User', request, [formData.language])
-
-      if (response.success && response.data) {
-        const content = response.data.content
-        
-        // Parse the response
-        const arabicMatch = content.match(/\*\*Arabic:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const transliterationMatch = content.match(/\*\*Transliteration:\*\*\s*(.+?)(?=\*\*|$)/s)
-        const translationMatch = content.match(new RegExp(`\\*\\*Translation in ${formData.language}:\\*\\*\\s*(.+?)(?=\\*\\*|$)`, 's'))
-        
-        // Generate AI reflections for this specific dua
-        const reflectionsResponse = await backendApiService.generateReflections(request, arabicMatch ? arabicMatch[1].trim() : '', formData.language)
-        
-        const duaData = {
-          arabicText: arabicMatch ? arabicMatch[1].trim() : '',
-          transliteration: transliterationMatch ? transliterationMatch[1].trim() : '',
-          translation: translationMatch ? translationMatch[1].trim() : '',
-          situation: request,
-          language: formData.language,
-          topic: formData.topic,
-          reflections: reflectionsResponse,
-          generatedAt: new Date().toISOString()
-        }
-
-        setGeneratedDua(duaData)
+      if (response.success) {
+        setGeneratedDua(response.data)
       } else {
-        setError(response.error || 'Failed to generate dua. Please try again.')
+        setError(response.error || 'Failed to generate dua')
       }
     } catch (error) {
-      console.error('Error:', error)
-      setError('An error occurred. Please check your API key and try again.')
+      console.error('Dua generation error:', error)
+      setError('An error occurred while generating the dua')
     } finally {
       setLoading(false)
     }
   }
 
-  const downloadPdf = async () => {
+  const downloadPDF = async () => {
     if (!generatedDua) return
 
     try {
-      setLoading(true)
-      // Use working professional PDF with Arabic text support and color theme
-      const pdfBlob = await professionalIslamicPdf.generateProfessionalPdf({
-        arabicText: generatedDua.arabicText,
-        transliteration: generatedDua.transliteration,
-        translation: generatedDua.translation,
-        situation: generatedDua.situation || formData.customRequest,
-        language: generatedDua.language,
-        reflections: generatedDua.reflections
-      }, formData.pdfTheme as 'gold' | 'blue' | 'green' | 'purple')
-      professionalIslamicPdf.downloadPdf(pdfBlob, `Islamic_Dua_${formData.pdfTheme}_${Date.now()}.pdf`)
+      await professionalIslamicPdf.generateDuaPDF(generatedDua, formData.pdfTheme)
     } catch (error) {
       console.error('PDF generation error:', error)
-      alert('Failed to generate PDF. Please try again.')
-    } finally {
-      setLoading(false)
+      alert('Failed to generate PDF')
     }
   }
 
-  const downloadImage = async () => {
-    if (!generatedDua) return
-
-    try {
-      setLoading(true)
-      
-      // Generate Islamic-themed image with DALL-E
-      const imageUrl = await dalleService.generateDuaImage(generatedDua, 'gold')
-      
-      // Download the image using dalleService's download method
-      await dalleService.downloadImage(imageUrl, `Islamic_Dua_Art_${Date.now()}.png`)
-      
-      alert('🎨 Beautiful Islamic art generated and downloaded!')
-    } catch (error) {
-      console.error('Image generation error:', error)
-      alert('Failed to generate image. Please check your OpenAI API key configuration.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const resetGenerator = () => {
-    setGeneratedDua(null)
-    setFormData({ topic: '', customRequest: '', language: 'English', pdfTheme: 'gold' })
-    setError('')
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header - EXACT SAME AS NAME POSTER */}
-      <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/')}
-                className="text-yellow-400 hover:text-yellow-300 transition-colors"
-              >
-                ← Back
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-yellow-400">Du'a Generator</h1>
-                <p className="text-yellow-300/60 text-sm">Authentic Islamic supplications</p>
-              </div>
-            </div>
-            <div className="text-3xl font-bold text-yellow-400">🤲</div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="text-emerald-600 hover:text-emerald-800 flex items-center"
+            >
+              ← Back to Home
+            </button>
+            <h1 className="text-2xl font-bold text-emerald-800 flex items-center">
+              🤲 Dua Generator
+            </h1>
+            <div className="w-20"></div> {/* Spacer */}
           </div>
         </div>
       </header>
 
-      {/* Main Content - EXACT SAME STYLING */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
-          {!generatedDua ? (
-            <>
-              <div className="text-center mb-8">
-                <div className="w-24 h-24 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                  <span className="text-5xl">🤲</span>
-                </div>
-                <h2 className="text-3xl font-bold text-white mb-3">
-                  Generate Your Islamic Du'a
-                </h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Create personalized Islamic supplications with authentic Arabic text, 
-                  transliteration, and translations
-                </p>
-              </div>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Title Section */}
+        <div className="text-center mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Islamic Dua Generator
+          </h2>
+          <p className="text-lg text-gray-600">
+            Generate beautiful, authentic Islamic supplications in multiple languages
+          </p>
+        </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Topic Selection - Grid Style */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Select a Du'a Topic
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {duaTopics.map((topic) => (
-                      <button
-                        key={topic.id}
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, topic: topic.id, customRequest: '' })
-                        }}
-                        className={`p-3 rounded-xl border transition-all duration-200 text-left ${
-                          formData.topic === topic.id
-                            ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                            : 'bg-slate-800/50 border-slate-700 text-gray-300 hover:border-yellow-500/50'
-                        }`}
-                      >
-                        <div className="text-2xl mb-1">{topic.icon}</div>
-                        <div className="text-sm font-medium">{topic.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+        {!userHasAccess ? (
+          /* Access Required */
+          <div className="max-w-md mx-auto text-center py-12">
+            <div className="bg-white rounded-2xl shadow-2xl p-8">
+              <div className="text-6xl mb-6">🔒</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                Unlock Dua Generator
+              </h3>
+              <p className="text-gray-600 mb-8">
+                Get unlimited access to generate personalized Islamic duas with authentic Arabic and translations
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={handlePaymentClick}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  🚀 {!user ? 'Login to Access' : 'Get Unlimited Access - $2.99'}
+                </button>
 
-                {/* Custom Request - SAME STYLING */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Or Describe Your Specific Need
-                  </label>
-                  <textarea
-                    value={formData.customRequest}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customRequest: e.target.value, topic: '' })
-                    }}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                    placeholder="Describe what you need du'a for... (e.g., guidance in making an important decision)"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Language Selection */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Language for Translation
-                  </label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:border-yellow-500 focus:outline-none transition-colors"
-                  >
-                    {languages.map(lang => (
-                      <option key={lang} value={lang}>{lang}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Color Theme Selection */}
-                <div>
-                  <label className="block text-yellow-400 font-semibold mb-2">
-                    Select PDF Color Theme
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { id: 'gold', name: 'Gold Classic', color: 'from-yellow-600 to-yellow-400' },
-                      { id: 'blue', name: 'Ocean Blue', color: 'from-blue-600 to-blue-400' },
-                      { id: 'green', name: 'Nature Green', color: 'from-green-600 to-green-400' },
-                      { id: 'purple', name: 'Royal Purple', color: 'from-purple-600 to-purple-400' }
-                    ].map((theme) => (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, pdfTheme: theme.id })}
-                        className={`p-4 rounded-xl border transition-all duration-200 ${
-                          formData.pdfTheme === theme.id
-                            ? 'bg-yellow-500/20 border-yellow-500'
-                            : 'bg-slate-800/50 border-slate-700 hover:border-yellow-500/50'
-                        }`}
-                      >
-                        <div className={`w-full h-16 bg-gradient-to-r ${theme.color} rounded-lg mb-2`}></div>
-                        <div className="text-sm font-medium text-gray-300">{theme.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
-                    {error}
-                  </div>
-                )}
-
-                {/* What You'll Get - SAME STYLE */}
-                <div className="bg-slate-800/50 rounded-xl p-6 space-y-3">
-                  <h3 className="text-yellow-400 font-semibold mb-3">What You'll Get:</h3>
-                  <div className="space-y-2 text-gray-300">
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Authentic Arabic du'a with full tashkeel</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Clear transliteration for pronunciation</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Translation in your selected language</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Clean, professional PDF format</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Simple, readable layout</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <span className="text-yellow-400">✓</span>
-                      <span>Instant download</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Access Control for Submit Button */}
-                {checkingAccess ? (
-                  /* Loading state while checking access */
+                {user && (
                   <button
-                    disabled
-                    className="w-full bg-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg opacity-50 cursor-not-allowed"
+                    type="button"
+                    onClick={handlePaymentClick}
+                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Checking access...</span>
+                      <span>✅</span>
+                      <span>Already Purchased? Access Now</span>
                     </div>
                   </button>
-                ) : hasAccess ? (
-                  /* User has access - show regular submit button */
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Main Generator Interface */
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Input Form */}
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">Generate Your Dua</h3>
+
+                <div className="space-y-6">
+                  {/* Topic Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select a Topic
+                    </label>
+                    <select
+                      value={formData.topic}
+                      onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    >
+                      <option value="">Choose a topic...</option>
+                      <option value="guidance">Guidance & Wisdom</option>
+                      <option value="protection">Protection & Safety</option>
+                      <option value="health">Health & Healing</option>
+                      <option value="success">Success & Prosperity</option>
+                      <option value="forgiveness">Forgiveness & Mercy</option>
+                      <option value="gratitude">Gratitude & Thanks</option>
+                      <option value="patience">Patience & Strength</option>
+                      <option value="family">Family & Relationships</option>
+                    </select>
+                  </div>
+
+                  {/* Custom Request */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Or Enter Custom Request
+                    </label>
+                    <textarea
+                      value={formData.customRequest}
+                      onChange={(e) => setFormData({ ...formData, customRequest: e.target.value })}
+                      placeholder="Describe what you'd like to make dua for..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Language Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Translation Language
+                    </label>
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    >
+                      {languages.map(lang => (
+                        <option key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Error Display */}
+                  {error && (
+                    <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Generate Button */}
                   <button
-                    type="submit"
-                    disabled={loading || (!formData.topic && !formData.customRequest.trim())}
-                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-2xl hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={generateDua}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Generating Your Du'a...</span>
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Generating Dua...
                       </div>
                     ) : (
-                      'Generate My Du\'a'
+                      '🤲 Generate Dua'
                     )}
                   </button>
-                ) : (
-                  /* User needs to purchase - show payment button */
-                  <div className="space-y-4">
-                    {/* Pricing Info */}
-                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 text-center">
-                      <h4 className="text-green-400 font-semibold mb-2">🤲 Du'a Generator - Premium</h4>
-                      <p className="text-2xl font-bold text-green-400 mb-2">$2.99</p>
-                      <p className="text-green-300 text-sm">One-time payment • Lifetime access • Unlimited generations</p>
-                    </div>
-                    
-                    {/* Purchase Button */}
-                    <button
-                      type="button"
-                      onClick={() => setShowPayment(true)}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-2xl hover:shadow-green-500/25"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span>💳</span>
-                        <span>Get Lifetime Access - $2.99</span>
-                      </div>
-                    </button>
-                    
-                    {/* Already Purchased Button */}
-                    <button
-                      type="button"
-                      onClick={() => setShowPayment(true)}
-                      className="w-full bg-slate-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors border border-slate-600"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span>✅</span>
-                        <span>Already Purchased? Access Now</span>
-                      </div>
-                    </button>
+                </div>
+              </div>
 
-                    {/* Features List */}
-                    <div className="text-center text-sm text-gray-400">
-                      <p>✨ Unlock unlimited du'a generation with Arabic text, transliteration, and translations</p>
+              {/* Generated Dua Display */}
+              <div>
+                {generatedDua ? (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-semibold text-gray-800">Your Generated Dua</h3>
+                      <button
+                        onClick={downloadPDF}
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all"
+                      >
+                        📄 Download PDF
+                      </button>
+                    </div>
+
+                    {/* Arabic Text */}
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-lg">
+                      <h4 className="text-lg font-semibold text-emerald-800 mb-3">Arabic</h4>
+                      <p className="text-2xl text-right leading-loose font-arabic" dir="rtl">
+                        {generatedDua.arabic || 'Arabic text will appear here'}
+                      </p>
+                    </div>
+
+                    {/* Translation */}
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3">Translation</h4>
+                      <p className="text-lg leading-relaxed">
+                        {generatedDua.translation || 'Translation will appear here'}
+                      </p>
+                    </div>
+
+                    {/* Reference */}
+                    {generatedDua.reference && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-2">Reference</h4>
+                        <p className="text-sm text-blue-700">{generatedDua.reference}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+                    <div className="text-center text-gray-500">
+                      <div className="text-6xl mb-4">🤲</div>
+                      <p>Your generated dua will appear here</p>
                     </div>
                   </div>
                 )}
-              </form>
-            </>
-          ) : (
-            /* Results Display - SAME DARK THEME */
-            <div className="space-y-8">
-              <div className="text-center">
-                <div className="w-24 h-24 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                  <span className="text-5xl">✨</span>
-                </div>
-                <h2 className="text-3xl font-bold text-white mb-3">
-                  Your Du'a Has Been Generated!
-                </h2>
-                <p className="text-gray-400">
-                  May Allah accept your supplication
-                </p>
-              </div>
-
-              {/* Arabic Text */}
-              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-yellow-400 font-semibold mb-4">Arabic Text</h3>
-                <p className="text-2xl text-white text-center leading-relaxed font-arabic" dir="rtl">
-                  {generatedDua.arabicText}
-                </p>
-              </div>
-
-              {/* Transliteration */}
-              {generatedDua.transliteration && (
-                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                  <h3 className="text-yellow-400 font-semibold mb-4">Transliteration</h3>
-                  <p className="text-lg text-gray-300 text-center italic">
-                    {generatedDua.transliteration}
-                  </p>
-                </div>
-              )}
-
-              {/* Translation */}
-              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                <h3 className="text-yellow-400 font-semibold mb-4">
-                  Translation ({generatedDua.language})
-                </h3>
-                <p className="text-lg text-gray-300 text-center">
-                  "{generatedDua.translation}"
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={resetGenerator}
-                  className="bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-700 transition-colors"
-                >
-                  Generate Another
-                </button>
-                <button
-                  onClick={downloadPdf}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-{loading ? 'Generating...' : '📄 Download PDF'}
-                </button>
-                <button
-                  onClick={downloadImage}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Generating...' : '🎨 Generate Art'}
-                </button>
-              </div>
-
-              {/* Success Message */}
-              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                <p className="text-green-400 text-center mb-2">
-                  ✅ Du'a generated successfully!
-                </p>
-                <p className="text-green-400/80 text-center text-sm">
-                  Download as PDF with Arabic text or generate beautiful Islamic art
-                </p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* Payment Gateway Modal */}
-      <PaymentGateway
-        productType="dua_generator"
-        isOpen={showPayment}
-        onClose={() => setShowPayment(false)}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
+      {showPayment && (
+        <PaymentGateway
+          productType="dua_generator"
+          isOpen={true}
+          onClose={() => setShowPayment(false)}
+          onPaymentSuccess={() => {
+            setShowPayment(false)
+            window.location.reload() // Refresh to get updated access
+          }}
+        />
+      )}
     </div>
   )
 }

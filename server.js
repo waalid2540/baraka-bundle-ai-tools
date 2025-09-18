@@ -326,7 +326,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
     const result = await pool.query(`
       SELECT
         u.id, u.email, u.name, u.role, u.email_verified, u.created_at, u.last_login,
-        COUNT(ua.id) as purchased_features_count,
+        COUNT(ua.user_id) as purchased_features_count,
         MAX(ua.purchased_at) as last_purchase
       FROM users u
       LEFT JOIN user_access ua ON u.id = ua.user_id AND ua.has_access = true

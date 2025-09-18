@@ -1,63 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import EnterpriseStoryGenerator from '../components/EnterpriseStoryGenerator'
 import PaymentGateway from '../components/PaymentGateway'
 
 const KidsStoryGenerator = () => {
-  // Access control state
-  const [hasAccess, setHasAccess] = useState<boolean>(false)
-  const [checkingAccess, setCheckingAccess] = useState<boolean>(true)
+  const { user, hasAccess, loading } = useAuth()
+  const navigate = useNavigate()
   const [showPayment, setShowPayment] = useState<boolean>(false)
 
-  // Check access on component mount
-  useEffect(() => {
-    checkAccess()
-  }, [])
+  const userHasAccess = hasAccess('story_generator')
 
-  const checkAccess = async () => {
-    try {
-      setCheckingAccess(true)
-      
-      // Get user email from localStorage
-      const storedEmail = localStorage.getItem('user_email')
-      
-      if (!storedEmail) {
-        // No user email, show payment
-        setHasAccess(false)
-        setCheckingAccess(false)
-        return
-      }
-
-      // Check access via API endpoint
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://baraka-bundle-ai-tools.onrender.com/api'
-        : '/api'
-        
-      const response = await fetch(`${apiUrl}/access/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: storedEmail, 
-          product_type: 'story_generator' 
-        })
-      })
-
-      if (!response.ok) {
-        console.error('Access check failed:', response.status)
-        setHasAccess(false)
-        setCheckingAccess(false)
-        return
-      }
-
-      const { has_access } = await response.json()
-      setHasAccess(has_access)
-      
-      console.log('📖 Kids Story access check:', { email: storedEmail, has_access })
-    } catch (error) {
-      console.error('Access check error:', error)
-      setHasAccess(false)
-    } finally {
-      setCheckingAccess(false)
+  // If not logged in, redirect to login
+  const handlePaymentClick = () => {
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/kids-story-generator' } } })
+    } else {
+      setShowPayment(true)
     }
   }
 
@@ -87,12 +46,12 @@ const KidsStoryGenerator = () => {
         </div>
 
         {/* Access Control */}
-        {checkingAccess ? (
+        {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-islamic-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Checking access...</p>
+            <p className="text-gray-600">Loading...</p>
           </div>
-        ) : !hasAccess ? (
+        ) : !userHasAccess ? (
           <div className="max-w-md mx-auto text-center py-12">
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               <div className="text-6xl mb-6">🔒</div>
@@ -104,30 +63,32 @@ const KidsStoryGenerator = () => {
               </p>
               <div className="space-y-3">
                 <button
-                  onClick={() => setShowPayment(true)}
+                  onClick={handlePaymentClick}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  🚀 Get Unlimited Access - $2.99
+                  🚀 {!user ? 'Login to Access' : 'Get Unlimited Access - $2.99'}
                 </button>
-                
-                <button
-                  type="button"
-                  onClick={() => setShowPayment(true)}
-                  className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <span>✅</span>
-                    <span>Already Purchased? Access Now</span>
-                  </div>
-                </button>
+
+                {user && (
+                  <button
+                    type="button"
+                    onClick={handlePaymentClick}
+                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>✅</span>
+                      <span>Already Purchased? Access Now</span>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
           </div>
         ) : (
           /* User has access - show enterprise generator */
-          <EnterpriseStoryGenerator 
-            hasAccess={hasAccess}
-            onPaymentClick={() => setShowPayment(true)}
+          <EnterpriseStoryGenerator
+            hasAccess={userHasAccess}
+            onPaymentClick={handlePaymentClick}
           />
         )}
       </main>
@@ -140,7 +101,8 @@ const KidsStoryGenerator = () => {
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={() => {
             setShowPayment(false)
-            checkAccess() // Recheck access after payment
+            // The auth context will automatically refresh user data
+            window.location.reload() // Refresh to get updated access
           }}
         />
       )}

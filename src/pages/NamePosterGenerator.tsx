@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import openaiService from '../services/openaiService'
 import stripeService from '../services/stripeService'
 import pdfService from '../services/pdfService'
+import PaymentGateway from '../components/PaymentGateway'
 
 const NamePosterGenerator = () => {
   const navigate = useNavigate()
+  const { user, hasAccess, loading: authLoading } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     language: 'English'
@@ -15,17 +18,42 @@ const NamePosterGenerator = () => {
   const [generatedPoster, setGeneratedPoster] = useState<any>(null)
   const [showPayment, setShowPayment] = useState(false)
 
+  const userHasAccess = hasAccess('name_poster')
   const languages = openaiService.getSupportedLanguages()
+
+  // If not logged in, redirect to login
+  const handlePaymentClick = () => {
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/name-poster-generator' } } })
+    } else {
+      setShowPayment(true)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name.trim()) {
       setError('Please enter a name')
       return
     }
 
-    setShowPayment(true)
+    if (!userHasAccess) {
+      handlePaymentClick()
+      return
+    }
+
+    // Here you would add the actual poster generation logic
+    setLoading(true)
+    try {
+      // Placeholder for poster generation
+      console.log('Generating poster for:', formData.name)
+      // Add actual generation logic here
+    } catch (error) {
+      setError('Failed to generate poster')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handlePayment = async () => {
