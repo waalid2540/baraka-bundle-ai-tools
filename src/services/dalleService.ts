@@ -1,7 +1,10 @@
 // DALL-E Islamic Image Generator Service
 // Creates beautiful Islamic-themed images with dua text
 
-const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || ''
+// Get API key from environment
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY ||
+                       (import.meta.env ? import.meta.env.VITE_REACT_APP_OPENAI_API_KEY : '') ||
+                       ''
 const DALLE_API_URL = 'https://api.openai.com/v1/images/generations'
 
 interface DuaData {
@@ -74,6 +77,25 @@ class DalleService {
     console.log('🔑 API key exists:', !!this.apiKey)
     console.log('🔑 API key format:', this.apiKey ? `${this.apiKey.substring(0, 7)}...${this.apiKey.substring(this.apiKey.length - 4)}` : 'NOT SET')
     console.log('🔑 API key length:', this.apiKey?.length || 0)
+    console.log('🔑 API key starts with sk-:', this.apiKey?.startsWith('sk-') || false)
+
+    // Check if API key is valid
+    const isValidKey = this.apiKey &&
+                      this.apiKey !== 'your_openai_api_key_here' &&
+                      this.apiKey.startsWith('sk-') &&
+                      this.apiKey.length > 40;
+
+    console.log('🔑 API key appears valid:', isValidKey)
+
+    if (!isValidKey) {
+      console.warn('⚠️ DALL-E API key is missing or invalid!')
+      console.warn('📝 To enable real AI image generation:')
+      console.warn('   1. Go to https://platform.openai.com/api-keys')
+      console.warn('   2. Create a new API key')
+      console.warn('   3. Update REACT_APP_OPENAI_API_KEY in .env file')
+      console.warn('   4. For Render deployment, update environment variable in dashboard')
+      console.warn('🎨 Using fallback canvas images until API key is configured')
+    }
   }
 
   async generateDuaImage(duaData: DuaData, theme: string = 'light'): Promise<string> {
@@ -201,8 +223,19 @@ class DalleService {
 
   // 📖 Generate Book Cover
   async generateBookCover(storyTitle: string, theme: string, ageGroup: string): Promise<string> {
-    if (!this.apiKey || this.apiKey === 'your_openai_api_key_here') {
-      console.log('📖 API key not configured, using fallback cover')
+    console.log('🔍 Book cover generation debug:')
+    console.log('🔑 API key exists:', !!this.apiKey)
+    console.log('🔑 API key length:', this.apiKey?.length || 0)
+    console.log('🔑 API key is placeholder:', this.apiKey === 'your_openai_api_key_here')
+    console.log('🔑 Should use fallback:', !this.apiKey || this.apiKey === 'your_openai_api_key_here')
+
+    const isValidKey = this.apiKey &&
+                      this.apiKey !== 'your_openai_api_key_here' &&
+                      this.apiKey.startsWith('sk-') &&
+                      this.apiKey.length > 40;
+
+    if (!isValidKey) {
+      console.log('📖 API key not valid, using fallback cover')
       return this.generateFallbackBookCover(storyTitle, theme)
     }
     
@@ -304,8 +337,19 @@ class DalleService {
 
   // 📚 Generate Multiple Scene Illustrations for Story (one per page)
   async generateStoryScenes(storyTitle: string, storyContent: string, characterName: string, theme: string, ageGroup: string): Promise<string[]> {
-    if (!this.apiKey || this.apiKey === 'your_openai_api_key_here') {
-      console.log('🎨 API key not configured, using fallback illustrations')
+    console.log('🔍 Story scenes generation debug:')
+    console.log('🔑 API key exists:', !!this.apiKey)
+    console.log('🔑 API key length:', this.apiKey?.length || 0)
+    console.log('🔑 API key is placeholder:', this.apiKey === 'your_openai_api_key_here')
+    console.log('🔑 Should use fallback:', !this.apiKey || this.apiKey === 'your_openai_api_key_here')
+
+    const isValidKey = this.apiKey &&
+                      this.apiKey !== 'your_openai_api_key_here' &&
+                      this.apiKey.startsWith('sk-') &&
+                      this.apiKey.length > 40;
+
+    if (!isValidKey) {
+      console.log('🎨 API key not valid, using fallback illustrations')
       const pages = this.splitStoryIntoPages(storyContent)
       const fallbacks: string[] = []
       for (let i = 0; i < pages.length; i++) {
@@ -506,19 +550,29 @@ class DalleService {
   private async generateSingleScene(prompt: string): Promise<string> {
     try {
       console.log('🎨 Making DALL-E API request...')
+      console.log('🔑 Using API key:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'MISSING')
+      console.log('🎯 Prompt:', prompt.substring(0, 100) + '...')
+
+      const requestBody = {
+        model: 'dall-e-2',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024'
+      };
+
+      console.log('📨 Request body:', JSON.stringify(requestBody, null, 2));
+
       const response = await fetch(DALLE_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`
         },
-        body: JSON.stringify({
-          model: 'dall-e-2',
-          prompt: prompt,
-          n: 1,
-          size: '1024x1024'
-        })
+        body: JSON.stringify(requestBody)
       })
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -527,17 +581,24 @@ class DalleService {
       }
 
       const data = await response.json()
+      console.log('📦 DALL-E response data:', data);
+
       const imageUrl = data.data[0].url
-      
+
       // Validate the URL
       if (!imageUrl || imageUrl.length < 10) {
         throw new Error('Invalid image URL received from DALL-E')
       }
-      
-      console.log('✅ DALL-E image generated successfully:', imageUrl.substring(0, 50) + '...')
+
+      console.log('✅ DALL-E image generated successfully:', imageUrl)
       return imageUrl
     } catch (error) {
       console.error('💥 Error in generateSingleScene:', error)
+      console.error('💥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       throw error
     }
   }
