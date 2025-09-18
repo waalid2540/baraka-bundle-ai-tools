@@ -20,6 +20,11 @@ const KidsStoryGenerator = () => {
     }
   }
 
+  // Handle refresh after payment or checking access
+  const handleAccessCheck = () => {
+    window.location.reload()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-islamic-green-50 via-white to-islamic-gold-50">
       <header className="bg-white shadow-sm">
@@ -72,12 +77,12 @@ const KidsStoryGenerator = () => {
                 {user && (
                   <button
                     type="button"
-                    onClick={handlePaymentClick}
+                    onClick={handleAccessCheck}
                     className="w-full bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors border border-gray-600"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <span>✅</span>
-                      <span>Already Purchased? Access Now</span>
+                      <span>Already Purchased? Refresh Access</span>
                     </div>
                   </button>
                 )}
