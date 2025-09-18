@@ -1,9 +1,9 @@
 // DALL-E Islamic Image Generator Service
 // Creates beautiful Islamic-themed images with dua text
 
-// Get API key from environment
-const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY ||
-                       (import.meta.env ? import.meta.env.VITE_REACT_APP_OPENAI_API_KEY : '') ||
+// Get API key from environment - Vite uses import.meta.env
+const OPENAI_API_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENAI_API_KEY) ||
+                       (typeof process !== 'undefined' && process.env?.REACT_APP_OPENAI_API_KEY) ||
                        ''
 const DALLE_API_URL = 'https://api.openai.com/v1/images/generations'
 
