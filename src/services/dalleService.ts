@@ -209,13 +209,31 @@ class DalleService {
     console.log('🎨 Generating book cover with DALL-E for:', storyTitle)
 
     const prompt = `Create a beautiful children's book cover for an Islamic story titled "${storyTitle}".
-    
-    Style: Professional children's book cover, vibrant colors for ages ${ageGroup}, Islamic geometric patterns, 
-    beautiful mosque or Islamic architecture, warm inviting atmosphere.
-    Theme: ${theme}
-    
-    Requirements: NO human faces, NO animals, focus on Islamic architecture and nature, child-friendly design.
-    Include space for title text overlay.`
+
+    VISUAL ELEMENTS:
+    - Professional children's book cover design
+    - Vibrant, engaging colors perfect for ages ${ageGroup}
+    - Islamic children characters in traditional modest clothing
+    - Boys wearing thobe/traditional Islamic dress with kufi caps
+    - Girls wearing hijab and modest colorful dresses
+    - Beautiful Islamic setting (mosque, Islamic garden, or traditional home)
+
+    COVER DESIGN:
+    - Central focus on happy Islamic children
+    - Islamic architectural elements in background
+    - Decorative Islamic geometric patterns as borders
+    - Warm, inviting atmosphere that appeals to children
+    - Theme: ${theme}
+    - Colors should be bright and child-friendly
+
+    STYLE REQUIREMENTS:
+    - Professional children's book cover quality
+    - Characters showing Islamic values and happiness
+    - Leave space for title text overlay
+    - Suitable for printing and publishing
+    - Diverse representation of Muslim children
+
+    Create an engaging cover that shows Islamic children living the story's theme.`
 
     try {
       const response = await fetch(DALLE_API_URL, {
@@ -394,34 +412,42 @@ class DalleService {
     let sceneType = 'middle'
     if (pageNumber === 1) sceneType = 'beginning'
     else if (pageNumber === totalPages) sceneType = 'ending'
-    
-    return `Create a beautiful, unique children's book illustration for page ${pageNumber} of "${title}".
 
-    PAGE CONTENT CONTEXT: ${pageContent.substring(0, 200)}...
+    return `Create a beautiful, engaging children's book illustration for page ${pageNumber} of "${title}".
+
+    PAGE CONTENT CONTEXT: ${pageContent.substring(0, 300)}...
     SCENE POSITION: ${sceneType} of the story
-    
+
     VISUAL REQUIREMENTS:
-    - Professional children's book illustration quality
-    - Unique scene different from other pages
-    - Age-appropriate for ${ageGroup} years old
-    - Warm, engaging colors and atmosphere
-    - Islamic architectural elements or nature scenes
-    
-    SPECIFIC ELEMENTS FOR THIS PAGE:
-    ${sceneType === 'beginning' ? '- Establishing scene with Islamic setting (mosque, garden, home)' : ''}
-    ${sceneType === 'middle' ? '- Action or key moment from the story' : ''}
-    ${sceneType === 'ending' ? '- Resolution scene with peaceful, happy atmosphere' : ''}
+    - Professional children's book illustration style
+    - Colorful, warm, and engaging for ages ${ageGroup}
+    - Include Islamic children characters appropriate to the story
+    - Beautiful Islamic setting (mosque, Islamic home, garden, market)
+    - Characters wearing modest Islamic clothing (hijab, thobe, traditional dress)
+
+    CHARACTER GUIDELINES:
+    - Show Islamic children (boys and girls) in modest traditional clothing
+    - Boys: wearing thobe, kufi/cap, or traditional Islamic attire
+    - Girls: wearing hijab, modest dresses, or traditional Islamic clothing
+    - Diverse representation of Muslim children from different backgrounds
+    - Happy, friendly expressions showing Islamic values
+
+    STORY-SPECIFIC ELEMENTS:
+    ${sceneType === 'beginning' ? '- Opening scene introducing the main character and Islamic setting' : ''}
+    ${sceneType === 'middle' ? '- Key story moment with character interactions and Islamic values' : ''}
+    ${sceneType === 'ending' ? '- Happy resolution showing lesson learned and character growth' : ''}
     - Theme focus: ${theme}
-    - Include Islamic geometric patterns or decorative elements
-    
-    STRICT RULES:
-    - NO human faces or figures
-    - NO anthropomorphic animals
-    - Focus on environments, objects, and Islamic architecture
-    - Each page must look visually distinct
-    - Professional quality for children's book publishing
-    
-    Create a unique, engaging illustration for page ${pageNumber} of ${totalPages}.`
+    - Islamic decorative elements and patterns in background
+    - Setting that matches the story content
+
+    STYLE REQUIREMENTS:
+    - Bright, colorful children's book art style
+    - Warm lighting and inviting atmosphere
+    - Professional quality suitable for publishing
+    - Each page visually distinct from others
+    - Characters should match the story narrative
+
+    Create a unique illustration showing Islamic children in the story scene for page ${pageNumber} of ${totalPages}.`
   }
 
   private extractScenes(storyContent: string): string[] {
@@ -524,30 +550,37 @@ class DalleService {
       return this.generateFallbackStoryImage(storyTitle, characterName, theme)
     }
 
-    // Create kid-friendly, Islamic-appropriate prompt
-    const prompt = `Create a beautiful, child-friendly Islamic illustration for a children's story titled "${storyTitle}". 
+    // Create kid-friendly, Islamic-appropriate prompt with characters
+    const prompt = `Create a beautiful, engaging Islamic children's book illustration for "${storyTitle}".
+
+    CHARACTER FOCUS:
+    - Islamic children (${characterName}) as main characters
+    - Boys wearing traditional Islamic clothing (thobe, kufi cap)
+    - Girls wearing hijab and modest, colorful traditional dresses
+    - Happy, friendly children showing Islamic values
+    - Diverse representation of Muslim children
 
     VISUAL STYLE:
-    - Warm, colorful, and inviting illustration perfect for ages ${ageGroup}
-    - Islamic geometric patterns and designs in the background
-    - Beautiful mosque or Islamic architecture elements
-    - Soft, bright colors that appeal to children
-    - Professional children's book illustration style
-    
-    SCENE ELEMENTS:
-    - Focus on Islamic values: ${theme}
-    - Include subtle Islamic decorative elements (crescents, stars, geometric patterns)
-    - Beautiful landscape or indoor Islamic setting
-    - Child-appropriate and educational visual elements
-    
-    IMPORTANT RESTRICTIONS:
-    - NO human faces or figures (Islamic guidelines)
-    - NO animals with human characteristics
-    - Focus on environments, objects, and Islamic architectural elements
-    - Keep it colorful and engaging for children
-    - Professional quality suitable for printing in children's books
+    - Warm, colorful children's book illustration
+    - Professional quality suitable for ages ${ageGroup}
+    - Bright, engaging colors that appeal to children
+    - Islamic setting with beautiful architecture
+    - Traditional Islamic home, mosque, or garden setting
 
-    Create a warm, educational illustration that supports the story's Islamic moral lesson.`
+    SCENE ELEMENTS:
+    - Story theme: ${theme}
+    - Children demonstrating Islamic values through actions
+    - Islamic decorative elements and geometric patterns
+    - Beautiful Islamic architectural background
+    - Educational and inspiring visual elements
+
+    ATMOSPHERE:
+    - Warm, inviting, and child-friendly
+    - Shows Islamic values in action
+    - Suitable for children's book printing
+    - Engaging and educational content
+
+    Create an illustration showing Islamic children living the story's moral lesson.`
 
     try {
       const response = await fetch(DALLE_API_URL, {

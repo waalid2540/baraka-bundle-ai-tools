@@ -763,6 +763,54 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                   <p className="text-green-700 font-medium mb-2">{result.quranReference}</p>
                   <p className="text-green-600 italic">"{result.verseTranslation}"</p>
                 </div>
+
+                {/* Story Images Gallery */}
+                {(result.coverImage || result.sceneIllustrations?.length) && (
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <h4 className="font-bold text-lg text-blue-800 mb-4">🎨 Story Illustrations</h4>
+
+                    {/* Cover Image */}
+                    {result.coverImage && (
+                      <div className="mb-6">
+                        <h5 className="font-semibold text-blue-700 mb-2">📚 Book Cover</h5>
+                        <div className="bg-white rounded-lg p-2 shadow-md">
+                          <img
+                            src={result.coverImage}
+                            alt="Story Cover"
+                            className="w-full max-w-sm mx-auto rounded-lg"
+                            style={{ maxHeight: '300px', objectFit: 'contain' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Scene Illustrations */}
+                    {result.sceneIllustrations && result.sceneIllustrations.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-blue-700 mb-3">📖 Story Scenes ({result.sceneIllustrations.length} images)</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {result.sceneIllustrations.map((imageUrl, index) => (
+                            <div key={index} className="bg-white rounded-lg p-2 shadow-md">
+                              <img
+                                src={imageUrl}
+                                alt={`Story Scene ${index + 1}`}
+                                className="w-full rounded-lg"
+                                style={{ height: '200px', objectFit: 'cover' }}
+                                onError={(e) => {
+                                  console.error(`Failed to load image ${index + 1}:`, imageUrl)
+                                  e.currentTarget.style.display = 'none'
+                                }}
+                              />
+                              <p className="text-center text-sm text-blue-600 mt-2">
+                                Page {index + 1}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
