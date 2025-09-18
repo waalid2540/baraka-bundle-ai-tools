@@ -1,7 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const HomePage = () => {
+  const { user, isAdmin } = useAuth()
   const products = [
     {
       id: 1,
@@ -58,10 +60,47 @@ const HomePage = () => {
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                 <span className="text-green-400 text-sm font-medium">AI Powered</span>
               </div>
-              
-              <button className="bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-8 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-2xl hover:shadow-yellow-500/30 transform hover:-translate-y-0.5">
-                Get Started
-              </button>
+
+              {/* Navigation Links */}
+              <div className="flex items-center space-x-4">
+                {user ? (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="text-yellow-300 hover:text-yellow-200 px-4 py-2 rounded-lg hover:bg-white/10 transition-all"
+                    >
+                      Dashboard
+                    </Link>
+                    {isAdmin() && (
+                      <Link
+                        to="/admin"
+                        className="text-purple-300 hover:text-purple-200 px-4 py-2 rounded-lg hover:bg-white/10 transition-all"
+                      >
+                        Admin
+                      </Link>
+                    )}
+                    <span className="text-gray-400">|</span>
+                    <span className="text-yellow-300 text-sm">
+                      {user.name}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="text-yellow-300 hover:text-yellow-200 px-4 py-2 rounded-lg hover:bg-white/10 transition-all"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-8 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 shadow-2xl hover:shadow-yellow-500/30 transform hover:-translate-y-0.5"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
