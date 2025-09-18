@@ -872,6 +872,46 @@ app.post('/api/generate/dalle-image', async (req, res) => {
   }
 })
 
+// 📸 Image Proxy Endpoint for PDF Generation (Handles CORS)
+app.get('/api/proxy-image', async (req, res) => {
+  try {
+    const { url } = req.query
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL parameter is required' })
+    }
+
+    console.log('📸 Proxying image for PDF:', url.substring(0, 50) + '...')
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`)
+    }
+
+    const buffer = await response.buffer()
+    const contentType = response.headers.get('content-type') || 'image/png'
+
+    // Convert to base64 data URL
+    const base64 = buffer.toString('base64')
+    const dataUrl = `data:${contentType};base64,${base64}`
+
+    console.log('✅ Image converted to base64 for PDF')
+
+    res.json({
+      success: true,
+      dataUrl: dataUrl,
+      contentType: contentType
+    })
+  } catch (error) {
+    console.error('❌ Image proxy error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error(error.stack)

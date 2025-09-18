@@ -22,29 +22,75 @@ export const generateBookStylePDF = async (result: StoryResult) => {
   const innerWidth = pageWidth - 2 * margin
   const innerHeight = pageHeight - 2 * margin
 
-  // Helper function to add image from URL
-  const addImageFromUrl = async (url: string, x: number, y: number, width: number, height: number) => {
+  // Helper function to add image from URL using backend proxy
+  const addImageFromUrl = async (url: string, x: number, y: number, width: number, height: number): Promise<boolean> => {
     try {
-      // Convert URL to base64 if it's a data URL or fetch if it's http
-      let imageData = url
+      console.log('📸 Attempting to add image to PDF:', url.substring(0, 50) + '...')
 
-      if (url.startsWith('http')) {
-        // For HTTP URLs, we need to convert to base64
-        const response = await fetch(url)
-        const blob = await response.blob()
-        imageData = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(blob)
-        })
-      }
-
-      if (imageData.includes('base64')) {
-        pdf.addImage(imageData, 'PNG', x, y, width, height)
+      // If it's already a data URL, use it directly
+      if (url.startsWith('data:')) {
+        pdf.addImage(url, 'PNG', x, y, width, height)
+        console.log('✅ Data URL image added successfully')
         return true
       }
+
+      // For HTTP URLs, use our backend proxy to avoid CORS issues
+      if (url.startsWith('http')) {
+        try {
+          console.log('🔄 Using backend proxy for image...')
+          const proxyUrl = `https://baraka-bundle-ai-tools.onrender.com/api/proxy-image?url=${encodeURIComponent(url)}`
+
+          const response = await fetch(proxyUrl)
+          const data = await response.json()
+
+          if (data.success && data.dataUrl) {
+            pdf.addImage(data.dataUrl, 'PNG', x, y, width, height)
+            console.log('✅ External image added via backend proxy')
+            return true
+          } else {
+            throw new Error(data.error || 'Proxy failed')
+          }
+        } catch (proxyError) {
+          console.warn('⚠️ Backend proxy failed, trying fallback methods:', proxyError)
+
+          // Fallback: Try canvas-based approach
+          return new Promise((resolve) => {
+            const img = new Image()
+            img.crossOrigin = 'anonymous'
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0)
+                  const dataUrl = canvas.toDataURL('image/png')
+                  pdf.addImage(dataUrl, 'PNG', x, y, width, height)
+                  console.log('✅ External image added via canvas fallback')
+                  resolve(true)
+                } else {
+                  resolve(false)
+                }
+              } catch (canvasError) {
+                console.error('❌ Canvas conversion failed:', canvasError)
+                resolve(false)
+              }
+            }
+
+            img.onerror = () => {
+              console.error('❌ Image loading failed for URL:', url)
+              resolve(false)
+            }
+
+            img.src = url
+          })
+        }
+      }
     } catch (error) {
-      console.error('Error adding image to PDF:', error)
+      console.error('❌ Error adding image to PDF:', error)
       return false
     }
     return false
@@ -65,27 +111,52 @@ export const generateBookStylePDF = async (result: StoryResult) => {
     return pages.length > 0 ? pages : [storyContent]
   }
 
-  // ============= PAGE 1: COVER PAGE =============
-  if (result.coverImage) {
-    // Full page cover image
-    await addImageFromUrl(result.coverImage, 0, 0, pageWidth, pageHeight)
+  // Helper function for fallback cover design
+  const generateFallbackCover = () => {
+    // Islamic Pattern Background
+    pdf.setDrawColor(0, 102, 51)
+    pdf.setLineWidth(3)
+    pdf.rect(10, 10, pageWidth - 20, pageHeight - 20, 'D')
 
-    // Add semi-transparent overlay for title
-    pdf.setFillColor(255, 255, 255)
-    pdf.setGState(pdf.GState({ opacity: 0.9 }))
-    pdf.roundedRect(margin, pageHeight - 80, innerWidth, 60, 5, 5, 'F')
-    pdf.setGState(pdf.GState({ opacity: 1 }))
-
-    // Title on cover
+    // Title
     pdf.setTextColor(0, 102, 51)
     pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(24)
+    pdf.setFontSize(28)
     const titleLines = pdf.splitTextToSize(result.title, innerWidth - 20)
-    let yPos = pageHeight - 50
+    let yPos = 100
     titleLines.forEach((line: string) => {
       pdf.text(line, pageWidth / 2, yPos, { align: 'center' })
-      yPos += 10
+      yPos += 14
     })
+  }
+
+  // ============= PAGE 1: COVER PAGE =============
+  if (result.coverImage) {
+    console.log('🎨 Adding cover image to PDF...')
+    const coverAdded = await addImageFromUrl(result.coverImage, 0, 0, pageWidth, pageHeight)
+
+    if (coverAdded) {
+      // Add semi-transparent overlay for title
+      pdf.setFillColor(255, 255, 255)
+      pdf.setGState(pdf.GState({ opacity: 0.9 }))
+      pdf.roundedRect(margin, pageHeight - 80, innerWidth, 60, 5, 5, 'F')
+      pdf.setGState(pdf.GState({ opacity: 1 }))
+
+      // Title on cover
+      pdf.setTextColor(0, 102, 51)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(24)
+      const titleLines = pdf.splitTextToSize(result.title, innerWidth - 20)
+      let yPos = pageHeight - 50
+      titleLines.forEach((line: string) => {
+        pdf.text(line, pageWidth / 2, yPos, { align: 'center' })
+        yPos += 10
+      })
+    } else {
+      console.warn('⚠️ Cover image failed to load, using fallback design')
+      // Use fallback cover design
+      generateFallbackCover()
+    }
   } else {
     // Fallback decorative cover if no image
     // Islamic Pattern Background
@@ -152,13 +223,31 @@ export const generateBookStylePDF = async (result: StoryResult) => {
       // Page with illustration at top
       const illustrationHeight = 100
 
-      // Add illustration
-      await addImageFromUrl(result.sceneIllustrations![i], margin, margin, innerWidth, illustrationHeight)
+      console.log(`🖼️ Adding scene illustration ${i + 1} to PDF...`)
 
-      // Add decorative border around image
-      pdf.setDrawColor(204, 153, 0)
-      pdf.setLineWidth(2)
-      pdf.rect(margin, margin, innerWidth, illustrationHeight, 'D')
+      // Try to add illustration
+      const imageAdded = await addImageFromUrl(result.sceneIllustrations![i], margin, margin, innerWidth, illustrationHeight)
+
+      if (imageAdded) {
+        // Add decorative border around successful image
+        pdf.setDrawColor(204, 153, 0)
+        pdf.setLineWidth(2)
+        pdf.rect(margin, margin, innerWidth, illustrationHeight, 'D')
+        console.log(`✅ Scene illustration ${i + 1} added successfully`)
+      } else {
+        // Add placeholder with text if image failed
+        console.warn(`⚠️ Scene illustration ${i + 1} failed to load, adding placeholder`)
+        pdf.setFillColor(245, 245, 245)
+        pdf.setDrawColor(200, 200, 200)
+        pdf.rect(margin, margin, innerWidth, illustrationHeight, 'FD')
+
+        pdf.setTextColor(120, 120, 120)
+        pdf.setFont('helvetica', 'italic')
+        pdf.setFontSize(16)
+        pdf.text(`Scene ${i + 1} Illustration`, pageWidth / 2, margin + illustrationHeight/2, { align: 'center' })
+        pdf.setFontSize(12)
+        pdf.text('(Image loading failed)', pageWidth / 2, margin + illustrationHeight/2 + 15, { align: 'center' })
+      }
 
       // Story text below illustration
       const textStartY = margin + illustrationHeight + 15
