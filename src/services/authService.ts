@@ -27,7 +27,10 @@ class AuthService {
   private token: string | null = null
 
   constructor() {
-    this.baseUrl = 'https://baraka-bundle-ai-tools.onrender.com/api'
+    // Use local API in development, production API in production
+    this.baseUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3003/api'
+      : 'https://baraka-bundle-ai-tools.onrender.com/api'
     this.token = localStorage.getItem('authToken')
   }
 
