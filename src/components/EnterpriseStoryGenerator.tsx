@@ -708,23 +708,78 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                     </div>
                   ) : null}
                   
-                  <div className="bg-white rounded-lg p-4 mb-4">
-                    <h4 className="font-bold text-lg text-gray-800 mb-2">{result.title}</h4>
-                    <p className="text-gray-600 text-sm mb-3">
+                  <div className="bg-white rounded-lg p-6 mb-4">
+                    {/* Book Cover */}
+                    {result.coverImage && (
+                      <div className="text-center mb-8">
+                        <img
+                          src={result.coverImage}
+                          alt="Story Cover"
+                          className="mx-auto rounded-lg shadow-xl border-4 border-gray-200"
+                          style={{ maxWidth: '250px', maxHeight: '350px', objectFit: 'cover' }}
+                        />
+                      </div>
+                    )}
+
+                    <h4 className="font-bold text-2xl text-gray-800 mb-2 text-center">{result.title}</h4>
+                    <p className="text-gray-600 text-sm mb-6 text-center">
                       {result.ageGroup} years • {result.theme} • Generated {new Date().toLocaleDateString()}
                     </p>
-                    <div className="max-h-80 overflow-y-auto text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
-                      <div className="whitespace-pre-wrap">
-                        {result.story}
-                      </div>
+
+                    {/* Professional Story Book Layout */}
+                    <div className="story-book-layout">
+                      {(() => {
+                        // Split story into pages (same logic as DALL-E service)
+                        const words = result.story.split(' ')
+                        const wordsPerPage = 80
+                        const pages: string[] = []
+
+                        for (let i = 0; i < words.length; i += wordsPerPage) {
+                          const pageContent = words.slice(i, Math.min(i + wordsPerPage, words.length)).join(' ')
+                          if (pageContent.trim()) {
+                            pages.push(pageContent.trim())
+                          }
+                        }
+
+                        return pages.map((pageContent, index) => (
+                          <div key={index} className="story-page mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl">
+                            {/* Page Header */}
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="text-sm font-semibold text-blue-600">Page {index + 1}</span>
+                              <span className="text-xs text-gray-500">{pages.length} pages total</span>
+                            </div>
+
+                            {/* Story Image for this page */}
+                            {result.sceneIllustrations && result.sceneIllustrations[index] && (
+                              <div className="mb-6">
+                                <img
+                                  src={result.sceneIllustrations[index]}
+                                  alt={`Story illustration for page ${index + 1}`}
+                                  className="w-full rounded-lg shadow-lg"
+                                  style={{ maxHeight: '300px', objectFit: 'cover' }}
+                                  onError={(e) => {
+                                    console.error(`Failed to load image for page ${index + 1}`)
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Page Text */}
+                            <div className="text-base text-gray-800 leading-relaxed font-medium">
+                              <p className="whitespace-pre-wrap">{pageContent}</p>
+                            </div>
+                          </div>
+                        ))
+                      })()}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="bg-white rounded-lg p-3">
-                      <div className="font-semibold text-gray-700 mb-1">📸 Illustrations</div>
+                      <div className="font-semibold text-gray-700 mb-1">📸 Story Illustrations</div>
                       <div className="text-gray-600">
-                        {result.sceneIllustrations?.length || 0} custom images
+                        {result.coverImage ? '1 cover + ' : ''}{result.sceneIllustrations?.length || 0} page images
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-3">
@@ -764,53 +819,6 @@ const EnterpriseStoryGenerator: React.FC<EnterpriseStoryGeneratorProps> = ({
                   <p className="text-green-600 italic">"{result.verseTranslation}"</p>
                 </div>
 
-                {/* Story Images Gallery */}
-                {(result.coverImage || result.sceneIllustrations?.length) && (
-                  <div className="bg-blue-50 rounded-xl p-6">
-                    <h4 className="font-bold text-lg text-blue-800 mb-4">🎨 Story Illustrations</h4>
-
-                    {/* Cover Image */}
-                    {result.coverImage && (
-                      <div className="mb-6">
-                        <h5 className="font-semibold text-blue-700 mb-2">📚 Book Cover</h5>
-                        <div className="bg-white rounded-lg p-2 shadow-md">
-                          <img
-                            src={result.coverImage}
-                            alt="Story Cover"
-                            className="w-full max-w-sm mx-auto rounded-lg"
-                            style={{ maxHeight: '300px', objectFit: 'contain' }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Scene Illustrations */}
-                    {result.sceneIllustrations && result.sceneIllustrations.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold text-blue-700 mb-3">📖 Story Scenes ({result.sceneIllustrations.length} images)</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {result.sceneIllustrations.map((imageUrl, index) => (
-                            <div key={index} className="bg-white rounded-lg p-2 shadow-md">
-                              <img
-                                src={imageUrl}
-                                alt={`Story Scene ${index + 1}`}
-                                className="w-full rounded-lg"
-                                style={{ height: '200px', objectFit: 'cover' }}
-                                onError={(e) => {
-                                  console.error(`Failed to load image ${index + 1}:`, imageUrl)
-                                  e.currentTarget.style.display = 'none'
-                                }}
-                              />
-                              <p className="text-center text-sm text-blue-600 mt-2">
-                                Page {index + 1}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )}
 
