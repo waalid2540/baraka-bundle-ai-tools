@@ -6,6 +6,7 @@ import KidsStoryGenerator from './pages/KidsStoryGenerator'
 import NamePosterGenerator from './pages/NamePosterGenerator'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
+import DalleDebug from './components/DalleDebug'
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
         <Route path="/name-poster-generator" element={<NamePosterGenerator />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-cancel" element={<PaymentCancel />} />
-        
+        <Route path="/dalle-debug" element={<DalleDebug />} />
+
         {/* 404 */}
         <Route path="*" element={
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
