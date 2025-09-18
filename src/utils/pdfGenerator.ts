@@ -22,7 +22,7 @@ export const generateBookStylePDF = async (result: StoryResult) => {
   const innerWidth = pageWidth - 2 * margin
   const innerHeight = pageHeight - 2 * margin
 
-  // Helper function to add image from URL using backend proxy
+  // Helper function to add image from URL - using backend proxy for CORS-free loading
   const addImageFromUrl = async (url: string, x: number, y: number, width: number, height: number): Promise<boolean> => {
     try {
       console.log('📸 Attempting to add image to PDF:', url.substring(0, 50) + '...')
@@ -34,59 +34,89 @@ export const generateBookStylePDF = async (result: StoryResult) => {
         return true
       }
 
-      // For HTTP URLs, use our backend proxy to avoid CORS issues
+      // For HTTP URLs, use backend proxy to avoid CORS issues
       if (url.startsWith('http')) {
         try {
-          console.log('🔄 Using backend proxy for image...')
+          console.log('🔄 Using backend proxy for image loading...')
           const proxyUrl = `https://baraka-bundle-ai-tools.onrender.com/api/proxy-image?url=${encodeURIComponent(url)}`
 
-          const response = await fetch(proxyUrl)
+          const response = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            }
+          })
+
+          if (!response.ok) {
+            console.warn(`⚠️ Backend proxy failed: ${response.status}`)
+            return false
+          }
+
           const data = await response.json()
 
           if (data.success && data.dataUrl) {
+            // Backend returns base64 data URL
             pdf.addImage(data.dataUrl, 'PNG', x, y, width, height)
             console.log('✅ External image added via backend proxy')
             return true
           } else {
-            throw new Error(data.error || 'Proxy failed')
+            console.warn('⚠️ Backend proxy returned error:', data.error)
+            return false
           }
+
         } catch (proxyError) {
-          console.warn('⚠️ Backend proxy failed, trying fallback methods:', proxyError)
+          console.error('❌ Backend proxy error:', proxyError)
 
-          // Fallback: Try canvas-based approach
-          return new Promise((resolve) => {
-            const img = new Image()
-            img.crossOrigin = 'anonymous'
+          // Fallback: Try direct canvas approach as last resort
+          try {
+            console.log('🔄 Falling back to direct canvas approach...')
 
-            img.onload = () => {
-              try {
-                const canvas = document.createElement('canvas')
-                canvas.width = img.width
-                canvas.height = img.height
-                const ctx = canvas.getContext('2d')
+            const success = await new Promise<boolean>((resolve) => {
+              const img = new Image()
+              img.crossOrigin = 'anonymous'
 
-                if (ctx) {
-                  ctx.drawImage(img, 0, 0)
-                  const dataUrl = canvas.toDataURL('image/png')
-                  pdf.addImage(dataUrl, 'PNG', x, y, width, height)
-                  console.log('✅ External image added via canvas fallback')
-                  resolve(true)
-                } else {
+              const timeout = setTimeout(() => {
+                console.warn('⏰ Canvas fallback timeout')
+                resolve(false)
+              }, 8000)
+
+              img.onload = () => {
+                clearTimeout(timeout)
+                try {
+                  const canvas = document.createElement('canvas')
+                  canvas.width = img.naturalWidth || img.width
+                  canvas.height = img.naturalHeight || img.height
+                  const ctx = canvas.getContext('2d')
+
+                  if (ctx && canvas.width > 0 && canvas.height > 0) {
+                    ctx.drawImage(img, 0, 0)
+                    const dataUrl = canvas.toDataURL('image/png', 0.9)
+                    pdf.addImage(dataUrl, 'PNG', x, y, width, height)
+                    console.log('✅ External image added via canvas fallback')
+                    resolve(true)
+                  } else {
+                    resolve(false)
+                  }
+                } catch (canvasError) {
+                  console.error('❌ Canvas fallback failed:', canvasError)
                   resolve(false)
                 }
-              } catch (canvasError) {
-                console.error('❌ Canvas conversion failed:', canvasError)
+              }
+
+              img.onerror = () => {
+                clearTimeout(timeout)
                 resolve(false)
               }
-            }
 
-            img.onerror = () => {
-              console.error('❌ Image loading failed for URL:', url)
-              resolve(false)
-            }
+              img.src = url
+            })
 
-            img.src = url
-          })
+            return success
+
+          } catch (fallbackError) {
+            console.error('❌ Canvas fallback failed:', fallbackError)
+            return false
+          }
         }
       }
     } catch (error) {
