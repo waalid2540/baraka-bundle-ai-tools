@@ -823,55 +823,16 @@ app.post('/api/generate/dalle-image', async (req, res) => {
     let prompt = ''
 
     if (type === 'book-cover') {
-      prompt = `Create a beautiful children's book cover for an Islamic story titled "${title}".
-      VISUAL ELEMENTS:
-      - Professional children's book cover design
-      - Vibrant, engaging colors perfect for ages ${ageGroup}
-      - Islamic children characters in traditional modest clothing
-      - Boys wearing thobe/traditional Islamic dress with kufi caps
-      - Girls wearing hijab and modest colorful dresses
-      - Beautiful Islamic setting (mosque, Islamic garden, or traditional home)
-      COVER DESIGN:
-      - Central focus on happy Islamic children
-      - Islamic architectural elements in background
-      - Decorative Islamic geometric patterns as borders
-      - Warm, inviting atmosphere that appeals to children
-      - Theme: ${theme}
-      - Colors should be bright and child-friendly
-      STYLE REQUIREMENTS:
-      - Professional children's book cover quality
-      - Characters showing Islamic values and happiness
-      - Suitable for printing and publishing
-      - Diverse representation of Muslim children`
+      // DALL-E 2 has 1000 character limit - keep prompt concise
+      prompt = `Beautiful children's book cover for Islamic story "${title}". Show happy Muslim children (ages ${ageGroup}) in traditional modest clothing - boys in thobe with kufi caps, girls in hijab and colorful dresses. Islamic setting with mosque or garden background. Theme: ${theme}. Bright engaging colors, professional children's book illustration style, warm atmosphere showing Islamic values and diversity.`
     } else if (type === 'story-scene') {
       const scenePosition = pageNumber === 1 ? 'beginning' :
                           pageNumber === totalPages ? 'ending' : 'middle'
 
-      prompt = `Create a beautiful, engaging children's book illustration for page ${pageNumber} of "${title}".
-      PAGE CONTENT CONTEXT: ${pageContent?.substring(0, 300)}...
-      SCENE POSITION: ${scenePosition} of the story
-      VISUAL REQUIREMENTS:
-      - Professional children's book illustration style
-      - Colorful, warm, and engaging for ages ${ageGroup}
-      - Include Islamic children characters appropriate to the story
-      - Beautiful Islamic setting (mosque, Islamic home, garden, market)
-      - Characters wearing modest Islamic clothing (hijab, thobe, traditional dress)
-      CHARACTER GUIDELINES:
-      - Show Islamic children (boys and girls) in modest traditional clothing
-      - Boys: wearing thobe, kufi/cap, or traditional Islamic attire
-      - Girls: wearing hijab, modest dresses, or traditional Islamic clothing
-      - Diverse representation of Muslim children from different backgrounds
-      - Happy, friendly expressions showing Islamic values
-      STORY-SPECIFIC ELEMENTS:
-      ${scenePosition === 'beginning' ? '- Opening scene introducing the main character and Islamic setting' : ''}
-      ${scenePosition === 'middle' ? '- Key story moment with character interactions and Islamic values' : ''}
-      ${scenePosition === 'ending' ? '- Happy resolution showing lesson learned and character growth' : ''}
-      - Theme focus: ${theme}
-      - Islamic decorative elements and patterns in background
-      STYLE REQUIREMENTS:
-      - Bright, colorful children's book art style
-      - Professional quality suitable for publishing
-      - Characters should match the story narrative`
+      // DALL-E 2 has 1000 character limit - create focused scene prompt
+      const sceneContext = pageContent ? pageContent.substring(0, 150) : ''
+
+      prompt = `Children's book illustration page ${pageNumber} of Islamic story "${title}". ${scenePosition === 'beginning' ? 'Opening scene' : scenePosition === 'ending' ? 'Happy ending' : 'Story scene'} showing Muslim children in traditional clothing (boys in thobe/kufi, girls in hijab). Context: ${sceneContext}. Theme: ${theme}. Bright colorful style for ages ${ageGroup}, Islamic setting with ${scenePosition === 'beginning' ? 'mosque/home' : 'garden/market'}, warm atmosphere showing Islamic values.`
     } else {
       return res.status(400).json({
         success: false,
@@ -880,6 +841,12 @@ app.post('/api/generate/dalle-image', async (req, res) => {
     }
 
     console.log('🎯 Generating image with prompt length:', prompt.length)
+
+    // Ensure prompt is under 1000 characters for DALL-E 2
+    if (prompt.length > 1000) {
+      console.warn(`⚠️ Prompt too long (${prompt.length} chars), truncating to 997...`)
+      prompt = prompt.substring(0, 997) + '...'
+    }
 
     const response = await openai.images.generate({
       model: "dall-e-2",
