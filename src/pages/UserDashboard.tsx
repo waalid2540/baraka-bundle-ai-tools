@@ -4,15 +4,12 @@ import { useAuth } from '../contexts/AuthContext'
 import DuaGenerator from './DuaGenerator'
 import KidsStoryGenerator from './KidsStoryGenerator'
 import NamePosterGenerator from './NamePosterGenerator'
-import EnterpriseStoryGenerator from '../components/EnterpriseStoryGenerator'
-import PaymentGateway from '../components/PaymentGateway'
 
 const UserDashboard: React.FC = () => {
   const { user, logout, hasAccess, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
-  const [showPayment, setShowPayment] = useState(false)
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -68,72 +65,7 @@ const UserDashboard: React.FC = () => {
 
     const FeatureComponent = feature.component
 
-    // For embedded components, we need to override certain behaviors
-    if (activeTab === 'story_generator') {
-      return <KidsStoryGeneratorEmbedded />
-    }
-
     return <FeatureComponent />
-  }
-
-  // Embedded KidsStoryGenerator that works in dashboard context - EXACT copy of original
-  const KidsStoryGeneratorEmbedded = () => {
-    const { loading } = useAuth()
-    const userHasAccess = hasAccess('story_generator')
-
-    const handlePaymentClick = () => {
-      // Remove navigation logic, just show payment
-      setShowPayment(true)
-    }
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-islamic-green-50 via-white to-islamic-gold-50">
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Enterprise Kids Story Generator
-            </h2>
-            <p className="text-lg text-gray-600">
-              Professional Islamic storytelling with AI-powered illustrations and narration
-            </p>
-          </div>
-
-          {/* Access Control - EXACT copy from original */}
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-islamic-green-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading...</p>
-            </div>
-          ) : !userHasAccess ? (
-            <div className="max-w-md mx-auto text-center py-12">
-              <div className="bg-white rounded-2xl shadow-2xl p-8">
-                <div className="text-6xl mb-6">🔒</div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                  Unlock Kids Story Generator
-                </h3>
-                <p className="text-gray-600 mb-8">
-                  Get unlimited access to create personalized Islamic stories with professional illustrations and audio narration
-                </p>
-                <div className="space-y-3">
-                  <button
-                    onClick={handlePaymentClick}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    🚀 Get Unlimited Access - $2.99
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* User has access - show enterprise generator */
-            <EnterpriseStoryGenerator
-              hasAccess={userHasAccess}
-              onPaymentClick={handlePaymentClick}
-            />
-          )}
-        </main>
-      </div>
-    )
   }
 
   return (
@@ -347,20 +279,6 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Payment Gateway Modal */}
-      {showPayment && (
-        <PaymentGateway
-          productType="story_generator"
-          isOpen={true}
-          onClose={() => setShowPayment(false)}
-          onPaymentSuccess={() => {
-            setShowPayment(false)
-            // The auth context will automatically refresh user data
-            window.location.reload() // Refresh to get updated access
-          }}
-        />
-      )}
     </div>
   )
 }

@@ -11,10 +11,16 @@ const KidsStoryGenerator = () => {
 
   const userHasAccess = hasAccess('story_generator')
 
-  // If not logged in, redirect to login
+  // If not logged in, redirect to login (but handle embedded context)
   const handlePaymentClick = () => {
     if (!user) {
-      navigate('/login', { state: { from: { pathname: '/kids-story-generator' } } })
+      // Check if we're in dashboard context by looking at current path
+      if (window.location.pathname === '/dashboard') {
+        // In dashboard, don't navigate, just show alert or do nothing
+        alert('Please ensure you are logged in to purchase features')
+      } else {
+        navigate('/login', { state: { from: { pathname: '/kids-story-generator' } } })
+      }
     } else {
       setShowPayment(true)
     }
