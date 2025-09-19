@@ -26,20 +26,26 @@ const KidsStoryGenerator = () => {
     }
   }
 
+  // Check if we're in dashboard context
+  const isDashboard = window.location.pathname === '/dashboard'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-islamic-green-50 via-white to-islamic-gold-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="text-islamic-green-600 hover:text-islamic-green-800">
-              ← Back to Baraka Bundle
-            </Link>
-            <h1 className="text-2xl font-bold text-islamic-green-800">
-              📖 Islamic Kids Stories
-            </h1>
+      {/* Only show header when NOT in dashboard */}
+      {!isDashboard && (
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <Link to="/" className="text-islamic-green-600 hover:text-islamic-green-800">
+                ← Back to Baraka Bundle
+              </Link>
+              <h1 className="text-2xl font-bold text-islamic-green-800">
+                📖 Islamic Kids Stories
+              </h1>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
