@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import DuaGenerator from './pages/DuaGenerator'
 import KidsStoryGenerator from './pages/KidsStoryGenerator'
@@ -29,6 +30,12 @@ function App() {
 
           {/* Protected Routes */}
           <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/old-dashboard" element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>

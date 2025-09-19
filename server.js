@@ -429,6 +429,112 @@ app.post('/api/admin/grant-access', authenticateToken, requireAdmin, async (req,
   }
 })
 
+// Delete user (admin only)
+app.delete('/api/admin/users/:userId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    // Get user info first
+    const userResult = await pool.query('SELECT email, role FROM users WHERE id = $1', [userId])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const userEmail = userResult.rows[0].email
+    const userRole = userResult.rows[0].role
+
+    // Prevent deleting admin users
+    if (userRole === 'admin') {
+      return res.status(403).json({ error: 'Cannot delete admin users' })
+    }
+
+    // Delete user access records first (foreign key constraint)
+    await pool.query('DELETE FROM user_access WHERE user_id = $1', [userId])
+
+    // Delete user logs
+    await pool.query('DELETE FROM usage_logs WHERE user_id = $1', [userId])
+
+    // Delete the user
+    await pool.query('DELETE FROM users WHERE id = $1', [userId])
+
+    // Log admin action
+    await pool.query(`
+      INSERT INTO admin_logs (admin_user_id, action, target_user_id, details)
+      VALUES ($1, $2, $3, $4)
+    `, [req.user.id, 'delete_user', userId, { deleted_email: userEmail }])
+
+    console.log(`✅ Admin ${req.user.email} deleted user ${userEmail}`)
+
+    res.json({
+      success: true,
+      message: `User ${userEmail} deleted successfully`
+    })
+
+  } catch (error) {
+    console.error('Delete user error:', error)
+    res.status(500).json({ error: 'Failed to delete user' })
+  }
+})
+
+// Revoke access (admin only)
+app.post('/api/admin/revoke-access', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { email, product_type } = req.body
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' })
+    }
+
+    // Find user
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const userId = userResult.rows[0].id
+
+    if (product_type === 'all') {
+      // Revoke all access
+      await pool.query(`
+        UPDATE user_access
+        SET has_access = false, expires_at = NOW()
+        WHERE user_id = $1
+      `, [userId])
+
+      console.log(`✅ Admin ${req.user.email} revoked ALL access for ${email}`)
+
+      res.json({
+        success: true,
+        message: `All access revoked for ${email}`
+      })
+    } else {
+      // Revoke specific product access
+      await pool.query(`
+        UPDATE user_access
+        SET has_access = false, expires_at = NOW()
+        WHERE user_id = $1 AND product_type = $2
+      `, [userId, product_type])
+
+      console.log(`✅ Admin ${req.user.email} revoked ${product_type} access for ${email}`)
+
+      res.json({
+        success: true,
+        message: `${product_type} access revoked for ${email}`
+      })
+    }
+
+    // Log admin action
+    await pool.query(`
+      INSERT INTO admin_logs (admin_user_id, action, target_user_id, details)
+      VALUES ($1, $2, $3, $4)
+    `, [req.user.id, 'revoke_access', userId, { product_type, revoked_email: email }])
+
+  } catch (error) {
+    console.error('Revoke access error:', error)
+    res.status(500).json({ error: 'Failed to revoke access' })
+  }
+})
+
 // Health check endpoint with debugging info
 app.get('/api/health', (req, res) => {
   res.json({

@@ -29,6 +29,8 @@ const AdminDashboard: React.FC = () => {
     expires_days: 365
   })
   const [isGrantingAccess, setIsGrantingAccess] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -93,6 +95,59 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     await logout()
     navigate('/')
+  }
+
+  const handleDeleteUser = async (userId: number, userEmail: string) => {
+    if (!confirm(`Are you sure you want to delete user: ${userEmail}?\n\nThis will permanently remove the user and all their data.`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: authService.getAuthHeaders()
+      })
+
+      if (response.ok) {
+        alert(`User ${userEmail} deleted successfully`)
+        loadUsers() // Refresh user list
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete user: ${error.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      alert('Failed to delete user')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleRevokeAccess = async (userEmail: string, productType: string) => {
+    if (!confirm(`Revoke ${productType} access for ${userEmail}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/revoke-access', {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({
+          email: userEmail,
+          product_type: productType
+        })
+      })
+
+      if (response.ok) {
+        alert(`Access revoked for ${userEmail}`)
+        loadUsers()
+      } else {
+        const error = await response.json()
+        alert(`Failed to revoke access: ${error.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      alert('Failed to revoke access')
+    }
   }
 
   if (!user || !isAdmin()) {
@@ -312,12 +367,29 @@ const AdminDashboard: React.FC = () => {
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => setGrantAccessForm({...grantAccessForm, email: user.email})}
-                          className="text-purple-600 hover:text-purple-900"
-                        >
-                          Grant Access
-                        </button>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => setGrantAccessForm({...grantAccessForm, email: user.email})}
+                            className="text-green-600 hover:text-green-900 font-medium"
+                          >
+                            Grant Access
+                          </button>
+                          <button
+                            onClick={() => handleRevokeAccess(user.email, 'all')}
+                            className="text-orange-600 hover:text-orange-900 font-medium"
+                          >
+                            Revoke Access
+                          </button>
+                          {user.role !== 'admin' && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.email)}
+                              disabled={isDeleting}
+                              className="text-red-600 hover:text-red-900 font-medium disabled:opacity-50"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Delete User'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
