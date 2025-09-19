@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import DuaGenerator from './DuaGenerator'
 import KidsStoryGenerator from './KidsStoryGenerator'
 import NamePosterGenerator from './NamePosterGenerator'
+import MobileMenu from '../components/MobileMenu'
 
 const UserDashboard: React.FC = () => {
   const { user, logout, hasAccess, isAdmin } = useAuth()
@@ -70,21 +71,22 @@ const UserDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-islamic-green-50">
-      {/* Navigation Header */}
+      {/* Navigation Header - Mobile Responsive */}
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-islamic-green-600">
+              <Link to="/" className="text-lg sm:text-2xl font-bold text-islamic-green-600">
                 BarakahTool
               </Link>
             </div>
 
-            <div className="flex items-center space-x-4">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-4">
               {isAdmin() && (
                 <Link
                   to="/admin"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                 >
                   Admin Panel
                 </Link>
@@ -92,46 +94,53 @@ const UserDashboard: React.FC = () => {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-400"
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-400 text-sm"
               >
                 {isLoggingOut ? 'Logging out...' : 'Logout'}
               </button>
             </div>
+
+            {/* Mobile Menu */}
+            <MobileMenu isDark={false} />
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      {/* Main Content - Mobile Responsive */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Welcome Section - Mobile Responsive */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-4 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user.name}! 👋
           </h1>
-          <p className="text-gray-600">
-            {user.email} • {user.role === 'admin' && <span className="text-purple-600 font-semibold">Admin</span>}
+          <div className="text-sm sm:text-base text-gray-600 break-words">
+            <span className="block sm:inline">{user.email}</span>
+            <span className="hidden sm:inline"> • </span>
+            {user.role === 'admin' && <span className="text-purple-600 font-semibold">Admin</span>}
             {user.role === 'user' && <span className="text-green-600">Member</span>}
             {!user.email_verified && (
-              <span className="ml-2 text-orange-500">
+              <span className="block sm:inline sm:ml-2 text-orange-500">
                 (Email not verified)
               </span>
             )}
-          </p>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-lg mb-8">
+        {/* Tab Navigation - Mobile Responsive */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-8">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-8">
+            {/* Mobile Tab Navigation - Horizontal Scroll */}
+            <nav className="flex overflow-x-auto scrollbar-hide px-2 sm:px-4 lg:px-8 space-x-2 sm:space-x-4 lg:space-x-8">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-3 sm:px-2 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'overview'
                     ? 'border-islamic-green-500 text-islamic-green-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                📊 Overview
+                <span className="block sm:inline">📊</span>
+                <span className="hidden sm:inline ml-1">Overview</span>
               </button>
 
               {features.map((feature) => {
@@ -141,7 +150,7 @@ const UserDashboard: React.FC = () => {
                     key={feature.id}
                     onClick={() => hasFeatureAccess && setActiveTab(feature.id)}
                     disabled={!hasFeatureAccess}
-                    className={`py-4 px-2 border-b-2 font-medium text-sm flex items-center ${
+                    className={`py-3 sm:py-4 px-3 sm:px-2 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 flex items-center ${
                       activeTab === feature.id
                         ? 'border-islamic-green-500 text-islamic-green-600'
                         : hasFeatureAccess
@@ -149,20 +158,22 @@ const UserDashboard: React.FC = () => {
                         : 'border-transparent text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    {feature.icon} {feature.name}
-                    {!hasFeatureAccess && <span className="ml-2 text-xs">🔒</span>}
+                    <span className="block">{feature.icon}</span>
+                    <span className="hidden lg:inline ml-1">{feature.name}</span>
+                    <span className="hidden sm:block lg:hidden ml-1">{feature.name.split(' ')[0]}</span>
+                    {!hasFeatureAccess && <span className="ml-1 text-xs">🔒</span>}
                   </button>
                 )
               })}
             </nav>
           </div>
 
-          {/* Tab Content */}
-          <div className="p-8">
+          {/* Tab Content - Mobile Responsive */}
+          <div className="p-4 sm:p-6 lg:p-8">
             {activeTab === 'overview' ? (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Your AI Tools</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Your AI Tools</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {features.map((feature) => {
                     const hasFeatureAccess = hasAccess(feature.id)
 
@@ -175,26 +186,26 @@ const UserDashboard: React.FC = () => {
                       >
                         <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
 
-                        <div className="p-6">
-                          <div className="text-4xl mb-4">{feature.icon}</div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        <div className="p-4 sm:p-6">
+                          <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{feature.icon}</div>
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                             {feature.name}
                           </h3>
-                          <p className="text-gray-600 mb-4">
+                          <p className="text-sm sm:text-base text-gray-600 mb-4">
                             {feature.description}
                           </p>
 
                           {hasFeatureAccess ? (
                             <button
                               onClick={() => setActiveTab(feature.id)}
-                              className={`block w-full text-center py-3 rounded-lg font-semibold text-white bg-gradient-to-r ${feature.color} hover:shadow-lg transform hover:scale-[1.02] transition-all`}
+                              className={`block w-full text-center py-2.5 sm:py-3 rounded-lg font-semibold text-white bg-gradient-to-r ${feature.color} hover:shadow-lg transform hover:scale-[1.02] transition-all text-sm sm:text-base`}
                             >
                               Open Tool
                             </button>
                           ) : (
                             <button
                               onClick={() => navigate('/pricing')}
-                              className="block w-full text-center py-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                              className="block w-full text-center py-2.5 sm:py-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all text-sm sm:text-base"
                             >
                               🔒 Unlock Feature
                             </button>
@@ -202,7 +213,7 @@ const UserDashboard: React.FC = () => {
                         </div>
 
                         {hasFeatureAccess && (
-                          <div className="absolute top-4 right-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                             Active
                           </div>
                         )}
