@@ -49,32 +49,14 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Protected Feature Routes */}
-          <Route path="/dua-generator" element={
-            <ProtectedRoute>
-              <DuaGenerator />
-            </ProtectedRoute>
-          } />
-          <Route path="/kids-stories" element={
-            <ProtectedRoute>
-              <KidsStoryGenerator />
-            </ProtectedRoute>
-          } />
-          <Route path="/kids-story-generator" element={
-            <ProtectedRoute>
-              <KidsStoryGenerator />
-            </ProtectedRoute>
-          } />
-          <Route path="/name-poster" element={
-            <ProtectedRoute>
-              <NamePosterGenerator />
-            </ProtectedRoute>
-          } />
-          <Route path="/name-poster-generator" element={
-            <ProtectedRoute>
-              <NamePosterGenerator />
-            </ProtectedRoute>
-          } />
+          {/* Feature Routes - Redirect to login/dashboard */}
+          <Route path="/dua-generator" element={<FeatureRedirect />} />
+          <Route path="/kids-stories" element={<FeatureRedirect />} />
+          <Route path="/kids-story-generator" element={<FeatureRedirect />} />
+          <Route path="/name-poster" element={<FeatureRedirect />} />
+          <Route path="/name-poster-generator" element={<FeatureRedirect />} />
+
+          {/* Direct eBook Generator Route */}
           <Route path="/ebook-generator" element={
             <ProtectedRoute>
               <EbookGenerator />
