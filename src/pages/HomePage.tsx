@@ -226,10 +226,10 @@ const HomePage = () => {
 
                   {/* CTA Button */}
                   <Link
-                    to={product.link}
+                    to={user ? "/dashboard" : "/login"}
                     className={`w-full bg-gradient-to-r ${product.gradient} text-white py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:shadow-2xl transition-all duration-300 group-hover:shadow-yellow-500/20 flex items-center justify-center space-x-2`}
                   >
-                    <span>Access Now</span>
+                    <span>{user ? "Go to Dashboard" : "Sign In to Access"}</span>
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </Link>
                 </div>

@@ -14,6 +14,7 @@ import NamePosterGenerator from './pages/NamePosterGenerator'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
 import DalleDebug from './components/DalleDebug'
+import FeatureRedirect from './components/FeatureRedirect'
 
 function App() {
   return (
@@ -47,12 +48,12 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Feature Routes (will be updated to check access) */}
-          <Route path="/dua-generator" element={<DuaGenerator />} />
-          <Route path="/kids-stories" element={<KidsStoryGenerator />} />
-          <Route path="/kids-story-generator" element={<KidsStoryGenerator />} />
-          <Route path="/name-poster" element={<NamePosterGenerator />} />
-          <Route path="/name-poster-generator" element={<NamePosterGenerator />} />
+          {/* Feature Routes - Redirect to login/dashboard */}
+          <Route path="/dua-generator" element={<FeatureRedirect />} />
+          <Route path="/kids-stories" element={<FeatureRedirect />} />
+          <Route path="/kids-story-generator" element={<FeatureRedirect />} />
+          <Route path="/name-poster" element={<FeatureRedirect />} />
+          <Route path="/name-poster-generator" element={<FeatureRedirect />} />
 
           {/* 404 */}
           <Route path="*" element={

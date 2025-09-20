@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { stripeService } from '../services/stripeService'
 import { databaseService } from '../services/databaseService'
 
@@ -23,10 +25,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   onClose,
   onPaymentSuccess
 }) => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState('')
-  const [userName, setUserName] = useState('')
   const [product, setProduct] = useState<ProductInfo | null>(null)
   const [hasAccess, setHasAccess] = useState(false)
 
@@ -34,19 +36,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   useEffect(() => {
     if (isOpen) {
       console.log('🔍 PaymentGateway opened for:', productType)
-      checkAccess()
+      checkUserAccess()
       loadProduct()
     }
-  }, [isOpen, productType])
-
-  const checkAccess = async () => {
-    try {
-      // Don't check access initially - let user enter email first
-      setHasAccess(false)
-    } catch (error) {
-      console.error('Failed to check access:', error)
-    }
-  }
+  }, [isOpen, productType, user])
 
   const loadProduct = async () => {
     try {
@@ -105,13 +98,10 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
   }
 
   const handlePayment = async () => {
-    if (!userEmail.trim()) {
-      setError('Please enter your email address')
-      return
-    }
-
-    if (!userName.trim()) {
-      setError('Please enter your name')
+    // Require user to be logged in
+    if (!user) {
+      // Redirect to login page
+      navigate('/login')
       return
     }
 
@@ -119,18 +109,14 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     setError(null)
 
     try {
-      // Create checkout session
+      // Create checkout session with authenticated user's info
       const result = await stripeService.createCheckoutSession(
         productType,
-        userEmail.trim(),
-        userName.trim()
+        user.email,
+        user.name
       )
 
       if (result.success && result.session) {
-        // Store email before redirecting so user has seamless access after payment
-        localStorage.setItem('user_email', userEmail.trim())
-        console.log('✅ Stored email before redirect:', userEmail.trim())
-        
         // Redirect to Stripe Checkout
         stripeService.redirectToCheckout(result.session.url)
       } else {
@@ -144,53 +130,33 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
     }
   }
 
-  const handleLoginAndAccess = async () => {
-    if (!userEmail.trim()) {
-      setError('Please enter your email address')
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
+  const checkUserAccess = async () => {
+    if (!user) return
 
     try {
-      // Check access by email directly
-      const apiUrl = process.env.NODE_ENV === 'production' 
+      const apiUrl = process.env.NODE_ENV === 'production'
         ? 'https://baraka-bundle-ai-tools.onrender.com/api'
         : '/api'
-        
+
       const response = await fetch(`${apiUrl}/access/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: userEmail.trim(), 
-          product_type: productType 
+        body: JSON.stringify({
+          email: user.email,
+          product_type: productType
         })
       })
 
-      if (!response.ok) {
-        setError('Failed to check access')
-        return
-      }
-
-      const { has_access } = await response.json()
-      
-      if (has_access) {
-        // Store email for seamless access
-        localStorage.setItem('user_email', userEmail.trim())
-        console.log('✅ Stored email after access verification:', userEmail.trim())
-        
-        setHasAccess(true)
-        onPaymentSuccess()
-        onClose()
-      } else {
-        setError('No active purchase found for this email')
+      if (response.ok) {
+        const { has_access } = await response.json()
+        if (has_access) {
+          setHasAccess(true)
+          onPaymentSuccess()
+          onClose()
+        }
       }
     } catch (error) {
       console.error('Access check error:', error)
-      setError('Failed to verify access. Please try again.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -270,36 +236,14 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                 </div>
               </div>
 
-              {/* User Information Form */}
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
-                    required
-                  />
+              {/* User Information Display - Show logged in user */}
+              {user && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Purchasing as:</p>
+                  <p className="font-semibold text-gray-900">{user.name}</p>
+                  <p className="text-sm text-gray-600">{user.email}</p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-islamic-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Error Message */}
               {error && (
@@ -308,36 +252,24 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                {/* Main Payment Button */}
-                <button
-                  onClick={handlePayment}
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-islamic-green-600 to-islamic-green-700 text-white py-4 px-6 rounded-lg font-semibold hover:from-islamic-green-700 hover:to-islamic-green-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <span className="mr-2">💳</span>
-                      Pay {product ? formatPrice(product.price_cents) : '...'} - Get Lifetime Access
-                    </div>
-                  )}
-                </button>
-
-                {/* Already Purchased Button */}
-                <button
-                  onClick={handleLoginAndAccess}
-                  disabled={isLoading}
-                  className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-all duration-300 disabled:opacity-50"
-                >
-                  Already purchased? Access your account
-                </button>
-              </div>
+              {/* Payment Button */}
+              <button
+                onClick={handlePayment}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-islamic-green-600 to-islamic-green-700 text-white py-4 px-6 rounded-lg font-semibold hover:from-islamic-green-700 hover:to-islamic-green-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <span className="mr-2">💳</span>
+                    Pay {product ? formatPrice(product.price_cents) : '...'} - Get Lifetime Access
+                  </div>
+                )}
+              </button>
 
               {/* Security Notice */}
               <div className="mt-6 text-center text-xs text-gray-500">

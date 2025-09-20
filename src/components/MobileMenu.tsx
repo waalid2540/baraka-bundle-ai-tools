@@ -92,40 +92,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isDark = true }) => {
                     </Link>
                   )}
                   <hr className={`my-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
-                  <Link
-                    to="/dua-generator"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
-                      isDark
-                        ? 'text-gray-300 hover:bg-white/10'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    🤲 Dua Generator
-                  </Link>
-                  <Link
-                    to="/kids-stories"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
-                      isDark
-                        ? 'text-gray-300 hover:bg-white/10'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    📚 Kids Stories
-                  </Link>
-                  <Link
-                    to="/name-poster"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
-                      isDark
-                        ? 'text-gray-300 hover:bg-white/10'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    🎨 Name Poster
-                  </Link>
-                  <hr className={`my-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
                   <button
                     onClick={handleLogout}
                     className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
