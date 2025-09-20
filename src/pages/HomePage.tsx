@@ -35,6 +35,16 @@ const HomePage = () => {
       gradient: "from-amber-500 to-orange-500",
       link: "/name-poster",
       features: ["Master Calligraphy", "Deep Islamic History", "Spiritual Significance", "Museum-Quality Design"]
+    },
+    {
+      id: 4,
+      title: "Islamic eBook Generator",
+      description: "Professional eBooks with AI content, templates & multi-format export",
+      price: "$4.99",
+      icon: "📚",
+      gradient: "from-indigo-500 to-purple-600",
+      link: "/ebook-generator",
+      features: ["Professional Templates", "AI Content Generation", "DALL-E Illustrations", "Multi-Format Export"]
     }
   ]
 

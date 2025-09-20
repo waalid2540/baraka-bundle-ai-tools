@@ -1355,6 +1355,292 @@ app.get('/api/proxy-image', async (req, res) => {
   }
 })
 
+// 📚 Add eBook Generator Product (Admin endpoint)
+app.post('/api/admin/add-ebook-product', async (req, res) => {
+  try {
+    console.log('📚 Adding eBook generator product to database...')
+
+    // Check if product already exists
+    const existingProduct = await pool.query('SELECT * FROM products WHERE product_type = $1', ['ebook_generator'])
+
+    if (existingProduct.rows.length > 0) {
+      return res.json({
+        success: true,
+        message: 'eBook generator product already exists',
+        product: existingProduct.rows[0]
+      })
+    }
+
+    // Insert new product
+    const result = await pool.query(`
+      INSERT INTO products (
+        name,
+        description,
+        price_cents,
+        product_type,
+        stripe_price_id,
+        is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `, [
+      'Islamic eBook Generator',
+      'Create professional Islamic eBooks with AI content generation, templates, DALL-E covers, and multi-format export (PDF, EPUB, MOBI).',
+      499, // $4.99
+      'ebook_generator',
+      null, // Will need to create Stripe price ID
+      true
+    ])
+
+    console.log('✅ eBook generator product added to database')
+
+    res.json({
+      success: true,
+      message: 'eBook generator product added successfully',
+      product: result.rows[0]
+    })
+
+  } catch (error) {
+    console.error('❌ Error adding eBook product:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to add eBook product'
+    })
+  }
+})
+
+// 📚 Islamic eBook Generation Endpoint
+app.post('/api/generate-ebook', async (req, res) => {
+  try {
+    console.log('📚 Generating Islamic eBook...')
+
+    const {
+      title,
+      subtitle,
+      author,
+      description,
+      category,
+      language,
+      chapters,
+      template,
+      coverStyle,
+      includeImages,
+      targetAudience,
+      userEmail
+    } = req.body
+
+    // Validate required fields
+    if (!title || !description || !chapters || chapters.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: title, description, and at least one chapter'
+      })
+    }
+
+    if (!openai) {
+      return res.status(500).json({
+        success: false,
+        error: 'AI service not available'
+      })
+    }
+
+    // Step 1: Generate cover image with DALL-E
+    let coverImageUrl = null
+    if (includeImages) {
+      try {
+        console.log('🎨 Generating cover image...')
+
+        const coverPrompt = `Create a professional Islamic book cover for "${title}".
+        Style: ${coverStyle}. Category: ${category}. Target audience: ${targetAudience}.
+        The cover should be elegant, professional, and suitable for publishing on platforms like Kindle.
+        Include beautiful Islamic calligraphy, geometric patterns, or architectural elements.
+        Make it high-quality, professional, and visually appealing.
+        No text on the cover - just the visual design.`
+
+        const coverResponse = await openai.images.generate({
+          model: 'dall-e-3',
+          prompt: coverPrompt,
+          size: '1024x1792', // Tall format for book cover
+          quality: 'hd',
+          n: 1
+        })
+
+        coverImageUrl = coverResponse.data[0].url
+        console.log('✅ Cover image generated')
+      } catch (error) {
+        console.error('⚠️ Cover generation failed:', error)
+        // Continue without cover image
+      }
+    }
+
+    // Step 2: Enhance and expand chapters with AI
+    const enhancedChapters = []
+
+    for (let i = 0; i < chapters.length; i++) {
+      const chapter = chapters[i]
+      console.log(`📝 Enhancing chapter ${i + 1}: ${chapter.title}`)
+
+      try {
+        const chapterPrompt = `You are a professional Islamic author writing a ${category} book for ${targetAudience} in ${language}.
+
+Title: "${title}"
+Chapter: "${chapter.title}"
+Current content: "${chapter.content}"
+
+Please enhance and expand this chapter to be professional, engaging, and informative.
+- Make it suitable for publication
+- Include relevant Islamic references where appropriate
+- Ensure the content is authentic and respectful
+- Target length: 1000-2000 words
+- Use proper formatting with paragraphs
+- Include relevant Islamic quotes or verses if appropriate (with proper attribution)
+- Make it engaging for the target audience: ${targetAudience}
+
+Return only the enhanced chapter content, well-formatted and ready for publication.`
+
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional Islamic author and editor. Create high-quality, authentic Islamic content suitable for publication.'
+            },
+            {
+              role: 'user',
+              content: chapterPrompt
+            }
+          ],
+          max_tokens: 3000,
+          temperature: 0.7
+        })
+
+        const enhancedContent = response.choices[0].message.content
+
+        enhancedChapters.push({
+          ...chapter,
+          content: enhancedContent,
+          enhanced: true
+        })
+
+        console.log(`✅ Chapter ${i + 1} enhanced`)
+      } catch (error) {
+        console.error(`⚠️ Failed to enhance chapter ${i + 1}:`, error)
+        // Use original content if enhancement fails
+        enhancedChapters.push({
+          ...chapter,
+          enhanced: false
+        })
+      }
+    }
+
+    // Step 3: Generate chapter illustrations if requested
+    const chapterImages = []
+    if (includeImages && enhancedChapters.length > 0) {
+      console.log('🖼️ Generating chapter illustrations...')
+
+      for (let i = 0; i < Math.min(enhancedChapters.length, 5); i++) { // Limit to 5 images
+        const chapter = enhancedChapters[i]
+        try {
+          const imagePrompt = `Create a beautiful Islamic illustration for a chapter titled "${chapter.title}"
+          from a ${category} book. The illustration should be elegant, culturally appropriate,
+          and suitable for ${targetAudience}. Style should match ${coverStyle}.
+          Use Islamic geometric patterns, calligraphy elements, or architectural motifs.
+          High quality, professional, suitable for book publication.`
+
+          const imageResponse = await openai.images.generate({
+            model: 'dall-e-3',
+            prompt: imagePrompt,
+            size: '1024x1024',
+            quality: 'standard',
+            n: 1
+          })
+
+          chapterImages.push({
+            chapterIndex: i,
+            imageUrl: imageResponse.data[0].url
+          })
+
+          console.log(`✅ Illustration generated for chapter ${i + 1}`)
+        } catch (error) {
+          console.error(`⚠️ Failed to generate illustration for chapter ${i + 1}:`, error)
+        }
+      }
+    }
+
+    // Step 4: Create structured eBook data
+    const ebookData = {
+      metadata: {
+        title,
+        subtitle,
+        author,
+        description,
+        category,
+        language,
+        targetAudience,
+        template: template?.name || 'Default',
+        coverStyle,
+        generatedAt: new Date().toISOString(),
+        totalChapters: enhancedChapters.length
+      },
+      cover: {
+        imageUrl: coverImageUrl,
+        style: coverStyle
+      },
+      chapters: enhancedChapters.map((chapter, index) => ({
+        ...chapter,
+        illustration: chapterImages.find(img => img.chapterIndex === index)?.imageUrl
+      })),
+      formats: {
+        pdf: true,
+        epub: true,
+        mobi: true,
+        docx: true
+      }
+    }
+
+    // Step 5: Log usage if user email provided
+    if (userEmail) {
+      try {
+        const user = await pool.query('SELECT id FROM users WHERE email = $1', [userEmail])
+        if (user.rows.length > 0) {
+          await pool.query(
+            'INSERT INTO usage_logs (user_id, product_type, action, metadata) VALUES ($1, $2, $3, $4)',
+            [user.rows[0].id, 'ebook_generator', 'ebook_generated', JSON.stringify({
+              title,
+              chapters: enhancedChapters.length,
+              includeImages,
+              coverGenerated: !!coverImageUrl,
+              illustrationsGenerated: chapterImages.length
+            })]
+          )
+        }
+      } catch (logError) {
+        console.error('Failed to log usage:', logError)
+      }
+    }
+
+    console.log('✅ Islamic eBook generated successfully')
+
+    res.json({
+      success: true,
+      ebook: ebookData,
+      downloadUrl: `/api/ebook-download/${Date.now()}`, // Placeholder for download endpoint
+      stats: {
+        chaptersEnhanced: enhancedChapters.filter(ch => ch.enhanced).length,
+        coverGenerated: !!coverImageUrl,
+        illustrationsGenerated: chapterImages.length,
+        totalWords: enhancedChapters.reduce((total, ch) => total + ch.content.length, 0)
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ eBook generation error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate eBook'
+    })
+  }
+})
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error(error.stack)

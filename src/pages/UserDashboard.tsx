@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import DuaGenerator from './DuaGenerator'
 import KidsStoryGenerator from './KidsStoryGenerator'
 import NamePosterGenerator from './NamePosterGenerator'
+import EbookGenerator from './EbookGenerator'
 import MobileMenu from '../components/MobileMenu'
 
 const UserDashboard: React.FC = () => {
@@ -57,6 +58,14 @@ const UserDashboard: React.FC = () => {
       description: 'Create beautiful Islamic name posters',
       color: 'from-green-500 to-emerald-600',
       component: NamePosterGenerator
+    },
+    {
+      id: 'ebook_generator',
+      name: 'Islamic eBook Generator',
+      icon: '📚',
+      description: 'Create professional Islamic eBooks',
+      color: 'from-indigo-500 to-purple-600',
+      component: EbookGenerator
     }
   ]
 

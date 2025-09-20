@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import DuaGenerator from './pages/DuaGenerator'
 import KidsStoryGenerator from './pages/KidsStoryGenerator'
 import NamePosterGenerator from './pages/NamePosterGenerator'
+import EbookGenerator from './pages/EbookGenerator'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
 import DalleDebug from './components/DalleDebug'
@@ -54,6 +55,7 @@ function App() {
           <Route path="/kids-story-generator" element={<FeatureRedirect />} />
           <Route path="/name-poster" element={<FeatureRedirect />} />
           <Route path="/name-poster-generator" element={<FeatureRedirect />} />
+          <Route path="/ebook-generator" element={<FeatureRedirect />} />
 
           {/* 404 */}
           <Route path="*" element={

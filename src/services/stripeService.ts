@@ -8,7 +8,7 @@ interface Product {
   name: string
   description: string
   price_cents: number
-  product_type: 'dua_generator' | 'story_generator' | 'poster_generator'
+  product_type: 'dua_generator' | 'story_generator' | 'poster_generator' | 'ebook_generator'
 }
 
 interface PaymentSession {
@@ -36,7 +36,7 @@ class StripeService {
 
   // Create Stripe Checkout Session for product purchase
   async createCheckoutSession(
-    productType: 'dua_generator' | 'story_generator' | 'poster_generator',
+    productType: 'dua_generator' | 'story_generator' | 'poster_generator' | 'ebook_generator',
     userEmail: string,
     userName?: string
   ): Promise<PaymentResult> {
@@ -191,8 +191,9 @@ class StripeService {
   getProductDisplayName(productType: string): string {
     const names: { [key: string]: string } = {
       'dua_generator': 'Du\'a Generator',
-      'story_generator': 'Kids Story Generator', 
-      'poster_generator': 'Name Poster Generator'
+      'story_generator': 'Kids Story Generator',
+      'poster_generator': 'Name Poster Generator',
+      'ebook_generator': 'Islamic eBook Generator'
     }
     return names[productType] || productType
   }
@@ -201,7 +202,8 @@ class StripeService {
     const descriptions: { [key: string]: string } = {
       'dua_generator': 'Generate unlimited beautiful Islamic du\'as with Arabic text, transliteration, and translations in multiple languages.',
       'story_generator': 'Create unlimited Islamic stories for children with DALL-E illustrations, audio narration, and interactive storybooks.',
-      'poster_generator': 'Generate unlimited beautiful Islamic calligraphy posters with names and custom designs.'
+      'poster_generator': 'Generate unlimited beautiful Islamic calligraphy posters with names and custom designs.',
+      'ebook_generator': 'Create professional Islamic eBooks with AI content generation, templates, DALL-E covers, and multi-format export (PDF, EPUB, MOBI).'
     }
     return descriptions[productType] || 'Premium Islamic digital tool access'
   }
@@ -210,7 +212,8 @@ class StripeService {
     const icons: { [key: string]: string } = {
       'dua_generator': '🤲',
       'story_generator': '📖',
-      'poster_generator': '🎨'
+      'poster_generator': '🎨',
+      'ebook_generator': '📚'
     }
     return icons[productType] || '✨'
   }
