@@ -1408,6 +1408,51 @@ app.post('/api/admin/add-ebook-product', async (req, res) => {
   }
 })
 
+// 🔓 Grant access for testing (Admin endpoint)
+app.post('/api/admin/grant-test-access', async (req, res) => {
+  try {
+    const { email, product_type } = req.body
+
+    // Get user ID
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const userId = userResult.rows[0].id
+
+    // Get product details
+    const productResult = await pool.query('SELECT * FROM products WHERE product_type = $1', [product_type])
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' })
+    }
+
+    const product = productResult.rows[0]
+
+    // Insert purchase record
+    await pool.query(`
+      INSERT INTO user_purchases (user_id, product_id, amount_paid_cents, currency, payment_status, purchased_at, stripe_payment_intent_id, stripe_session_id)
+      VALUES ($1, $2, $3, 'usd', 'completed', NOW(), $4, $5)
+      ON CONFLICT (user_id, product_id)
+      DO UPDATE SET payment_status = 'completed', purchased_at = NOW()
+    `, [userId, product.id, product.price_cents, `test_intent_${userId}`, `test_session_${userId}`])
+
+    console.log(`✅ Granted ${product_type} access to ${email}`)
+
+    res.json({
+      success: true,
+      message: `Access granted for ${product_type} to ${email}`
+    })
+
+  } catch (error) {
+    console.error('❌ Error granting access:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to grant access'
+    })
+  }
+})
+
 // 📚 Islamic eBook Generation Endpoint
 app.post('/api/generate-ebook', async (req, res) => {
   try {
