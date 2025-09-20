@@ -15,7 +15,6 @@ import EbookGenerator from './pages/EbookGenerator'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PaymentCancel from './pages/PaymentCancel'
 import DalleDebug from './components/DalleDebug'
-import FeatureRedirect from './components/FeatureRedirect'
 
 function App() {
   return (
@@ -49,14 +48,32 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Feature Routes - Redirect to login/dashboard */}
-          <Route path="/dua-generator" element={<FeatureRedirect />} />
-          <Route path="/kids-stories" element={<FeatureRedirect />} />
-          <Route path="/kids-story-generator" element={<FeatureRedirect />} />
-          <Route path="/name-poster" element={<FeatureRedirect />} />
-          <Route path="/name-poster-generator" element={<FeatureRedirect />} />
-
-          {/* Direct eBook Generator Route */}
+          {/* Direct Feature Routes - Professional SaaS Flow */}
+          <Route path="/dua-generator" element={
+            <ProtectedRoute>
+              <DuaGenerator />
+            </ProtectedRoute>
+          } />
+          <Route path="/kids-stories" element={
+            <ProtectedRoute>
+              <KidsStoryGenerator />
+            </ProtectedRoute>
+          } />
+          <Route path="/kids-story-generator" element={
+            <ProtectedRoute>
+              <KidsStoryGenerator />
+            </ProtectedRoute>
+          } />
+          <Route path="/name-poster" element={
+            <ProtectedRoute>
+              <NamePosterGenerator />
+            </ProtectedRoute>
+          } />
+          <Route path="/name-poster-generator" element={
+            <ProtectedRoute>
+              <NamePosterGenerator />
+            </ProtectedRoute>
+          } />
           <Route path="/ebook-generator" element={
             <ProtectedRoute>
               <EbookGenerator />
